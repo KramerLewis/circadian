@@ -1,0 +1,12 @@
+# Xcode
+xcuserdata/
+DerivedData/
+*.xcuserstate
+# SwiftPM
+.build/
+.swiftpm/
+Package.resolved
+# Python
+__pycache__/
+# macOS
+.DS_Store

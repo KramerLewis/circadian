@@ -1,0 +1,60 @@
+name: iOS
+
+on:
+  push:
+    branches: [main, sunclock]
+    paths:
+      - "ios/**"
+      - "shared/fixtures/**"
+      - ".github/workflows/ios.yml"
+      - ".github/scripts/**"
+  pull_request:
+    paths:
+      - "ios/**"
+      - "shared/fixtures/**"
+      - ".github/workflows/ios.yml"
+      - ".github/scripts/**"
+  workflow_dispatch:
+
+# A newer push makes an in-flight run on the same branch pointless.
+concurrency:
+  group: ios-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  suncore:
+    name: SunCore tests (macOS host)
+    runs-on: macos-26
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Select Xcode 26
+        run: .github/scripts/select-xcode.sh
+      - name: swift test
+        run: swift test --package-path ios/SunCore
+
+  app:
+    name: App build + tests (iOS Simulator)
+    runs-on: macos-26
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - name: Select Xcode 26
+        run: .github/scripts/select-xcode.sh
+      - name: Pick a simulator
+        id: sim
+        run: echo "udid=$(.github/scripts/pick-simulator.sh)" >> "$GITHUB_OUTPUT"
+      - name: Build
+        run: |
+          xcodebuild build \
+            -project ios/SunClock.xcodeproj \
+            -scheme SunClock \
+            -destination 'generic/platform=iOS Simulator' \
+            CODE_SIGNING_ALLOWED=NO
+      - name: Test
+        run: |
+          xcodebuild test \
+            -project ios/SunClock.xcodeproj \
+            -scheme SunClock \
+            -destination "id=${{ steps.sim.outputs.udid }}" \
+            CODE_SIGNING_ALLOWED=NO

@@ -1,0 +1,27 @@
+name: Shared fixtures
+
+on:
+  push:
+    branches: [main, sunclock]
+    paths:
+      - "shared/**"
+      - ".github/workflows/shared.yml"
+  pull_request:
+    paths:
+      - "shared/**"
+      - ".github/workflows/shared.yml"
+
+jobs:
+  solar-fixtures:
+    name: Solar reference fixtures
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: pip install ephem
+      # Fails if the committed fixture doesn't match the generator, or if the NOAA
+      # reference disagrees with an independent ephemeris by more than the tolerance.
+      - run: python3 shared/tools/generate_solar_fixtures.py --check --ephem
