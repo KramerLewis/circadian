@@ -42,3 +42,6 @@ shoot 3-seattle-december-night-dark  dark  America/Los_Angeles 2026-12-21T21:30:
 shoot 4-tromso-midnight-sun-light    light Europe/Oslo         2026-06-21T23:30:00+02:00 "${tromso[@]}"
 shoot 5-tromso-polar-night-dark      dark  Europe/Oslo         2026-12-21T12:00:00+01:00 "${tromso[@]}"
 shoot 6-location-settings-light      light America/Los_Angeles 2026-06-21T15:00:00-07:00 "${seattle[@]}" -demoSheet location
+shoot 7-alarms-light                 light America/Los_Angeles 2026-06-20T12:00:00-07:00 "${seattle[@]}" -demoTab alarms
+shoot 8-alarms-dark                  dark  America/Los_Angeles 2026-06-20T12:00:00-07:00 "${seattle[@]}" -demoTab alarms
+shoot 9-new-alarm-light              light America/Los_Angeles 2026-06-20T12:00:00-07:00 "${seattle[@]}" -demoTab alarms -demoSheet alarm

@@ -21,4 +21,21 @@ public enum SolarFormat {
         let h = total / 60, m = total % 60
         return (h < 10 ? "0" : "") + "\(h):" + (m < 10 ? "0" : "") + "\(m)"
     }
+
+    /// "30 min before sunrise", "1 hr after solar noon", "Civil dusk".
+    public static func alarmDescription(event: SolarEvent, offsetMinutes: Int) -> String {
+        if offsetMinutes == 0 { return event.displayName }
+        let direction = offsetMinutes < 0 ? "before" : "after"
+        return "\(offset(abs(offsetMinutes))) \(direction) \(event.displayName.lowercased())"
+    }
+
+    /// "30 min", "1 hr", "1 hr 30 min".
+    public static func offset(_ minutes: Int) -> String {
+        let h = minutes / 60, m = minutes % 60
+        switch (h, m) {
+        case (0, _): return "\(m) min"
+        case (_, 0): return "\(h) hr"
+        default: return "\(h) hr \(m) min"
+        }
+    }
 }

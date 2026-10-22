@@ -1,10 +1,11 @@
 import Foundation
 import SunCore
+import SwiftData
 
 /// A frozen place and time, set from launch arguments, for deterministic screenshots:
 ///
 ///     -demoLatitude 47.61 -demoLongitude -122.33 -demoName Seattle
-///     -demoDate 2026-06-21T15:00:00-07:00 [-demoSheet location]
+///     -demoDate 2026-06-21T15:00:00-07:00 [-demoTab alarms] [-demoSheet location|alarm]
 ///
 /// Debug builds only. In demo mode the app uses an in-memory store and never
 /// touches CoreLocation, so no permission prompt covers the screen.
@@ -13,6 +14,7 @@ struct DemoConfig {
     var name: String
     var date: Date
     var sheet: String?
+    var tab: String?
 
     static let current: DemoConfig? = {
         #if DEBUG
@@ -32,10 +34,34 @@ struct DemoConfig {
             coordinate: Coordinate(latitude: lat, longitude: lon),
             name: value("-demoName") ?? "Demo",
             date: date,
-            sheet: value("-demoSheet")
+            sheet: value("-demoSheet"),
+            tab: value("-demoTab")
         )
         #else
         return nil
         #endif
     }()
+}
+
+extension DemoConfig {
+    /// Sample data for the in-memory demo store.
+    func seed(_ context: ModelContext) {
+        context.insert(AppSettings())
+        let samples: [(String, SolarEvent, Int, [Int], Bool)] = [
+            ("Wake up", .sunrise, -30, [2, 3, 4, 5, 6], true),
+            ("", .solarNoon, 60, Array(1...7), true),
+            ("Evening walk", .civilDusk, 0, [1, 7], false),
+            ("", .nauticalDawn, 0, [], true),
+        ]
+        for (label, event, offset, weekdays, enabled) in samples {
+            let alarm = SolarAlarm()
+            alarm.label = label
+            alarm.event = event
+            alarm.offsetMinutes = offset
+            alarm.weekdays = weekdays
+            alarm.isEnabled = enabled
+            alarm.armedAt = date
+            context.insert(alarm)
+        }
+    }
 }
