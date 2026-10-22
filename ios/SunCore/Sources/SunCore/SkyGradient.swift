@@ -73,6 +73,29 @@ public enum SkyGradient {
     }
 }
 
+extension SkyGradient {
+    /// The sun's own color at an altitude: white-gold high in the sky, deepening
+    /// through gold and orange to red at the horizon, as it looks through more air.
+    /// `core` tints the disc; `glow` tints the corona around it.
+    public static func sunColor(altitude: Double) -> (core: RGB, glow: RGB) {
+        let (lower, upper, t) = bracket(altitude, sunStops.map(\.0))
+        func mix(_ a: RGB, _ b: RGB) -> RGB {
+            RGB(a.red + (b.red - a.red) * t, a.green + (b.green - a.green) * t, a.blue + (b.blue - a.blue) * t)
+        }
+        return (mix(sunStops[lower].1, sunStops[upper].1), mix(sunStops[lower].2, sunStops[upper].2))
+    }
+
+    /// (altitude, core, glow), ascending.
+    static let sunStops: [(Double, RGB, RGB)] = [
+        (-2, RGB(1.00, 0.35, 0.15), RGB(1.00, 0.30, 0.12)),
+        (0, RGB(1.00, 0.45, 0.18), RGB(1.00, 0.38, 0.15)),
+        (3, RGB(1.00, 0.62, 0.28), RGB(1.00, 0.50, 0.20)),
+        (8, RGB(1.00, 0.78, 0.45), RGB(1.00, 0.62, 0.25)),
+        (20, RGB(1.00, 0.90, 0.68), RGB(1.00, 0.74, 0.35)),
+        (45, RGB(1.00, 0.97, 0.88), RGB(1.00, 0.84, 0.50)),
+    ]
+}
+
 extension SolarCalculator {
     /// Altitude (degrees) of the sun's center at a given hour angle, for a declination.
     public static func altitude(hourAngle: Double, latitude: Double, declination: Double) -> Double {

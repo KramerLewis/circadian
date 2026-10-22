@@ -29,4 +29,13 @@ struct SkyGradientTests {
         #expect(samples == samples.sorted())
         #expect(samples.first! > 0 && samples.last! <= 1)
     }
+
+    @Test func sunReddensTowardTheHorizon() {
+        let noon = SkyGradient.sunColor(altitude: 60).core
+        let golden = SkyGradient.sunColor(altitude: 8).core
+        let sunset = SkyGradient.sunColor(altitude: 0).core
+        #expect(noon.blue > golden.blue && golden.blue > sunset.blue)
+        #expect(noon.green > golden.green && golden.green > sunset.green)
+        #expect(SkyGradient.sunColor(altitude: -30).core == SkyGradient.sunColor(altitude: -2).core)
+    }
 }

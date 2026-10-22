@@ -51,27 +51,31 @@ enum SkyRingRenderer {
         )
     }
 
-    /// The sun at `angle`, sized to fit within the ring, with its glow clipped to it.
-    /// It dims as it sinks below the horizon (`altitude` in degrees).
+    /// The sun at `angle`, sized to fit within the ring: a rendered disc (see
+    /// `SunRenderer`) inside a two-layer corona tinted for its altitude, clipped to the
+    /// ring. It dims and reddens as it sinks below the horizon.
     static func drawSun(in context: inout GraphicsContext, ring: Ring, angle: Double, altitude: Double, monochrome: Bool) {
         let strength = altitude >= -0.833 ? 1 : max(0.3, 1 + (altitude + 0.833) / 25)
-        let color = (monochrome ? Color.white : DialPalette.sun).opacity(strength)
+        let rgb = SkyGradient.sunColor(altitude: altitude).glow
+        let glowColor = monochrome ? Color.white : Color(red: rgb.red, green: rgb.green, blue: rgb.blue)
         let center = ring.point((ring.inner + ring.outer) / 2, angle)
         let radius = ring.thickness * 0.3
+        let scale = context.environment.displayScale
         context.drawLayer { layer in
             layer.clip(to: ring.path, style: evenOdd)
-            let glow = ring.thickness * 0.9
-            layer.fill(
-                Path(ellipseIn: CGRect(x: center.x - glow, y: center.y - glow, width: glow * 2, height: glow * 2)),
-                with: .radialGradient(
-                    Gradient(colors: [color.opacity(0.7), color.opacity(0)]),
-                    center: center, startRadius: radius * 0.6, endRadius: glow
+            for (reach, opacity) in [(radius * 4.6, 0.35), (radius * 2.0, 0.6)] {
+                layer.fill(
+                    Path(ellipseIn: CGRect(x: center.x - reach, y: center.y - reach, width: reach * 2, height: reach * 2)),
+                    with: .radialGradient(
+                        Gradient(colors: [glowColor.opacity(opacity * strength), glowColor.opacity(0)]),
+                        center: center, startRadius: radius * 0.9, endRadius: reach
+                    )
                 )
-            )
-            layer.fill(
-                Path(ellipseIn: CGRect(x: center.x - radius, y: center.y - radius, width: radius * 2, height: radius * 2)),
-                with: .color((monochrome ? Color.white : Color(red: 1, green: 0.97, blue: 0.85)).opacity(strength))
-            )
+            }
+            let rect = CGRect(x: center.x - radius, y: center.y - radius, width: radius * 2, height: radius * 2)
+            if let image = SunRenderer.image(altitude: altitude, pixels: Int((radius * 2 * scale).rounded(.up)), monochrome: monochrome) {
+                layer.draw(Image(decorative: image, scale: scale), in: rect)
+            }
         }
     }
 
