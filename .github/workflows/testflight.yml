@@ -1,0 +1,53 @@
+name: TestFlight
+
+# Builds, signs and uploads the iOS app (with its widgets and Watch app) to App Store
+# Connect, where it appears in TestFlight after Apple's processing (10-15 minutes).
+# Run it from the Actions tab ("Run workflow"). Needs these repository secrets:
+#   ASC_KEY_ID, ASC_ISSUER_ID, ASC_KEY_P8   App Store Connect API key (Admin role), .p8 text
+#   APPLE_TEAM_ID                           the 10-character team ID
+# Signing is automatic: Xcode creates the certificate, App IDs, app group and profiles
+# through the API key.
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: testflight
+  cancel-in-progress: false
+
+jobs:
+  upload:
+    name: Archive and upload
+    runs-on: macos-26
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v5
+      - name: Select Xcode 26
+        run: .github/scripts/select-xcode.sh
+      - name: Check secrets
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          missing=0
+          for name in ASC_KEY_ID ASC_ISSUER_ID ASC_KEY_P8 APPLE_TEAM_ID; do
+            if [[ -z "${!name}" ]]; then echo "::error::Missing repository secret $name"; missing=1; fi
+          done
+          exit $missing
+      - name: Archive and upload
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          # Every upload needs a new build number; the run number always increases.
+          BUILD_NUMBER: ${{ github.run_number }}
+        run: .github/scripts/testflight.sh
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: xcodebuild-logs
+          path: ${{ runner.temp }}/build/*.log
+          retention-days: 7
