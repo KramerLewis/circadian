@@ -5,7 +5,7 @@ import SunCore
 /// and how the dial should mark it.
 struct SpecialDayText: Equatable {
     enum Style: Equatable {
-        case solstice, equinox, fullMoon, supermoon, blueMoon, newMoon
+        case solstice, equinox, fullMoon, supermoon, blueMoon, newMoon, lunarEclipse, solarEclipse
     }
 
     var symbol: String
@@ -62,17 +62,144 @@ struct SpecialDayText: Equatable {
         }
     }
 
-    /// Today's special day at a place, if any.
+    /// Today's special day at a place, if any. An eclipse visible here outranks
+    /// everything else.
     static func today(at coordinate: Coordinate, on date: Date) -> SpecialDayText? {
-        SkyCalendar.event(onDayOf: date, in: .current).map { SpecialDayText($0, at: coordinate, on: date) }
+        if let eclipse = VisibleEclipse.on(dayOf: date, at: coordinate) {
+            return SpecialDayText(eclipse, at: coordinate)
+        }
+        return SkyCalendar.event(onDayOf: date, in: .current).map { SpecialDayText($0, at: coordinate, on: date) }
+    }
+
+    init(_ eclipse: VisibleEclipse, at coordinate: Coordinate) {
+        func time(_ date: Date?) -> String { date?.formatted(date: .omitted, time: .shortened) ?? "?" }
+        switch eclipse {
+        case .lunar(let e):
+            style = .lunarEclipse
+            symbol = "moon.fill"
+            let moonUp = { (date: Date?) in date.map { LunarCalculator.altitude(at: $0, coordinate: coordinate) > 0 } ?? false }
+            switch e.kind {
+            case .total:
+                title = "Total lunar eclipse"
+                let whole = moonUp(e.totalStart) && moonUp(e.totalEnd)
+                lines = ["A blood moon: totality \(time(e.totalStart))–\(time(e.totalEnd)).",
+                         whole ? "The moon is up for all of totality." : "Part of totality happens with the moon below the horizon."]
+                short = "Blood moon tonight"
+            case .partial:
+                title = "Partial lunar eclipse"
+                lines = ["\(Int((e.umbralMagnitude * 100).rounded()))% of the moon in Earth's shadow at \(time(e.greatest)).",
+                         "Partial phase \(time(e.partialStart))–\(time(e.partialEnd))."]
+                short = "Lunar eclipse tonight"
+            case .penumbral:
+                title = "Penumbral lunar eclipse"
+                lines = ["A subtle dimming of the moon, deepest at \(time(e.greatest)).",
+                         "Easiest to see in photos."]
+                short = "Lunar eclipse tonight"
+            }
+        case .solar(let e):
+            style = .solarEclipse
+            symbol = "circle.dashed.inset.filled"
+            let window = "\(time(e.start))–\(time(e.end))"
+            switch e.kind {
+            case .total:
+                title = "Total solar eclipse"
+                lines = ["Totality here \(time(e.centralStart))–\(time(e.centralEnd)).",
+                         "Eclipse \(window). Use eclipse glasses except during totality."]
+            case .annular:
+                title = "Annular solar eclipse"
+                lines = ["A ring of fire \(time(e.centralStart))–\(time(e.centralEnd)).",
+                         "Eclipse \(window). Always use eclipse glasses."]
+            case .partial:
+                title = "Partial solar eclipse"
+                lines = ["\(Int((e.obscuration * 100).rounded()))% of the sun covered at \(time(e.maximum)).",
+                         "Eclipse \(window). Always use eclipse glasses."]
+            }
+            short = "Solar eclipse today"
+        }
     }
 
     /// "Full moon in 2 days", for the next special day within three days.
     static func headsUp(at coordinate: Coordinate, after date: Date) -> String? {
-        guard let next = SkyCalendar.upcoming(after: date, within: 3, in: .current) else { return nil }
         let calendar = Calendar.current
-        let days = calendar.dateComponents([.day], from: calendar.startOfDay(for: date), to: calendar.startOfDay(for: next.date)).day ?? 0
-        let when = days <= 1 ? "tomorrow" : "in \(days) days"
-        return "\(next.title(southern: coordinate.latitude < 0)) \(when)"
+        func when(_ day: Date) -> String {
+            let days = calendar.dateComponents([.day], from: calendar.startOfDay(for: date), to: calendar.startOfDay(for: day)).day ?? 0
+            return days <= 1 ? "tomorrow" : "in \(days) days"
+        }
+        for offset in 1...3 {
+            if let day = calendar.date(byAdding: .day, value: offset, to: date),
+               let eclipse = VisibleEclipse.on(dayOf: day, at: coordinate) {
+                return "\(SpecialDayText(eclipse, at: coordinate).title) \(when(day))"
+            }
+        }
+        guard let next = SkyCalendar.upcoming(after: date, within: 3, in: .current) else { return nil }
+        return "\(next.title(southern: coordinate.latitude < 0)) \(when(next.date))"
+    }
+}
+
+/// An eclipse that can be seen from a place: a lunar eclipse while the moon is up, or a
+/// solar eclipse while the sun is up.
+enum VisibleEclipse: Hashable {
+    case lunar(EclipseCalculator.LunarEclipse)
+    case solar(EclipseCalculator.SolarEclipse)
+
+    var date: Date {
+        switch self {
+        case .lunar(let e): e.greatest
+        case .solar(let e): e.maximum
+        }
+    }
+
+    /// The eclipse visible on the local day containing `date`, if any.
+    static func on(dayOf date: Date, at coordinate: Coordinate) -> VisibleEclipse? {
+        let calendar = Calendar.current
+        let start = calendar.startOfDay(for: date)
+        guard let end = calendar.date(byAdding: .day, value: 1, to: start) else { return nil }
+        // Called on every frame while scrubbing the Watch dial, so remember each day.
+        let key = NextKey(day: start, latitude: (coordinate.latitude * 10).rounded(), longitude: (coordinate.longitude * 10).rounded())
+        if let cached = dayCache[key] { return cached.value }
+        let found = all(from: start, to: end, at: coordinate).first
+        if dayCache.count > 16 { dayCache.removeAll() }
+        dayCache[key] = Box(value: found)
+        return found
+    }
+
+    /// The next visible eclipse after `date`, looking up to `days` ahead.
+    static func next(after date: Date, at coordinate: Coordinate, days: Int = 400) -> VisibleEclipse? {
+        let key = NextKey(day: Calendar.current.startOfDay(for: date), latitude: (coordinate.latitude * 10).rounded(), longitude: (coordinate.longitude * 10).rounded())
+        if let cached = nextCache[key] { return cached.value }
+        let found = all(from: date, to: date.addingTimeInterval(Double(days) * 86_400), at: coordinate).first { $0.date > date }
+        if nextCache.count > 8 { nextCache.removeAll() }
+        nextCache[key] = Box(value: found)
+        return found
+    }
+
+    private struct NextKey: Hashable { let day: Date; let latitude, longitude: Double }
+    private struct Box { let value: VisibleEclipse? }
+    private static var nextCache: [NextKey: Box] = [:]
+    private static var dayCache: [NextKey: Box] = [:]
+
+    private static func all(from start: Date, to end: Date, at coordinate: Coordinate) -> [VisibleEclipse] {
+        let lunar = EclipseCalculator.lunarEclipses(from: start.addingTimeInterval(-43_200), to: end.addingTimeInterval(43_200))
+            .filter { $0.greatest >= start && $0.greatest < end }
+            .filter { e in
+                // Visible if the moon is up at any point of the eclipse.
+                [e.penumbralStart, e.partialStart, e.totalStart, e.greatest, e.totalEnd, e.partialEnd, e.penumbralEnd]
+                    .compactMap { $0 }
+                    .contains { LunarCalculator.altitude(at: $0, coordinate: coordinate) > 0 }
+            }
+            .map(VisibleEclipse.lunar)
+        let solar = EclipseCalculator.solarEclipses(from: start.addingTimeInterval(-43_200), to: end.addingTimeInterval(43_200), at: coordinate)
+            .filter { $0.maximum >= start && $0.maximum < end }
+            .filter { e in
+                [e.start, e.maximum, e.end].contains { t in
+                    SolarCalculator.altitude(
+                        hourAngle: SolarCalculator.hourAngle(at: t, longitude: coordinate.longitude),
+                        latitude: coordinate.latitude,
+                        declination: SolarCalculator.position(at: t).declination
+                    ) > -0.833
+                }
+            }
+            .map(VisibleEclipse.solar)
+        return (lunar + solar).sorted { $0.date < $1.date }
     }
 }

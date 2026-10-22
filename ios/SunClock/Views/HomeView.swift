@@ -64,6 +64,7 @@ struct HomeView: View {
                         readout: readout,
                         timeDisplay: settings.timeDisplay,
                         special: special,
+                        coordinate: place.coordinate,
                         onCycleDisplay: {
                             withAnimation { settings.timeDisplay = settings.timeDisplay.next }
                         }

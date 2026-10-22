@@ -23,9 +23,10 @@ public enum LunarEvent: String, CaseIterable, Codable, Sendable, Identifiable {
 
 /// The moon's position, phase and daily events, computed on device.
 ///
-/// Position uses Paul Schlyter's low-precision method (orbital elements plus the main
-/// perturbation terms, about 1-2 arcminutes; https://stjarnhimlen.se/comp/ppcomp.html).
-/// That puts rise, set and transit times within about 30 seconds of a full ephemeris.
+/// Position uses the main terms of the ELP-2000/82 theory as given by Meeus,
+/// *Astronomical Algorithms* ch. 47 (about 10″; coefficients in LunarTerms.swift). That
+/// puts rise, set and transit times within seconds of a full ephemeris, and is accurate
+/// enough for solar eclipse magnitudes near totality.
 /// Rise/set use the standard altitude 0.7275 * parallax - 34' (topocentric upper limb
 /// on the refracted horizon). The reference implementation and fixture are in
 /// shared/tools/generate_lunar_fixtures.py.
@@ -70,57 +71,63 @@ public enum LunarCalculator {
 
     // MARK: Position
 
+    /// Clocks run on UT; the lunar theory runs on Terrestrial Time. TT − UT (ΔT) has
+    /// been within a second of 69 s since 2015 and drifts well under a second a year.
+    static let deltaT: TimeInterval = 69
+
     public static func position(at instant: Date) -> Position {
-        let d = instant.timeIntervalSince1970 / 86_400 + 2_440_587.5 - 2_451_543.5 // days since 2000 Jan 0.0
-        let n = rev(125.1228 - 0.0529538083 * d)
-        let i = 5.1454
-        let w = rev(318.0634 + 0.1643573223 * d)
-        let a = 60.2666, e = 0.054900
-        let m = rev(115.3654 + 13.0649929509 * d)
-        let ms = rev(356.0470 + 0.9856002585 * d)
-        let ls = rev(282.9404 + 4.70935e-5 * d + ms)
+        let jd = (instant.timeIntervalSince1970 + deltaT) / 86_400 + 2_440_587.5
+        let t = (jd - 2_451_545) / 36_525
+        let t2 = t * t, t3 = t2 * t, t4 = t3 * t
 
-        var ecc = m + degrees(e * sin(radians(m)) * (1 + e * cos(radians(m))))
-        for _ in 0..<5 {
-            ecc -= (ecc - degrees(e * sin(radians(ecc))) - m) / (1 - e * cos(radians(ecc)))
+        // Fundamental arguments (degrees).
+        let lp = 218.3164477 + 481267.88123421 * t - 0.0015786 * t2 + t3 / 538_841 - t4 / 65_194_000
+        let d = 297.8501921 + 445267.1114034 * t - 0.0018819 * t2 + t3 / 545_868 - t4 / 113_065_000
+        let m = 357.5291092 + 35999.0502909 * t - 0.0001536 * t2 + t3 / 24_490_000
+        let mp = 134.9633964 + 477198.8675055 * t + 0.0087414 * t2 + t3 / 69_699 - t4 / 14_712_000
+        let f = 93.2720950 + 483202.0175233 * t - 0.0036539 * t2 - t3 / 3_526_000 + t4 / 863_310_000
+        let a1 = 119.75 + 131.849 * t
+        let a2 = 53.09 + 479264.290 * t
+        let a3 = 313.45 + 481266.484 * t
+        let e = 1 - 0.002516 * t - 0.0000074 * t2
+
+        func argument(_ cd: Int8, _ cm: Int8, _ cmp: Int8, _ cf: Int8) -> Double {
+            radians(Double(cd) * d + Double(cm) * m + Double(cmp) * mp + Double(cf) * f)
         }
-        let xv = a * (cos(radians(ecc)) - e)
-        let yv = a * (1 - e * e).squareRoot() * sin(radians(ecc))
-        let v = degrees(atan2(yv, xv))
-        var r = (xv * xv + yv * yv).squareRoot()
+        func eccentricity(_ cm: Int8) -> Double { cm == 0 ? 1 : abs(cm) == 1 ? e : e * e }
 
-        let xh = r * (cos(radians(n)) * cos(radians(v + w)) - sin(radians(n)) * sin(radians(v + w)) * cos(radians(i)))
-        let yh = r * (sin(radians(n)) * cos(radians(v + w)) + cos(radians(n)) * sin(radians(v + w)) * cos(radians(i)))
-        let zh = r * sin(radians(v + w)) * sin(radians(i))
-        var lon = degrees(atan2(yh, xh))
-        var lat = degrees(atan2(zh, (xh * xh + yh * yh).squareRoot()))
+        var sl = 0.0, sr = 0.0, sb = 0.0
+        for (cd, cm, cmp, cf, l, r) in longitudeDistanceTerms {
+            let arg = argument(cd, cm, cmp, cf)
+            let ecc = eccentricity(cm)
+            sl += Double(l) * ecc * sin(arg)
+            sr += Double(r) * ecc * cos(arg)
+        }
+        for (cd, cm, cmp, cf, b) in latitudeTerms {
+            sb += Double(b) * eccentricity(cm) * sin(argument(cd, cm, cmp, cf))
+        }
+        sl += 3958 * sin(radians(a1)) + 1962 * sin(radians(lp - f)) + 318 * sin(radians(a2))
+        sb += -2235 * sin(radians(lp)) + 382 * sin(radians(a3)) + 175 * sin(radians(a1 - f))
+            + 175 * sin(radians(a1 + f)) + 127 * sin(radians(lp - mp)) - 115 * sin(radians(lp + mp))
 
-        // Main perturbations (mean elongation, argument of latitude).
-        let lm = rev(n + w + m)
-        let dd = rev(lm - ls)
-        let f = rev(lm - n)
-        func s(_ x: Double) -> Double { sin(radians(x)) }
-        func c(_ x: Double) -> Double { cos(radians(x)) }
-        lon += -1.274 * s(m - 2 * dd) + 0.658 * s(2 * dd) - 0.186 * s(ms) - 0.059 * s(2 * m - 2 * dd)
-            - 0.057 * s(m - 2 * dd + ms) + 0.053 * s(m + 2 * dd) + 0.046 * s(2 * dd - ms)
-            + 0.041 * s(m - ms) - 0.035 * s(dd) - 0.031 * s(m + ms) - 0.015 * s(2 * f - 2 * dd)
-            + 0.011 * s(m - 4 * dd)
-        lat += -0.173 * s(f - 2 * dd) - 0.055 * s(m - f - 2 * dd) - 0.046 * s(m + f - 2 * dd)
-            + 0.033 * s(f + 2 * dd) + 0.017 * s(2 * m + f)
-        r += -0.58 * c(m - 2 * dd) - 0.46 * c(2 * dd)
+        // Nutation (main terms) and the true obliquity of the ecliptic.
+        let omega = radians(125.04452 - 1934.136261 * t)
+        let ls = radians(280.4665 + 36000.7698 * t), lm = radians(218.3165 + 481267.8813 * t)
+        let dpsi = (-17.20 * sin(omega) - 1.32 * sin(2 * ls) - 0.23 * sin(2 * lm) + 0.21 * sin(2 * omega)) / 3600
+        let deps = (9.20 * cos(omega) + 0.57 * cos(2 * ls) + 0.10 * cos(2 * lm) - 0.09 * cos(2 * omega)) / 3600
+        let eps0 = 23 + 26.0 / 60 + 21.448 / 3600 - (46.8150 * t + 0.00059 * t2 - 0.001813 * t3) / 3600
+        let eps = radians(eps0 + deps)
 
-        let obliquity = 23.4393 - 3.563e-7 * d
-        let xe = c(lon) * c(lat), ye = s(lon) * c(lat), ze = s(lat)
-        let yq = ye * c(obliquity) - ze * s(obliquity)
-        let zq = ye * s(obliquity) + ze * c(obliquity)
-        return Position(
-            longitude: rev(lon),
-            latitude: lat,
-            rightAscension: rev(degrees(atan2(yq, xe))),
-            declination: degrees(atan2(zq, (xe * xe + yq * yq).squareRoot())),
-            distance: r
-        )
+        let lon = rev(lp + sl / 1e6 + dpsi)
+        let lat = sb / 1e6
+        let distanceKm = 385_000.56 + sr / 1000
+        let l = radians(lon), b = radians(lat)
+        let ra = rev(degrees(atan2(sin(l) * cos(eps) - tan(b) * sin(eps), cos(l))))
+        let dec = degrees(asin(sin(b) * cos(eps) + cos(b) * sin(eps) * sin(l)))
+        return Position(longitude: lon, latitude: lat, rightAscension: ra, declination: dec, distance: distanceKm / earthRadiusKm)
     }
+
+    static let earthRadiusKm = 6378.14
 
     /// The moon's local hour angle in `(-180, 180]`: 0 at its highest.
     public static func hourAngle(at instant: Date, longitude: Double) -> Double {

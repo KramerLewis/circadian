@@ -42,6 +42,8 @@ struct SpecialDayBanner: View {
         case .supermoon: Color(red: 0.50, green: 0.56, blue: 0.95)
         case .blueMoon: Color(red: 0.25, green: 0.48, blue: 1.0)
         case .newMoon: Color(red: 0.45, green: 0.45, blue: 0.85)
+        case .lunarEclipse: Color(red: 0.85, green: 0.25, blue: 0.18)
+        case .solarEclipse: Color(red: 0.95, green: 0.70, blue: 0.15)
         }
     }
 }

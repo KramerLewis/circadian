@@ -54,7 +54,10 @@ enum SkyRingRenderer {
     /// The sun at `angle`, sized to fit within the ring: a rendered disc (see
     /// `SunRenderer`) inside a two-layer corona tinted for its altitude, clipped to the
     /// ring. It dims and reddens as it sinks below the horizon.
-    static func drawSun(in context: inout GraphicsContext, ring: Ring, angle: Double, altitude: Double, monochrome: Bool) {
+    /// `eclipse`: the moon's offset and size relative to the sun's radius while it's
+    /// crossing the sun, for a solar eclipse.
+    static func drawSun(in context: inout GraphicsContext, ring: Ring, angle: Double, altitude: Double, monochrome: Bool,
+                        eclipse: (offset: Double, moonScale: Double)? = nil) {
         let strength = altitude >= -0.833 ? 1 : max(0.3, 1 + (altitude + 0.833) / 25)
         let rgb = SkyGradient.sunColor(altitude: altitude).glow
         let glowColor = monochrome ? Color.white : Color(red: rgb.red, green: rgb.green, blue: rgb.blue)
@@ -75,6 +78,19 @@ enum SkyRingRenderer {
             let rect = CGRect(x: center.x - radius, y: center.y - radius, width: radius * 2, height: radius * 2)
             if let image = SunRenderer.image(altitude: altitude, pixels: Int((radius * 2 * scale).rounded(.up)), monochrome: monochrome) {
                 layer.draw(Image(decorative: image, scale: scale), in: rect)
+            }
+            if let eclipse, abs(eclipse.offset) < 1 + eclipse.moonScale {
+                // The moon's silhouette crossing the sun.
+                let mr = radius * eclipse.moonScale
+                let mc = CGPoint(x: center.x + radius * eclipse.offset, y: center.y)
+                let moonDisc = Path(ellipseIn: CGRect(x: mc.x - mr, y: mc.y - mr, width: mr * 2, height: mr * 2))
+                if abs(eclipse.offset) < eclipse.moonScale - 1 {
+                    // Totality: the corona flares around the black disc.
+                    layer.fill(Path(ellipseIn: rect.insetBy(dx: -radius * 0.9, dy: -radius * 0.9)),
+                               with: .radialGradient(Gradient(colors: [.white.opacity(0.85), .white.opacity(0)]),
+                                                     center: center, startRadius: radius, endRadius: radius * 1.9))
+                }
+                layer.fill(moonDisc, with: .color(Color(red: 0.06, green: 0.06, blue: 0.09)))
             }
         }
     }
@@ -132,7 +148,7 @@ enum SkyRingRenderer {
                 context.fill(Path(ellipseIn: CGRect(x: point.x - size, y: point.y - size, width: size * 2, height: size * 2)),
                              with: .color(color.opacity(0.35 + 0.6 * Double(random()))))
             }
-        case .fullMoon, .supermoon, .blueMoon:
+        case .fullMoon, .supermoon, .blueMoon, .lunarEclipse, .solarEclipse:
             break
         }
     }
@@ -142,7 +158,7 @@ enum SkyRingRenderer {
     /// The moon's ring: its own timeline (angle = the moon's hour angle), colored by
     /// the moon's altitude and fullness, with ticks at moonrise and moonset.
     static func drawMoonRing(in context: inout GraphicsContext, ring: Ring, moon: MoonDialModel, dark: Bool,
-                             special: SpecialDayText.Style? = nil) {
+                             special: SpecialDayText.Style? = nil, eclipseShadow: Double = 0) {
         // Full moons light up the ring; a supermoon most of all.
         let boost: Double = switch special {
         case .supermoon: 1.3
@@ -179,17 +195,18 @@ enum SkyRingRenderer {
         }
         drawMoon(in: &context, center: ring.point((ring.inner + ring.outer) / 2, moon.nowAngle),
                  radius: radius, phase: moon.phase, southern: moon.latitude < 0, monochrome: false,
-                 glowScale: glow, blueGlow: special == .blueMoon)
+                 glowScale: glow, blueGlow: special == .blueMoon, shadow: eclipseShadow)
     }
 
     /// The moon as it looks now (NASA texture lit for the phase, see `MoonRenderer`),
     /// with a soft glow that grows as the moon fills.
     static func drawMoon(in context: inout GraphicsContext, center: CGPoint, radius: CGFloat,
                          phase: LunarCalculator.Phase, southern: Bool, monochrome: Bool,
-                         glowScale: Double = 1, blueGlow: Bool = false) {
+                         glowScale: Double = 1, blueGlow: Bool = false, shadow: Double = 0) {
         let k = min(phase.illumination * glowScale, 2)
         let glow = radius * (1.9 + 0.5 * (glowScale - 1))
         let glowColor = monochrome ? Color.white
+            : shadow > 0.3 ? Color(red: 0.85, green: 0.30, blue: 0.20)
             : blueGlow ? Color(red: 0.45, green: 0.62, blue: 1.0) : Color(red: 0.80, green: 0.84, blue: 0.97)
         context.fill(
             Path(ellipseIn: CGRect(x: center.x - glow, y: center.y - glow, width: glow * 2, height: glow * 2)),
@@ -200,7 +217,8 @@ enum SkyRingRenderer {
         )
         let scale = context.environment.displayScale
         let rect = CGRect(x: center.x - radius, y: center.y - radius, width: radius * 2, height: radius * 2)
-        if let image = MoonRenderer.image(phase: phase, southern: southern, pixels: Int((radius * 2 * scale).rounded(.up)), monochrome: monochrome) {
+        if let image = MoonRenderer.image(phase: phase, southern: southern, pixels: Int((radius * 2 * scale).rounded(.up)),
+                                          monochrome: monochrome, shadow: shadow) {
             context.draw(Image(decorative: image, scale: scale), in: rect)
         }
     }

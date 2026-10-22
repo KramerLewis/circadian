@@ -32,6 +32,15 @@ struct MoonListView: View {
                 .fontWeight(occurrence == next ? .semibold : .regular)
                 .padding(.vertical, 10)
             }
+            if let eclipse = VisibleEclipse.next(after: now, at: coordinate) {
+                Divider()
+                EventRow(time: eclipse.date.formatted(.dateTime.month(.abbreviated).day().year())) {
+                    let text = SpecialDayText(eclipse, at: coordinate)
+                    Label("Next eclipse: \(text.title.replacingOccurrences(of: " eclipse", with: "").lowercased())",
+                          systemImage: text.symbol)
+                }
+                .padding(.vertical, 10)
+            }
             if !events.contains(where: { $0.event == .moonrise }) || !events.contains(where: { $0.event == .moonset }) {
                 Divider()
                 Text(missingNote(events))

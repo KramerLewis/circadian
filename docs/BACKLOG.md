@@ -13,8 +13,8 @@ and a richer Watch face all build on), and the open-ended items last.
 | 3 | **App Store readiness**: docs, privacy, listing, screenshots, review notes (see details) | M | 1 for the build; can start now |
 | 4 | **Stage 5: Apple Watch complications + app** (design agreed, see details) | L | Crown scrubbing decision |
 | 5 | **Cat feeder on solar time** | M | Which feeder (later, see details) |
-| 6 | **Special event days**: built (solstices, equinoxes, full/super/blue/new moons, heads-up, widgets, Watch); blood moon comes with eclipses | M | - |
-| 7 | **Eclipses** | L | Bundled eclipse data |
+| 6 | **Special event days**: built (solstices, equinoxes, full/super/blue/new moons, eclipses, heads-up, widgets, Watch) | M | - |
+| 7 | **Eclipses**: built (computed on device, no bundled data; fixtures cross-checked with PyEphem) | L | - |
 | 8 | **More widgets** (Lock Screen rectangular/inline, readout variants, moon ring/phase in widgets) | S | - |
 | 9 | **Tides** | L | Data source decision (bundle vs. API) |
 | 10 | **Native macOS app + widget** | M | - (for now, iPhone widgets on the Mac desktop) |
@@ -28,7 +28,7 @@ and a richer Watch face all build on), and the open-ended items last.
 | P3 | **iOS sync client**: account sign-in, background sync of `AppSettings` and `SolarAlarm` | M | P2 |
 | P4 | **Web app** (`web/`, TypeScript): dial, readouts, events, alarm management; solar math ported and tested against `shared/fixtures` | L | P1; P2 for sync |
 | P5 | **Android app** (`android/`, Kotlin + Compose): dial, widgets, exact alarms (`AlarmManager.setAlarmClock`, which, unlike iOS, can be recomputed in the background); solar math ported and tested against `shared/fixtures` | L | P1; P2 for sync |
-| P6 | **Eclipse fixtures** for every platform (the moon fixture is done: `shared/fixtures/lunar-reference.json`) | S | 7 |
+| P6 | **Eclipse fixtures** for every platform: done (`shared/fixtures/eclipse-reference.json`) | S | 7 |
 
 ## Done
 - Moon: on-device lunar position, rise/set/transits and phase (fixture + PyEphem
@@ -63,9 +63,11 @@ high/low, height curve for the day).
 Show upcoming solar and lunar eclipses correctly for the location: type (partial,
 annular, total; penumbral/partial/total lunar), local contact times, and the visible
 magnitude, and render them on the dial.
-- On-device from Besselian elements (solar) and Meeus ch. 54/55 (lunar). Solar eclipse
-  local circumstances need the elements for each eclipse, which can be bundled as data
-  for, say, 2025-2050.
+- Built: computed on device from the Meeus ch. 47 moon and the NOAA sun (shadow
+  geometry for lunar eclipses, topocentric disc overlap for solar), so no bundled
+  data. Contact times agree with PyEphem to about a minute. Shown as special days
+  (blood moon tints the moon red; the moon's disc crosses the sun on the dial), with a
+  heads-up, the next eclipse in the moon list, widgets and the Watch.
 
 ### Special event days
 Distinct UI treatments on notable days: solstices, equinoxes, full/new moons,

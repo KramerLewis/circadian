@@ -24,19 +24,24 @@ enum MoonRenderer {
         let southern: Bool
         let pixels: Int
         let monochrome: Bool
+        /// Umbral coverage during a lunar eclipse, in twentieths.
+        let shadow: Int
     }
 
     private static let texture: Texture? = loadTexture()
     private static var cache: [Key: CGImage] = [:]
 
     /// A `pixels` × `pixels` image of the moon disc with transparent corners.
-    static func image(phase: LunarCalculator.Phase, southern: Bool, pixels: Int, monochrome: Bool = false) -> CGImage? {
+    /// `shadow` (0...1) is how far the moon is inside Earth's umbra during a lunar
+    /// eclipse: it darkens and reddens, as it does in the real sky.
+    static func image(phase: LunarCalculator.Phase, southern: Bool, pixels: Int, monochrome: Bool = false, shadow: Double = 0) -> CGImage? {
         let key = Key(
             illumination: Int((phase.illumination * 1000).rounded()),
             waxing: phase.isWaxing,
             southern: southern,
             pixels: max(pixels, 8),
-            monochrome: monochrome
+            monochrome: monochrome,
+            shadow: Int((min(max(shadow, 0), 1) * 20).rounded())
         )
         if let cached = cache[key] { return cached }
         guard let image = render(key) else { return nil }
@@ -76,9 +81,17 @@ enum MoonRenderer {
                     (red, green, blue) = (gray, gray, gray)
                 }
                 let earthshine = 0.07 * (1 - lit)
-                let rOut = min(red * 1.15 * lit + red * earthshine * 0.6, 1)
-                let gOut = min(green * 1.15 * lit + green * earthshine * 0.7, 1)
-                let bOut = min(blue * 1.15 * lit + blue * earthshine * 1.0, 1)
+                var rOut = min(red * 1.15 * lit + red * earthshine * 0.6, 1)
+                var gOut = min(green * 1.15 * lit + green * earthshine * 0.7, 1)
+                var bOut = min(blue * 1.15 * lit + blue * earthshine * 1.0, 1)
+                if key.shadow > 0 {
+                    // Sunlight bent through Earth's atmosphere: a dim copper-red moon.
+                    let s = Double(key.shadow) / 20
+                    let gray = 0.3 * rOut + 0.59 * gOut + 0.11 * bOut
+                    rOut = rOut * (1 - s) + gray * 0.85 * s
+                    gOut = gOut * (1 - s) + gray * 0.22 * s
+                    bOut = bOut * (1 - s) + gray * 0.10 * s
+                }
 
                 // Like the real moon in a lit sky, the unlit part is mostly see-through:
                 // just a hint of the disc (with its earthshine) over whatever is behind.

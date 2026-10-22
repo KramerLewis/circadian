@@ -18,6 +18,15 @@ public enum SolarCalculator {
         public let equationOfTime: Double
         /// Apparent ecliptic longitude in degrees (used for the moon's phase).
         public let apparentLongitude: Double
+        /// Apparent right ascension in degrees (used for eclipses).
+        public let rightAscension: Double
+        /// Distance from Earth in AU.
+        public let distance: Double
+
+        /// Apparent semidiameter in degrees (about 0.27).
+        public var semidiameter: Double { 959.63 / 3600 / distance }
+        /// Horizontal parallax in degrees (about 0.0024).
+        public var parallax: Double { 8.794 / 3600 / distance }
     }
 
     // MARK: Solar days
@@ -129,7 +138,17 @@ public enum SolarCalculator {
             - 0.5 * y * y * sin(4 * l0)
             - 1.25 * e * e * sin(2 * m)
 
-        return Position(declination: declination, equationOfTime: 4 * degrees(eot), apparentLongitude: mod(apparentLongitude, 360))
+        let lambda = radians(apparentLongitude)
+        let rightAscension = mod(degrees(atan2(cos(obliquity) * sin(lambda), cos(lambda))), 360)
+        let trueAnomaly = radians(meanAnomaly + equationOfCenter)
+        let distance = 1.000001018 * (1 - eccentricity * eccentricity) / (1 + eccentricity * cos(trueAnomaly))
+        return Position(
+            declination: declination,
+            equationOfTime: 4 * degrees(eot),
+            apparentLongitude: mod(apparentLongitude, 360),
+            rightAscension: rightAscension,
+            distance: distance
+        )
     }
 
     // MARK: Helpers

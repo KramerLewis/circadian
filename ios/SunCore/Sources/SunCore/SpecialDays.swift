@@ -36,7 +36,6 @@ public enum SkyCalendar {
 
     /// A full moon closer than this is a supermoon (about 90% of the way to perigee).
     public static let supermoonDistance: Double = 362_000
-    static let earthRadiusKm = 6378.14
 
     /// Every notable instant in `[start, end)`, chronological. Blue moons are judged in
     /// `timeZone` (the second full moon in one calendar month).
@@ -110,7 +109,7 @@ public enum SkyCalendar {
     }
 
     private static func moonDistance(at date: Date) -> Double {
-        LunarCalculator.position(at: date).distance * earthRadiusKm
+        LunarCalculator.position(at: date).distance * LunarCalculator.earthRadiusKm
     }
 
     /// Instants in `[start, end)` where an increasing angle passes `target`.

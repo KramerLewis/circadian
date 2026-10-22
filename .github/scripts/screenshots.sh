@@ -75,6 +75,12 @@ shoot 17-supermoon-dark              dark  America/Los_Angeles 2026-12-23T20:00:
 shoot 18-blue-moon-dark              dark  America/Los_Angeles 2026-05-31T22:00:00-07:00 "${seattle[@]}"
 shoot 19-new-moon-dark               dark  America/Los_Angeles 2026-12-08T23:00:00-08:00 "${seattle[@]}" -demoTimeDisplay twelveHour
 shoot 20-heads-up-light              light America/Los_Angeles 2026-12-19T12:00:00-08:00 "${seattle[@]}"
+# Eclipses
+dallas=(-demoLatitude 32.78 -demoLongitude -96.80 -demoName Dallas)
+shoot 21-blood-moon-dark             dark  America/Los_Angeles 2026-03-03T03:30:00-08:00 "${seattle[@]}"
+shoot 22-partial-solar-eclipse-light light America/Los_Angeles 2023-10-14T09:18:00-07:00 "${seattle[@]}"
+shoot 23-total-solar-eclipse-light   light America/Chicago     2024-04-08T13:41:00-05:00 "${dallas[@]}"
+shoot 24-eclipse-heads-up-dark       dark  America/Los_Angeles 2026-03-01T20:00:00-08:00 "${seattle[@]}"
 # Largest accessibility text size, to check nothing truncates.
 xcrun simctl ui "$udid" content_size accessibility-extra-extra-extra-large
 shoot 14-accessibility-text-light    light America/Los_Angeles 2026-11-01T09:00:00-08:00 "${seattle[@]}" -demoScroll moon

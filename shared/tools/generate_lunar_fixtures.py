@@ -2,8 +2,7 @@
 """Generate shared/fixtures/lunar-reference.json.
 
 Reference implementation of the moon calculations every platform ports: the moon's
-position from Paul Schlyter's low-precision method (orbital elements plus the main
-perturbation terms, about 1-2 arcminutes; https://stjarnhimlen.se/comp/ppcomp.html),
+position from Meeus, Astronomical Algorithms ch. 47 (meeus_moon.py, about 10"),
 rise/set at the standard altitude 0.7275 * parallax - 34', meridian transits, and the
 illuminated fraction from the sun-moon elongation (sun from the NOAA formulas in
 generate_solar_fixtures.py).
@@ -27,6 +26,7 @@ from pathlib import Path
 from zoneinfo import ZoneInfo
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+import meeus_moon  # noqa: E402
 from generate_solar_fixtures import julian_century  # noqa: E402
 
 FIXTURE = Path(__file__).resolve().parent.parent / "fixtures" / "lunar-reference.json"
@@ -54,49 +54,7 @@ def rev(x: float) -> float:
 
 def moon_position(t: float) -> dict:
     """Geocentric moon at Unix time t: ecliptic lon/lat, RA/Dec (deg), distance (Earth radii)."""
-    d = t / 86400 + 2440587.5 - 2451543.5  # days since 2000 Jan 0.0
-    n = rev(125.1228 - 0.0529538083 * d)
-    i = 5.1454
-    w = rev(318.0634 + 0.1643573223 * d)
-    a, e = 60.2666, 0.054900
-    m = rev(115.3654 + 13.0649929509 * d)
-    ms = rev(356.0470 + 0.9856002585 * d)
-    ls = rev(282.9404 + 4.70935e-5 * d + ms)
-
-    ecc = m + D(e * math.sin(R(m)) * (1 + e * math.cos(R(m))))
-    for _ in range(5):
-        ecc -= (ecc - D(e * math.sin(R(ecc))) - m) / (1 - e * math.cos(R(ecc)))
-    xv = a * (math.cos(R(ecc)) - e)
-    yv = a * math.sqrt(1 - e * e) * math.sin(R(ecc))
-    v, r = D(math.atan2(yv, xv)), math.hypot(xv, yv)
-
-    xh = r * (math.cos(R(n)) * math.cos(R(v + w)) - math.sin(R(n)) * math.sin(R(v + w)) * math.cos(R(i)))
-    yh = r * (math.sin(R(n)) * math.cos(R(v + w)) + math.cos(R(n)) * math.sin(R(v + w)) * math.cos(R(i)))
-    zh = r * math.sin(R(v + w)) * math.sin(R(i))
-    lon, lat = D(math.atan2(yh, xh)), D(math.atan2(zh, math.hypot(xh, yh)))
-
-    lm = rev(n + w + m)
-    dd = rev(lm - ls)
-    f = rev(lm - n)
-    s = lambda x: math.sin(R(x))  # noqa: E731
-    c = lambda x: math.cos(R(x))  # noqa: E731
-    lon += (-1.274 * s(m - 2 * dd) + 0.658 * s(2 * dd) - 0.186 * s(ms) - 0.059 * s(2 * m - 2 * dd)
-            - 0.057 * s(m - 2 * dd + ms) + 0.053 * s(m + 2 * dd) + 0.046 * s(2 * dd - ms)
-            + 0.041 * s(m - ms) - 0.035 * s(dd) - 0.031 * s(m + ms) - 0.015 * s(2 * f - 2 * dd)
-            + 0.011 * s(m - 4 * dd))
-    lat += (-0.173 * s(f - 2 * dd) - 0.055 * s(m - f - 2 * dd) - 0.046 * s(m + f - 2 * dd)
-            + 0.033 * s(f + 2 * dd) + 0.017 * s(2 * m + f))
-    r += -0.58 * c(m - 2 * dd) - 0.46 * c(2 * dd)
-
-    obliquity = 23.4393 - 3.563e-7 * d
-    xe, ye, ze = c(lon) * c(lat), s(lon) * c(lat), s(lat)
-    yq = ye * c(obliquity) - ze * s(obliquity)
-    zq = ye * s(obliquity) + ze * c(obliquity)
-    return {
-        "lon": rev(lon), "lat": lat,
-        "ra": rev(D(math.atan2(yq, xe))), "dec": D(math.atan2(zq, math.hypot(xe, yq))),
-        "distance": r,
-    }
+    return meeus_moon.position(t)
 
 
 def sun_longitude(t: float) -> float:
@@ -196,7 +154,7 @@ def build_fixture() -> dict:
     return {
         "description": "Reference moon events (within each local calendar day) and illumination for every platform's lunar calculator tests.",
         "generatedBy": "shared/tools/generate_lunar_fixtures.py",
-        "algorithm": "Schlyter low-precision moon; rise/set at 0.7275*parallax - 34'; transits at hour angle 0/180",
+        "algorithm": "Meeus ch. 47 moon (ELP-2000/82 main terms); rise/set at 0.7275*parallax - 34'; transits at hour angle 0/180",
         "toleranceSeconds": TOLERANCE_SECONDS,
         "illuminationTolerance": ILLUMINATION_TOLERANCE,
         "cases": cases,

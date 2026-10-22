@@ -26,3 +26,4 @@ jobs:
       # reference disagrees with an independent ephemeris by more than the tolerance.
       - run: python3 shared/tools/generate_solar_fixtures.py --check --ephem
       - run: python3 shared/tools/generate_lunar_fixtures.py --check --ephem
+      - run: python3 shared/tools/generate_eclipse_fixtures.py --check --ephem

@@ -12,6 +12,8 @@ struct SolarDialView: View {
     let readout: SolarReadout
     let timeDisplay: TimeDisplay
     var special: SpecialDayText?
+    /// Where the dial is drawn for; only needed to place the moon over the sun in a solar eclipse.
+    var coordinate: Coordinate?
     /// Called when the center is tapped, to switch to the next display.
     var onCycleDisplay: () -> Void = {}
     @Environment(\.colorScheme) private var colorScheme
@@ -27,7 +29,8 @@ struct SolarDialView: View {
                 SkyRingRenderer.drawSpecialDay(.solstice, in: &context, ring: geometry.ring, innerRadius: geometry.moonInner, dark: dark)
             }
             drawRing(in: &context, geometry)
-            SkyRingRenderer.drawMoonRing(in: &context, ring: geometry.moonRing, moon: moon, dark: dark, special: special?.style)
+            SkyRingRenderer.drawMoonRing(in: &context, ring: geometry.moonRing, moon: moon, dark: dark, special: special?.style,
+                                         eclipseShadow: special?.style == .lunarEclipse ? EclipseCalculator.umbralCoverage(at: now) : 0)
             if let style = special?.style, style == .equinox || style == .newMoon {
                 SkyRingRenderer.drawSpecialDay(style, in: &context, ring: geometry.ring, innerRadius: geometry.moonInner, dark: dark)
             }
@@ -71,6 +74,13 @@ struct SolarDialView: View {
         let moonUp = moon.altitudeNow > moon.riseSetAltitude
         let lit = Int((moon.phase.illumination * 100).rounded())
         return "\(sunText). Moon: \(moon.phase.name.lowercased()), \(lit)% lit, \(moonUp ? "up" : "below the horizon")."
+    }
+
+    /// The moon's position over the sun right now, during a solar eclipse.
+    private var solarEclipseOverlay: (offset: Double, moonScale: Double)? {
+        guard let coordinate else { return nil }
+        let c = EclipseCalculator.solarCoverage(at: now, coordinate: coordinate)
+        return (c.offset, c.moonScale)
     }
 
     private var centerText: (primary: String, secondary: String) {
@@ -158,6 +168,7 @@ struct SolarDialView: View {
         hand.addLine(to: g.point(g.outer + 4, model.nowAngle))
         context.stroke(hand, with: .style(.primary.opacity(0.7)), style: StrokeStyle(lineWidth: 1.5, lineCap: .round))
         SkyRingRenderer.drawSun(in: &context, ring: g.ring, angle: model.nowAngle,
-                                altitude: model.altitude(atAngle: model.nowAngle), monochrome: false)
+                                altitude: model.altitude(atAngle: model.nowAngle), monochrome: false,
+                                eclipse: special?.style == .solarEclipse ? solarEclipseOverlay : nil)
     }
 }

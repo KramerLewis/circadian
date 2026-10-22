@@ -1,0 +1,170 @@
+{
+  "description": "Reference eclipses for every platform's eclipse calculator tests.",
+  "generatedBy": "shared/tools/generate_eclipse_fixtures.py",
+  "toleranceSeconds": 300,
+  "magnitudeTolerance": 0.06,
+  "lunar": [
+    {
+      "date": "2025-03-14",
+      "kind": "total",
+      "greatest": "2025-03-14T06:59:20Z",
+      "umbralMagnitude": 1.183,
+      "penumbralMagnitude": 2.286,
+      "contacts": {
+        "Pend": "2025-03-14T10:02:27Z",
+        "Pstart": "2025-03-14T03:56:17Z",
+        "Tend": "2025-03-14T07:32:32Z",
+        "Tstart": "2025-03-14T06:26:08Z",
+        "Uend": "2025-03-14T08:48:47Z",
+        "Ustart": "2025-03-14T05:09:51Z"
+      }
+    },
+    {
+      "date": "2025-09-07",
+      "kind": "total",
+      "greatest": "2025-09-07T18:11:27Z",
+      "umbralMagnitude": 1.367,
+      "penumbralMagnitude": 2.368,
+      "contacts": {
+        "Pend": "2025-09-07T20:56:15Z",
+        "Pstart": "2025-09-07T15:26:34Z",
+        "Tend": "2025-09-07T18:52:52Z",
+        "Tstart": "2025-09-07T17:30:03Z",
+        "Uend": "2025-09-07T19:56:30Z",
+        "Ustart": "2025-09-07T16:26:26Z"
+      }
+    },
+    {
+      "date": "2026-03-03",
+      "kind": "total",
+      "greatest": "2026-03-03T11:34:25Z",
+      "umbralMagnitude": 1.155,
+      "penumbralMagnitude": 2.208,
+      "contacts": {
+        "Pend": "2026-03-03T14:25:23Z",
+        "Pstart": "2026-03-03T08:43:32Z",
+        "Tend": "2026-03-03T12:03:59Z",
+        "Tstart": "2026-03-03T11:04:48Z",
+        "Uend": "2026-03-03T13:18:17Z",
+        "Ustart": "2026-03-03T09:50:29Z"
+      }
+    },
+    {
+      "date": "2026-08-28",
+      "kind": "partial",
+      "greatest": "2026-08-28T04:12:56Z",
+      "umbralMagnitude": 0.935,
+      "penumbralMagnitude": 1.99,
+      "contacts": {
+        "Pend": "2026-08-28T07:03:28Z",
+        "Pstart": "2026-08-28T01:22:19Z",
+        "Uend": "2026-08-28T05:52:23Z",
+        "Ustart": "2026-08-28T02:33:32Z"
+      }
+    },
+    {
+      "date": "2027-02-20",
+      "kind": "penumbral",
+      "greatest": "2027-02-20T23:12:56Z",
+      "umbralMagnitude": -0.053,
+      "penumbralMagnitude": 0.95,
+      "contacts": {
+        "Pend": "2027-02-21T01:15:16Z",
+        "Pstart": "2027-02-20T21:10:32Z"
+      }
+    },
+    {
+      "date": "2028-01-12",
+      "kind": "partial",
+      "greatest": "2028-01-12T04:13:17Z",
+      "umbralMagnitude": 0.072,
+      "penumbralMagnitude": 1.072,
+      "contacts": {
+        "Pend": "2028-01-12T06:20:32Z",
+        "Pstart": "2028-01-12T02:06:05Z",
+        "Uend": "2028-01-12T04:42:36Z",
+        "Ustart": "2028-01-12T03:44:05Z"
+      }
+    }
+  ],
+  "solar": [
+    {
+      "name": "Seattle, 2017 total eclipse (partial here)",
+      "latitude": 47.61,
+      "longitude": -122.33,
+      "date": "2017-08-21",
+      "kind": "partial",
+      "maximum": "2017-08-21T17:20:58Z",
+      "start": "2017-08-21T16:08:52Z",
+      "end": "2017-08-21T18:39:01Z",
+      "magnitude": 0.922,
+      "obscuration": 0.908
+    },
+    {
+      "name": "Salem OR, 2017 total eclipse",
+      "latitude": 44.94,
+      "longitude": -123.03,
+      "date": "2017-08-21",
+      "kind": "total",
+      "maximum": "2017-08-21T17:18:22Z",
+      "start": "2017-08-21T16:05:29Z",
+      "end": "2017-08-21T18:37:54Z",
+      "magnitude": 1.001,
+      "obscuration": 1.0,
+      "centralStart": "2017-08-21T17:17:54Z",
+      "centralEnd": "2017-08-21T17:18:49Z"
+    },
+    {
+      "name": "Seattle, 2023 annular eclipse (partial here)",
+      "latitude": 47.61,
+      "longitude": -122.33,
+      "date": "2023-10-14",
+      "kind": "partial",
+      "maximum": "2023-10-14T16:20:04Z",
+      "start": "2023-10-14T15:07:30Z",
+      "end": "2023-10-14T17:39:22Z",
+      "magnitude": 0.849,
+      "obscuration": 0.79
+    },
+    {
+      "name": "Dallas, 2024 total eclipse",
+      "latitude": 32.78,
+      "longitude": -96.8,
+      "date": "2024-04-08",
+      "kind": "total",
+      "maximum": "2024-04-08T18:43:37Z",
+      "start": "2024-04-08T17:24:13Z",
+      "end": "2024-04-08T20:03:41Z",
+      "magnitude": 1.012,
+      "obscuration": 1.0,
+      "centralStart": "2024-04-08T18:41:48Z",
+      "centralEnd": "2024-04-08T18:45:26Z"
+    },
+    {
+      "name": "Seattle, 2024 eclipse (partial here)",
+      "latitude": 47.61,
+      "longitude": -122.33,
+      "date": "2024-04-08",
+      "kind": "partial",
+      "maximum": "2024-04-08T18:30:16Z",
+      "start": "2024-04-08T17:40:17Z",
+      "end": "2024-04-08T19:21:50Z",
+      "magnitude": 0.305,
+      "obscuration": 0.195
+    },
+    {
+      "name": "Burgos, 2026 total eclipse",
+      "latitude": 42.34,
+      "longitude": -3.7,
+      "date": "2026-08-12",
+      "kind": "total",
+      "maximum": "2026-08-12T18:28:56Z",
+      "start": "2026-08-12T17:32:59Z",
+      "end": "2026-08-12T19:21:24Z",
+      "magnitude": 1.006,
+      "obscuration": 1.0,
+      "centralStart": "2026-08-12T18:28:15Z",
+      "centralEnd": "2026-08-12T18:29:37Z"
+    }
+  ]
+}
