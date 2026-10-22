@@ -18,6 +18,7 @@ and a richer Watch face all build on), and the open-ended items last.
 | 8 | **Eclipses** | L | 4; bundled eclipse data |
 | 9 | **More widgets** (Lock Screen rectangular/inline, readout variants) | S | - |
 | 10 | **Tides** | L | Data source decision (bundle vs. API) |
+| 11 | **Native macOS app + widget** | M | - (for now, iPhone widgets on the Mac desktop) |
 
 ### Rest of the system (after the iOS app ships)
 
@@ -114,3 +115,18 @@ Everything needed beyond the code to publish:
   `SECURITY.md`. (`LICENSE` is done: MIT.)
 - **Release process:** versioning (marketing version + CI build number), TestFlight
   external testing (needs a beta review), phased release.
+
+### Native macOS app + widget
+For now, the iPhone's Sun Ring widget can be shown on the Mac desktop (System Settings
+› Desktop & Dock › Widgets › Use iPhone widgets); it needs the iPhone signed in to the
+same Apple ID and nearby or on the same network. A native version removes that:
+- New macOS app target: a small window with the dial, readouts and today's events.
+  Alarms stay iPhone-only (no AlarmKit on macOS).
+- macOS widget extension reusing `Shared/` (ring renderer, widget content) and SunCore,
+  which already builds for macOS.
+- Make `Shared/` cross-platform: `DialPalette` and the system colors use UIKit
+  (`UIColor`), so they need `NSColor` equivalents.
+- Its own location permission (CoreLocation works on macOS) plus the manual fallback;
+  later, sync from the backend.
+- Distribution via the same developer account: TestFlight for Mac / Mac App Store, or
+  a notarized download. CI can build it on the macOS runner.
