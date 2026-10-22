@@ -1,33 +1,34 @@
 # Backlog
 
-Not scheduled. Newest at the bottom.
+## Priority order
 
-## Planned stages
-- **Stage 5: Apple Watch face / complication.** Needs a design discussion first.
-- More widgets beyond the Sun Ring (e.g. a medium one with next event, readouts). The Sun Ring widget (small, large, Lock Screen circular) is built.
-- TestFlight pipeline via GitHub Actions (waiting on Apple Developer enrollment).
+Proposed; reorder freely. Rationale: get on a real device first (alarms can't be
+verified anywhere else), then cheap wins, then the moon (which eclipses, special days
+and a richer Watch face all build on), and the open-ended items last.
 
-## iOS
+| # | Item | Size | Depends on / blocked by |
+|---|---|---|---|
+| 1 | **TestFlight pipeline** (CI builds, signs, uploads) | S | Apple Developer enrollment, API key secrets |
+| 2 | **On-device shakedown**: alarms ring/snooze/stop, permission prompts, background refresh, widgets, location | S-M | 1 |
+| 3 | **Time display setting** (relative / 12h / 24h) | S | Your answer on scope (below) |
+| 4 | **Moon ring + phase** | L | - |
+| 5 | **Stage 5: Apple Watch face / complications**: design discussion now, build after 4 | L | Design decisions |
+| 6 | **Special event days** (solstices, equinoxes, full/new moon) | M | 4 for moon days; design pass |
+| 7 | **Eclipses** | L | 4; bundled eclipse data |
+| 8 | **More widgets** (Lock Screen rectangular/inline, readout variants) | S | - |
+| 9 | **Tides** | L | Data source decision (bundle vs. API) |
 
-### Smooth gradients instead of hard band edges
-The night/twilight/day bands should blend into each other continuously rather than
-switching color at each threshold. This merges naturally with the daylight gradient
-below: color is a continuous function of solar altitude, with the event thresholds
-(-18, -12, -6, -0.833 deg) as stops.
+Later, outside iOS: Android app, web app, AWS sync backend (models are already
+sync-ready: stable IDs, `updatedAt`, soft deletes).
 
-### Glowing sun
-Drop the hard black outline on the sun marker; draw it as a soft glow (radial
-gradient + blur) whose intensity can follow altitude.
+## Done
+- Sun Ring widget: small, medium (with next sunrise/sunset and next event), large,
+  Lock Screen circular.
+- Smooth sky gradient driven by solar altitude (replaces hard bands); brightest at
+  solar noon, warm near the horizon.
+- Glowing sun without an outline, sized to stay inside the ring.
 
-### Daylight gradient on the dial
-Paint the day band as a gradient that tracks how high the sun is, instead of one flat
-yellow: brightest at solar noon (the sun's highest point), shading through warm
-sunrise/sunset colors near the horizon. Twilight bands can blend into it the same way.
-Light and dark mode variants.
-- Drive the color from the sun's altitude at each angle on the ring, not from clock
-  time, so it's correct in winter, summer and at high latitudes (in midnight sun, the
-  lowest point of the ring stays warm but never goes dark).
-- SunCore needs `altitude(at:coordinate:)`; the angular gradient is drawn in the dial.
+## Details
 
 ### Time display setting
 A setting for the dial's main readout, with three options:
