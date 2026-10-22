@@ -9,6 +9,8 @@ struct ComplicationView: View {
     let place: SharedStore.StoredPlace?
     let date: Date
     var monochrome = false
+    /// Countdowns drawn live by the system. Off for previews frozen at a fake date.
+    var liveRelativeTimes = true
 
     var body: some View {
         if let place {
@@ -76,7 +78,7 @@ struct ComplicationView: View {
                     Text("\(next.event.displayName) \(next.date.formatted(date: .omitted, time: .shortened))")
                         .font(.headline)
                         .widgetAccentable()
-                    Text(next.date, style: .relative)
+                    countdown(next)
                         .monospacedDigit()
                 } else {
                     Text(r.polarCondition == .midnightSun ? "Midnight sun" : "Polar night")
@@ -106,7 +108,7 @@ struct ComplicationView: View {
                 Label(special.short, systemImage: special.symbol)
             } else if let next = r.nextHorizon {
                 Label {
-                    Text("\(Text(next.date, style: .relative)) to \(next.event.displayName.lowercased())")
+                    Text("\(countdown(next)) to \(next.event.displayName.lowercased())")
                 } icon: {
                     Image(systemName: next.event.symbolName)
                 }
@@ -114,6 +116,10 @@ struct ComplicationView: View {
                 Label(r.polarCondition == .midnightSun ? "Midnight sun" : "Polar night", systemImage: "sun.max")
             }
         }
+    }
+
+    private func countdown(_ event: SolarReadout.Relative) -> Text {
+        liveRelativeTimes ? Text(event.date, style: .relative) : Text(SolarFormat.duration(event.interval))
     }
 
     /// Fraction of today's daylight that has passed (0 before sunrise, 1 after sunset).

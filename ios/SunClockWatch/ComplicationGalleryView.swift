@@ -15,23 +15,23 @@ struct ComplicationGalleryView: View {
             VStack(spacing: 10) {
                 HStack(spacing: 10) {
                     tile("Circular") {
-                        ComplicationView(family: .accessoryCircular, place: place, date: date).frame(width: 52, height: 52)
+                        ComplicationView(family: .accessoryCircular, place: place, date: date, liveRelativeTimes: false).frame(width: 52, height: 52)
                     }
                     tile("Tinted") {
-                        ComplicationView(family: .accessoryCircular, place: place, date: date, monochrome: true)
+                        ComplicationView(family: .accessoryCircular, place: place, date: date, monochrome: true, liveRelativeTimes: false)
                             .frame(width: 52, height: 52)
                             .colorMultiply(.orange)
                     }
                     tile("Corner") {
-                        ComplicationView(family: .accessoryCorner, place: place, date: date).frame(width: 40, height: 40)
+                        ComplicationView(family: .accessoryCorner, place: place, date: date, liveRelativeTimes: false).frame(width: 40, height: 40)
                     }
                 }
                 tile("Rectangular · Smart Stack") {
-                    ComplicationView(family: .accessoryRectangular, place: place, date: date)
+                    ComplicationView(family: .accessoryRectangular, place: place, date: date, liveRelativeTimes: false)
                         .frame(width: 170, height: 52)
                 }
                 tile("Inline") {
-                    ComplicationView(family: .accessoryInline, place: place, date: date)
+                    ComplicationView(family: .accessoryInline, place: place, date: date, liveRelativeTimes: false)
                         .font(.caption)
                         .frame(width: 170)
                 }

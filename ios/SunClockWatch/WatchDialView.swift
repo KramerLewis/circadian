@@ -85,7 +85,7 @@ struct WatchDialView: View {
 
             VStack(spacing: 0) {
                 Text(center.primary)
-                    .font(.system(.title2, design: .rounded, weight: .semibold))
+                    .font(.system(.title3, design: .rounded, weight: .semibold))
                 Text(center.secondary)
                     .font(.system(.caption, design: .rounded))
                     .foregroundStyle(scrubbing ? .orange : .secondary)
@@ -93,7 +93,7 @@ struct WatchDialView: View {
             .monospacedDigit()
             .lineLimit(1)
             .minimumScaleFactor(0.5)
-            .padding(.horizontal, 44)
+            .frame(maxWidth: 104)
             .contentTransition(.numericText())
         }
         .contentShape(.rect)
