@@ -11,7 +11,7 @@ and a richer Watch face all build on), and the open-ended items last.
 | 1 | **TestFlight pipeline** (CI builds, signs, uploads; the app icon it needs is done) | S | Apple Developer enrollment, API key secrets |
 | 2 | **On-device shakedown**: alarms ring/snooze/stop, permission prompts, background refresh, widgets, location | S-M | 1 |
 | 3 | **App Store readiness**: docs, privacy, listing, screenshots, review notes (see details) | M | 1 for the build; can start now |
-| 4 | **Stage 5: Apple Watch face / complications** | L | Design discussion |
+| 4 | **Stage 5: Apple Watch complications + app** (design agreed, see details) | L | Crown scrubbing decision |
 | 5 | **Cat feeder on solar time** | M | Which feeder (later, see details) |
 | 6 | **Special event days** (solstices, equinoxes, full/new moon) | M | Design pass |
 | 7 | **Eclipses** | L | Bundled eclipse data |
@@ -126,3 +126,23 @@ same Apple ID and nearby or on the same network. A native version removes that:
   later, sync from the backend.
 - Distribution via the same developer account: TestFlight for Mac / Mac App Store, or
   a notarized download. CI can build it on the macOS runner.
+
+### Stage 5: Apple Watch (design agreed)
+Third-party apps can't make watch faces, so SunClock ships complications for Apple's
+faces, a Smart Stack card and a Watch app. Mockups reviewed Oct 22.
+- **Complications** (WidgetKit accessory families, reusing `Shared/` renderers):
+  - Circular: sun ring with the glowing sun and the real moon in the center;
+    full color where the face allows, tinted otherwise.
+  - Corner: curved daylight-progress gauge with "SUNSET 4:51"; at night, time to sunrise.
+  - Rectangular (also the Smart Stack card): ring + next sunrise/sunset + live countdown
+    + moon phase.
+  - Inline: "1h 51m until sunset" (or solar time; to confirm).
+- **Watch app:** full-screen dial (sun + moon rings) with the same center readout and
+  time-display setting as the phone (tap to cycle); swipe for events and the moon;
+  dimmed always-on mode updating once a minute.
+  - Open: Digital Crown scrubbing through time (snaps back to now) vs. no scrubbing.
+- **Data:** the phone's current place and settings via WatchConnectivity; the Watch's
+  own location as a fallback. SunCore runs on watchOS (already declared in Package.swift).
+- **Alarms:** stay on the iPhone (AlarmKit); verify on a real Watch that they mirror.
+- **Testing:** no Apple Watch on hand, so CI watchOS simulator screenshots until a
+  device test is possible.
