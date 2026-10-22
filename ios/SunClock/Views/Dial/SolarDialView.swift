@@ -57,25 +57,7 @@ struct SolarDialView: View {
     }
 
     private var centerText: (primary: String, secondary: String) {
-        let solar = "\(SolarFormat.solarClock(minutes: solarMinutes)) solar"
-        switch timeDisplay {
-        case .relative:
-            guard let anchor = readout.nearestAnchor else { return (solar, "") }
-            let direction = readout.nearestAnchorIsPast ? "after" : "until"
-            return (SolarFormat.duration(anchor.interval), "\(direction) \(anchor.event.displayName.lowercased())")
-        case .twelveHour:
-            return (Self.clock(now, format: "h:mm a"), solar)
-        case .twentyFourHour:
-            return (Self.clock(now, format: "HH:mm"), solar)
-        }
-    }
-
-    /// An explicit 12- or 24-hour clock, regardless of the device's setting.
-    private static func clock(_ date: Date, format: String) -> String {
-        let formatter = DateFormatter()
-        formatter.locale = .current
-        formatter.dateFormat = format
-        return formatter.string(from: date)
+        DialCenterText.make(now: now, solarMinutes: solarMinutes, readout: readout, display: timeDisplay)
     }
 
     // MARK: Drawing

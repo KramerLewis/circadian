@@ -1,3 +1,4 @@
+#if canImport(AlarmKit)
 import AlarmKit
 import Foundation
 
@@ -9,3 +10,4 @@ nonisolated struct SolarAlarmMetadata: AlarmMetadata {
     /// e.g. "30 min before sunrise".
     var detail: String
 }
+#endif

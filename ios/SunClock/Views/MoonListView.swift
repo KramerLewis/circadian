@@ -59,14 +59,3 @@ struct MoonListView: View {
         }
     }
 }
-
-extension LunarEvent {
-    var symbolName: String {
-        switch self {
-        case .moonrise: "moonrise.fill"
-        case .moonTransit: "moon.fill"
-        case .moonset: "moonset.fill"
-        case .moonLowerTransit: "moon"
-        }
-    }
-}

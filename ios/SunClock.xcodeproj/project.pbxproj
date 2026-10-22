@@ -9,6 +9,10 @@
 /* Begin PBXBuildFile section */
 		5C0000000000000000000301 /* SunCore in Frameworks */ = {isa = PBXBuildFile; productRef = 5C0000000000000000000501 /* SunCore */; };
 		5C0000000000000000000303 /* SunCore in Frameworks */ = {isa = PBXBuildFile; productRef = 5C0000000000000000000502 /* SunCore */; };
+		5C0000000000000000000304 /* SunCore in Frameworks */ = {isa = PBXBuildFile; productRef = 5C0000000000000000000503 /* SunCore */; };
+		5C0000000000000000000305 /* SunClockWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 5C0000000000000000000103 /* SunClockWatch.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		5C0000000000000000000306 /* SunCore in Frameworks */ = {isa = PBXBuildFile; productRef = 5C0000000000000000000504 /* SunCore */; };
+		5C0000000000000000000307 /* SunClockWatchWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 5C0000000000000000000104 /* SunClockWatchWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		5C0000000000000000000302 /* SunClockWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 5C0000000000000000000102 /* SunClockWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
@@ -19,6 +23,20 @@
 			proxyType = 1;
 			remoteGlobalIDString = 5C0000000000000000000702;
 			remoteInfo = SunClockWidgets;
+		};
+		5C0000000000000000000B03 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 5C0000000000000000000801 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 5C0000000000000000000703;
+			remoteInfo = SunClockWatch;
+		};
+		5C0000000000000000000B05 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 5C0000000000000000000801 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 5C0000000000000000000704;
+			remoteInfo = SunClockWatchWidgets;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -34,11 +52,35 @@
 			name = "Embed Foundation Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		5C0000000000000000000605 /* Embed Watch Content */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
+			dstSubfolderSpec = 16;
+			files = (
+				5C0000000000000000000305 /* SunClockWatch.app in Embed Watch Content */,
+			);
+			name = "Embed Watch Content";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		5C0000000000000000000624 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				5C0000000000000000000307 /* SunClockWatchWidgets.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		5C0000000000000000000101 /* SunClock.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SunClock.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		5C0000000000000000000102 /* SunClockWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = SunClockWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		5C0000000000000000000103 /* SunClockWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SunClockWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		5C0000000000000000000104 /* SunClockWatchWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = SunClockWatchWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -55,6 +97,21 @@
 		5C0000000000000000000203 /* Shared */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = Shared;
+			sourceTree = "<group>";
+		};
+		5C0000000000000000000204 /* SunClockWatch */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = SunClockWatch;
+			sourceTree = "<group>";
+		};
+		5C0000000000000000000205 /* SunClockWatchWidgets */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = SunClockWatchWidgets;
+			sourceTree = "<group>";
+		};
+		5C0000000000000000000206 /* WatchShared */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = WatchShared;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -76,6 +133,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		5C0000000000000000000622 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				5C0000000000000000000304 /* SunCore in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		5C0000000000000000000632 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				5C0000000000000000000306 /* SunCore in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -85,6 +158,9 @@
 				5C0000000000000000000201 /* SunClock */,
 				5C0000000000000000000202 /* SunClockWidgets */,
 				5C0000000000000000000203 /* Shared */,
+				5C0000000000000000000204 /* SunClockWatch */,
+				5C0000000000000000000205 /* SunClockWatchWidgets */,
+				5C0000000000000000000206 /* WatchShared */,
 				5C0000000000000000000002 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -94,6 +170,8 @@
 			children = (
 				5C0000000000000000000101 /* SunClock.app */,
 				5C0000000000000000000102 /* SunClockWidgets.appex */,
+				5C0000000000000000000103 /* SunClockWatch.app */,
+				5C0000000000000000000104 /* SunClockWatchWidgets.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -109,11 +187,13 @@
 				5C0000000000000000000602 /* Frameworks */,
 				5C0000000000000000000603 /* Resources */,
 				5C0000000000000000000604 /* Embed Foundation Extensions */,
+				5C0000000000000000000605 /* Embed Watch Content */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 				5C0000000000000000000B02 /* PBXTargetDependency */,
+				5C0000000000000000000B04 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				5C0000000000000000000201 /* SunClock */,
@@ -151,6 +231,58 @@
 			productReference = 5C0000000000000000000102 /* SunClockWidgets.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
+		5C0000000000000000000703 /* SunClockWatch */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 5C0000000000000000000904 /* Build configuration list for PBXNativeTarget "SunClockWatch" */;
+			buildPhases = (
+				5C0000000000000000000621 /* Sources */,
+				5C0000000000000000000622 /* Frameworks */,
+				5C0000000000000000000623 /* Resources */,
+				5C0000000000000000000624 /* Embed Foundation Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				5C0000000000000000000B06 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				5C0000000000000000000204 /* SunClockWatch */,
+				5C0000000000000000000203 /* Shared */,
+				5C0000000000000000000206 /* WatchShared */,
+			);
+			name = SunClockWatch;
+			packageProductDependencies = (
+				5C0000000000000000000503 /* SunCore */,
+			);
+			productName = SunClockWatch;
+			productReference = 5C0000000000000000000103 /* SunClockWatch.app */;
+			productType = "com.apple.product-type.application";
+		};
+		5C0000000000000000000704 /* SunClockWatchWidgets */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 5C0000000000000000000905 /* Build configuration list for PBXNativeTarget "SunClockWatchWidgets" */;
+			buildPhases = (
+				5C0000000000000000000631 /* Sources */,
+				5C0000000000000000000632 /* Frameworks */,
+				5C0000000000000000000633 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				5C0000000000000000000205 /* SunClockWatchWidgets */,
+				5C0000000000000000000203 /* Shared */,
+				5C0000000000000000000206 /* WatchShared */,
+			);
+			name = SunClockWatchWidgets;
+			packageProductDependencies = (
+				5C0000000000000000000504 /* SunCore */,
+			);
+			productName = SunClockWatchWidgets;
+			productReference = 5C0000000000000000000104 /* SunClockWatchWidgets.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -165,6 +297,12 @@
 						CreatedOnToolsVersion = 26.0;
 					};
 					5C0000000000000000000702 = {
+						CreatedOnToolsVersion = 26.0;
+					};
+					5C0000000000000000000703 = {
+						CreatedOnToolsVersion = 26.0;
+					};
+					5C0000000000000000000704 = {
 						CreatedOnToolsVersion = 26.0;
 					};
 				};
@@ -188,6 +326,8 @@
 			targets = (
 				5C0000000000000000000701 /* SunClock */,
 				5C0000000000000000000702 /* SunClockWidgets */,
+				5C0000000000000000000703 /* SunClockWatch */,
+				5C0000000000000000000704 /* SunClockWatchWidgets */,
 			);
 		};
 /* End PBXProject section */
@@ -201,6 +341,20 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		5C0000000000000000000613 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		5C0000000000000000000623 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		5C0000000000000000000633 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -224,6 +378,20 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		5C0000000000000000000621 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		5C0000000000000000000631 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -231,6 +399,16 @@
 			isa = PBXTargetDependency;
 			target = 5C0000000000000000000702 /* SunClockWidgets */;
 			targetProxy = 5C0000000000000000000B01 /* PBXContainerItemProxy */;
+		};
+		5C0000000000000000000B04 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 5C0000000000000000000703 /* SunClockWatch */;
+			targetProxy = 5C0000000000000000000B03 /* PBXContainerItemProxy */;
+		};
+		5C0000000000000000000B06 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 5C0000000000000000000704 /* SunClockWatchWidgets */;
+			targetProxy = 5C0000000000000000000B05 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -418,6 +596,130 @@
 			};
 			name = Release;
 		};
+		5C0000000000000000000A07 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Config/SunClockWatch.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = SunClock;
+				MARKETING_VERSION = 0.1;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 26.0;
+				ENABLE_PREVIEWS = YES;
+				INFOPLIST_FILE = "Config/SunClockWatch-Info.plist";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "SunClock uses your approximate location when your iPhone hasn't shared one, to calculate the sun and moon where you are.";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.kray.circadian;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.kray.circadian.watchkitapp;
+			};
+			name = Debug;
+		};
+		5C0000000000000000000A08 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Config/SunClockWatch.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = SunClock;
+				MARKETING_VERSION = 0.1;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 26.0;
+				ENABLE_PREVIEWS = YES;
+				INFOPLIST_FILE = "Config/SunClockWatch-Info.plist";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "SunClock uses your approximate location when your iPhone hasn't shared one, to calculate the sun and moon where you are.";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.kray.circadian;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.kray.circadian.watchkitapp;
+			};
+			name = Release;
+		};
+		5C0000000000000000000A09 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = Config/SunClockWatchWidgets.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = SunClock;
+				MARKETING_VERSION = 0.1;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 26.0;
+				INFOPLIST_FILE = "Config/SunClockWatchWidgets-Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.kray.circadian.watchkitapp.widgets;
+			};
+			name = Debug;
+		};
+		5C0000000000000000000A0A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = Config/SunClockWatchWidgets.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = SunClock;
+				MARKETING_VERSION = 0.1;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 26.0;
+				INFOPLIST_FILE = "Config/SunClockWatchWidgets-Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.kray.circadian.watchkitapp.widgets;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -448,6 +750,24 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
+		5C0000000000000000000904 /* Build configuration list for PBXNativeTarget "SunClockWatch" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				5C0000000000000000000A07 /* Debug */,
+				5C0000000000000000000A08 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		5C0000000000000000000905 /* Build configuration list for PBXNativeTarget "SunClockWatchWidgets" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				5C0000000000000000000A09 /* Debug */,
+				5C0000000000000000000A0A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
@@ -464,6 +784,16 @@
 			productName = SunCore;
 		};
 		5C0000000000000000000502 /* SunCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 5C0000000000000000000401 /* XCLocalSwiftPackageReference "SunCore" */;
+			productName = SunCore;
+		};
+		5C0000000000000000000503 /* SunCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 5C0000000000000000000401 /* XCLocalSwiftPackageReference "SunCore" */;
+			productName = SunCore;
+		};
+		5C0000000000000000000504 /* SunCore */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 5C0000000000000000000401 /* XCLocalSwiftPackageReference "SunCore" */;
 			productName = SunCore;

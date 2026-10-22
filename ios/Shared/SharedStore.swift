@@ -23,6 +23,16 @@ nonisolated enum SharedStore {
         return try? JSONDecoder().decode(StoredPlace.self, from: data)
     }
 
+    private static let timeDisplayKey = "timeDisplay"
+
+    static func loadTimeDisplay() -> String? {
+        defaults?.string(forKey: timeDisplayKey)
+    }
+
+    static func saveTimeDisplay(_ raw: String) {
+        defaults?.set(raw, forKey: timeDisplayKey)
+    }
+
     /// Returns whether the stored place changed.
     @discardableResult
     static func savePlace(_ place: StoredPlace?) -> Bool {

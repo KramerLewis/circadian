@@ -25,6 +25,7 @@ struct SunClockApp: App {
         _locationService = State(initialValue: locationService)
         _refresh = State(initialValue: RefreshCoordinator(container: container, locationService: locationService))
         DemoConfig.current?.seed(container.mainContext)
+        if DemoConfig.current == nil { WatchSync.shared.start() }
     }
 
     var body: some Scene {
@@ -68,6 +69,10 @@ struct RootView: View {
                 .onChange(of: Place.resolve(settings: settings, live: locationService.location), initial: true) { old, place in
                     if old != place { refresh.request("location changed") }
                     shareWithWidgets(place)
+                    shareWithWatch(place, settings: settings)
+                }
+                .onChange(of: settings.timeDisplayRaw) {
+                    shareWithWatch(Place.resolve(settings: settings, live: locationService.location), settings: settings)
                 }
             } else {
                 Color.clear
@@ -114,5 +119,14 @@ struct RootView: View {
         if SharedStore.savePlace(stored) {
             WidgetCenter.shared.reloadTimelines(ofKind: "SunRing")
         }
+    }
+
+    /// The Watch app uses the phone's place and time display setting.
+    private func shareWithWatch(_ place: Place?, settings: AppSettings) {
+        guard DemoConfig.current == nil else { return }
+        let stored = place.map {
+            SharedStore.StoredPlace(name: $0.name, latitude: $0.coordinate.latitude, longitude: $0.coordinate.longitude)
+        }
+        WatchSync.shared.send(WatchContext(place: stored, timeDisplay: settings.timeDisplayRaw))
     }
 }

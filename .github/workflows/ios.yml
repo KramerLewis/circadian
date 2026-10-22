@@ -64,7 +64,7 @@ jobs:
     runs-on: macos-26
     permissions:
       contents: write
-    timeout-minutes: 30
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v5
       - name: Select Xcode 26
@@ -74,6 +74,11 @@ jobs:
         run: echo "udid=$(.github/scripts/pick-simulator.sh)" >> "$GITHUB_OUTPUT"
       - name: Capture
         run: .github/scripts/screenshots.sh "${{ steps.sim.outputs.udid }}" screenshots
+      - name: Pick a Watch simulator
+        id: watch
+        run: echo "udid=$(.github/scripts/pick-simulator.sh watchOS)" >> "$GITHUB_OUTPUT"
+      - name: Capture Watch
+        run: .github/scripts/watch-screenshots.sh "${{ steps.watch.outputs.udid }}" screenshots
       # Only on pushes: pull requests (including from forks) never get write access.
       - name: Publish to the screenshots branch
         if: github.event_name == 'push'
