@@ -27,7 +27,7 @@ jobs:
     runs-on: macos-26
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Select Xcode 26
         run: .github/scripts/select-xcode.sh
       - name: swift test
@@ -38,7 +38,7 @@ jobs:
     runs-on: macos-26
     timeout-minutes: 40
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Select Xcode 26
         run: .github/scripts/select-xcode.sh
       - name: Pick a simulator
@@ -47,14 +47,14 @@ jobs:
       - name: Build
         run: |
           xcodebuild build \
-            -project ios/SunClock.xcodeproj \
+            -workspace ios/SunClock.xcworkspace \
             -scheme SunClock \
             -destination 'generic/platform=iOS Simulator' \
             CODE_SIGNING_ALLOWED=NO
       - name: Test
         run: |
           xcodebuild test \
-            -project ios/SunClock.xcodeproj \
+            -workspace ios/SunClock.xcworkspace \
             -scheme SunClock \
             -destination "id=${{ steps.sim.outputs.udid }}" \
             CODE_SIGNING_ALLOWED=NO

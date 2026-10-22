@@ -6,7 +6,7 @@
 
 ## Tests
 
-- In Xcode: open `SunClock.xcodeproj`, press ⌘U.
+- In Xcode: open `SunClock.xcworkspace` (not the `.xcodeproj`), press ⌘U.
 - On the command line (Mac): `swift test --package-path ios/SunCore`
 
 Solar tests compare against `shared/fixtures/solar-reference.json` (±1 minute). To
