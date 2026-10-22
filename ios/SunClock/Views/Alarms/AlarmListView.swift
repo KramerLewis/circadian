@@ -29,6 +29,7 @@ struct AlarmListView: View {
                             AlarmRow(alarm: alarm, place: place, now: now)
                         }
                         .buttonStyle(.plain)
+                        .accessibilityHint("Edit alarm")
                     }
                     .onDelete(perform: delete)
                 } footer: {
@@ -108,7 +109,7 @@ private struct AlarmRow: View {
             }
             .foregroundStyle(alarm.isEnabled ? .primary : .secondary)
             Spacer()
-            Toggle("Enabled", isOn: Binding(
+            Toggle(alarm.title, isOn: Binding(
                 get: { alarm.isEnabled },
                 set: { on in
                     if on {

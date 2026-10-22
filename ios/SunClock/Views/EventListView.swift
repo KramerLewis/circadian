@@ -10,13 +10,10 @@ struct EventListView: View {
         let next = day.events.first { ($0.time.date ?? .distantPast) > now }?.event
         VStack(spacing: 0) {
             ForEach(day.events) { entry in
-                HStack {
+                EventRow(time: timeText(entry.time), timeIsSecondary: entry.time.date == nil) {
                     Label(entry.event.displayName, systemImage: entry.event.symbolName)
-                    Spacer()
-                    Text(timeText(entry.time))
-                        .monospacedDigit()
-                        .foregroundStyle(entry.time.date == nil ? .secondary : .primary)
                 }
+                .accessibilityAddTraits(entry.event == next ? .isSelected : [])
                 .fontWeight(entry.event == next ? .semibold : .regular)
                 .padding(.vertical, 10)
                 if entry.event != SolarEvent.allCases.last {

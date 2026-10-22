@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
 # Build SunClock for a simulator and capture screenshots in demo mode (a fixed place
 # and time from launch arguments; see ios/SunClock/App/DemoConfig.swift).
-# Usage: screenshots.sh <simulator-udid> <output-dir>
+# Usage: screenshots.sh <simulator-udid> <output-dir> [appstore]
+#   appstore: only the App Store marketing set (run it on a 6.9" iPhone).
 set -euo pipefail
 udid=$1
 out=$2
+mode=${3:-all}
 bundle=com.kray.circadian
 mkdir -p "$out"
 
@@ -45,6 +47,15 @@ shoot() {
 failures=0
 
 seattle=(-demoLatitude 47.61 -demoLongitude -122.33 -demoName Seattle)
+if [[ $mode == appstore ]]; then
+  shoot 1-dial-summer-afternoon light America/Los_Angeles 2026-06-21T15:00:00-07:00 "${seattle[@]}"
+  shoot 2-full-moon-night       dark  America/Los_Angeles 2026-11-24T22:00:00-08:00 "${seattle[@]}"
+  shoot 3-events-and-moon       light America/Los_Angeles 2026-11-01T09:00:00-08:00 "${seattle[@]}" -demoScroll moon
+  shoot 4-solar-alarms          light America/Los_Angeles 2026-06-20T12:00:00-07:00 "${seattle[@]}" -demoTab alarms
+  shoot 5-new-alarm             dark  America/Los_Angeles 2026-06-20T12:00:00-07:00 "${seattle[@]}" -demoTab alarms -demoSheet alarm
+  (( failures == 0 )) || exit 1
+  exit 0
+fi
 tromso=(-demoLatitude 69.65 -demoLongitude 18.96 -demoName Tromsø)
 shoot 1-seattle-june-afternoon-light light America/Los_Angeles 2026-06-21T15:00:00-07:00 "${seattle[@]}"
 shoot 2-seattle-june-afternoon-dark  dark  America/Los_Angeles 2026-06-21T15:00:00-07:00 "${seattle[@]}" -demoTimeDisplay twelveHour
@@ -57,6 +68,10 @@ shoot 8-alarms-dark                  dark  America/Los_Angeles 2026-06-20T12:00:
 shoot 9-new-alarm-light              light America/Los_Angeles 2026-06-20T12:00:00-07:00 "${seattle[@]}" -demoTab alarms -demoSheet alarm
 shoot 12-seattle-full-moon-night-dark dark America/Los_Angeles 2026-11-24T22:00:00-08:00 "${seattle[@]}"
 shoot 13-seattle-moon-list-light     light America/Los_Angeles 2026-11-01T09:00:00-08:00 "${seattle[@]}" -demoScroll moon
+# Largest accessibility text size, to check nothing truncates.
+xcrun simctl ui "$udid" content_size accessibility-extra-extra-extra-large
+shoot 14-accessibility-text-light    light America/Los_Angeles 2026-11-01T09:00:00-08:00 "${seattle[@]}" -demoScroll moon
+xcrun simctl ui "$udid" content_size large
 shoot 10-widgets-light               light America/Los_Angeles 2026-06-21T15:00:00-07:00 "${seattle[@]}" -demoSheet widgets
 shoot 11-widgets-dark-evening        dark  America/Los_Angeles 2026-12-21T17:00:00-08:00 "${seattle[@]}" -demoSheet widgets
 

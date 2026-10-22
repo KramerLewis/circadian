@@ -74,6 +74,11 @@ jobs:
         run: echo "udid=$(.github/scripts/pick-simulator.sh)" >> "$GITHUB_OUTPUT"
       - name: Capture
         run: .github/scripts/screenshots.sh "${{ steps.sim.outputs.udid }}" screenshots
+      - name: Pick a 6.9" iPhone for the App Store set
+        id: promax
+        run: echo "udid=$(.github/scripts/pick-simulator.sh iOS 'Pro Max')" >> "$GITHUB_OUTPUT"
+      - name: Capture App Store set
+        run: .github/scripts/screenshots.sh "${{ steps.promax.outputs.udid }}" screenshots/app-store appstore
       - name: Pick a Watch simulator
         id: watch
         run: echo "udid=$(.github/scripts/pick-simulator.sh watchOS)" >> "$GITHUB_OUTPUT"

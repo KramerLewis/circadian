@@ -22,14 +22,12 @@ struct MoonListView: View {
                     .monospacedDigit()
                     .foregroundStyle(.secondary)
             }
+            .accessibilityElement(children: .combine)
             .padding(.vertical, 10)
             ForEach(events, id: \.self) { occurrence in
                 Divider()
-                HStack {
+                EventRow(time: occurrence.date.formatted(date: .omitted, time: .shortened)) {
                     Label(occurrence.event.displayName, systemImage: occurrence.event.symbolName)
-                    Spacer()
-                    Text(occurrence.date.formatted(date: .omitted, time: .shortened))
-                        .monospacedDigit()
                 }
                 .fontWeight(occurrence == next ? .semibold : .regular)
                 .padding(.vertical, 10)

@@ -1,6 +1,7 @@
 import CoreLocation
 import Foundation
 import Observation
+import SunCore
 import WatchConnectivity
 import WidgetKit
 

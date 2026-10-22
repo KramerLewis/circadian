@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 # Print the UDID of an available simulator on the newest installed runtime of a
 # platform, so the workflow doesn't hard-code a device name the runner may not have.
-# Usage: pick-simulator.sh [iOS|watchOS]   (default iOS)
+# Usage: pick-simulator.sh [iOS|watchOS] [name substring]   (default iOS, any)
 set -euo pipefail
 platform=${1:-iOS}
-xcrun simctl list devices available --json | PLATFORM="$platform" python3 -c '
+match=${2:-}
+xcrun simctl list devices available --json | PLATFORM="$platform" MATCH="$match" python3 -c '
 import json, os, re, sys
 platform = os.environ["PLATFORM"]
 prefix = "iPhone" if platform == "iOS" else "Apple Watch"
@@ -15,7 +16,7 @@ def version(runtime):
 runtimes = sorted((r for r in devices if version(r) and version(r) >= (26, 0)), key=version, reverse=True)
 for runtime in runtimes:
     for d in devices[runtime]:
-        if d["name"].startswith(prefix):
+        if d["name"].startswith(prefix) and os.environ["MATCH"] in d["name"]:
             name = d["name"]
             print("Using " + name + " on " + runtime, file=sys.stderr)
             print(d["udid"])

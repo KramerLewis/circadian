@@ -51,9 +51,18 @@ struct SolarDialView: View {
         .onTapGesture(perform: onCycleDisplay)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Solar dial")
-        .accessibilityValue("\(centerText.primary) \(centerText.secondary)")
+        .accessibilityValue("\(centerText.primary) \(centerText.secondary). \(skySummary)")
         .accessibilityHint("Double-tap to change the time display.")
         .accessibilityAddTraits(.isButton)
+    }
+
+    /// What the rings show, for VoiceOver: "Sun 15 degrees up. Moon: waning gibbous, 84% lit, below the horizon."
+    private var skySummary: String {
+        let sun = Int(model.altitude(atAngle: model.nowAngle).rounded())
+        let sunText = sun >= 0 ? "Sun \(sun) degrees up" : "Sun \(-sun) degrees below the horizon"
+        let moonUp = moon.altitudeNow > moon.riseSetAltitude
+        let lit = Int((moon.phase.illumination * 100).rounded())
+        return "\(sunText). Moon: \(moon.phase.name.lowercased()), \(lit)% lit, \(moonUp ? "up" : "below the horizon")."
     }
 
     private var centerText: (primary: String, secondary: String) {

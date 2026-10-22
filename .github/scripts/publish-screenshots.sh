@@ -15,6 +15,14 @@ cd "$1"
     echo
     echo "<img src=\"$f\" width=\"320\">"
   done
+  if compgen -G "app-store/*.png" >/dev/null; then
+    echo
+    echo "## App Store set (6.9\" iPhone)"
+    for f in app-store/*.png; do
+      echo
+      echo "<img src=\"$f\" width=\"240\">"
+    done
+  fi
 } > README.md
 git init -q -b screenshots
 git config user.name "github-actions[bot]"
