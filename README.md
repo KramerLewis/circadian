@@ -12,3 +12,7 @@ Planned: `android/`, `web/`, `backend/` + `infra/` (AWS). Each platform reimplem
 the solar math natively and is tested against the same `shared/fixtures`.
 
 CI runs per platform, only when that platform's paths change (`.github/workflows/`).
+
+## License
+
+[MIT](LICENSE) © 2026 Kramer Lewis

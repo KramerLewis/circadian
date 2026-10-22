@@ -111,7 +111,6 @@ Everything needed beyond the code to publish:
   some UI text is built from strings in code and needs converting first. Decide
   initial languages.
 - **Repo docs:** user-facing README section, `CHANGELOG.md` / release notes,
-  `LICENSE` (the repo is public, so pick one deliberately; "all rights reserved" is
-  an option), `SECURITY.md`.
+  `SECURITY.md`. (`LICENSE` is done: MIT.)
 - **Release process:** versioning (marketing version + CI build number), TestFlight
   external testing (needs a beta review), phased release.
