@@ -84,7 +84,7 @@ jobs:
   deploy:
     name: Deploy to GitHub Pages
     needs: build
-    if: github.event_name == 'push' && vars.PAGES_DEPLOY == 'true'
+    if: github.event_name != 'pull_request' && vars.PAGES_DEPLOY == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
