@@ -22,7 +22,11 @@ shoot() {
   local name=$1 appearance=$2 tz=$3 date=$4
   shift 4
   xcrun simctl ui "$udid" appearance "$appearance"
-  xcrun simctl status_bar "$udid" override --time "$date" --batteryState charged --batteryLevel 100 --wifiBars 3 --cellularBars 4
+  # The status bar clock is cosmetic, so a rejected override must not stop the run.
+  local utc
+  utc=$(python3 -c 'import sys, datetime; print(datetime.datetime.fromisoformat(sys.argv[1]).astimezone(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"))' "$date")
+  xcrun simctl status_bar "$udid" override --time "$utc" --batteryState charged --batteryLevel 100 --wifiBars 3 --cellularBars 4 \
+    || echo "warning: status bar override failed; continuing"
   xcrun simctl terminate "$udid" "$bundle" 2>/dev/null || true
   SIMCTL_CHILD_TZ="$tz" xcrun simctl launch "$udid" "$bundle" -demoDate "$date" "$@" >/dev/null
   sleep 4
