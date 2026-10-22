@@ -28,11 +28,21 @@ shoot() {
   xcrun simctl status_bar "$udid" override --time "$utc" --batteryState charged --batteryLevel 100 --wifiBars 3 --cellularBars 4 \
     || echo "warning: status bar override failed; continuing"
   xcrun simctl terminate "$udid" "$bundle" 2>/dev/null || true
-  SIMCTL_CHILD_TZ="$tz" xcrun simctl launch "$udid" "$bundle" -demoDate "$date" "$@" >/dev/null
-  sleep 4
+  local launched pid
+  launched=$(SIMCTL_CHILD_TZ="$tz" xcrun simctl launch "$udid" "$bundle" -demoDate "$date" "$@")
+  pid=${launched##*: }
+  sleep 5
+  # Simulator apps are host processes, so a crash shows up as a missing pid.
+  if ! kill -0 "$pid" 2>/dev/null; then
+    echo "::error::SunClock exited or crashed while capturing $name"
+    report=$(ls -t ~/Library/Logs/DiagnosticReports/SunClock*.ips 2>/dev/null | head -1)
+    [[ -n "$report" ]] && head -c 6000 "$report"
+    failures=$((failures + 1))
+  fi
   xcrun simctl io "$udid" screenshot "$out/$name.png" >/dev/null
-  echo "captured $name"
+  echo "captured $name (pid $pid)"
 }
+failures=0
 
 seattle=(-demoLatitude 47.61 -demoLongitude -122.33 -demoName Seattle)
 tromso=(-demoLatitude 69.65 -demoLongitude 18.96 -demoName Tromsø)
@@ -47,3 +57,8 @@ shoot 8-alarms-dark                  dark  America/Los_Angeles 2026-06-20T12:00:
 shoot 9-new-alarm-light              light America/Los_Angeles 2026-06-20T12:00:00-07:00 "${seattle[@]}" -demoTab alarms -demoSheet alarm
 shoot 10-widgets-light               light America/Los_Angeles 2026-06-21T15:00:00-07:00 "${seattle[@]}" -demoSheet widgets
 shoot 11-widgets-dark-evening        dark  America/Los_Angeles 2026-12-21T17:00:00-08:00 "${seattle[@]}" -demoSheet widgets
+
+if (( failures > 0 )); then
+  echo "$failures screenshot(s) caught a crashed app"
+  exit 1
+fi
