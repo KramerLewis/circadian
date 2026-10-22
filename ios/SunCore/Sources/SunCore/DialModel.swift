@@ -38,6 +38,10 @@ public struct DialModel: Hashable, Sendable {
     public let arcs: [Arc]
     public let markers: [Marker]
     public let nowAngle: Double
+    public let latitude: Double
+    /// The sun's declination at this day's solar noon. It changes by under half a
+    /// degree a day, so one value is accurate enough to color the whole ring.
+    public let declination: Double
 
     public init(day: SolarDay, now: Date) {
         let longitude = day.coordinate.longitude
@@ -60,6 +64,14 @@ public struct DialModel: Hashable, Sendable {
             entry.time.date.map { Marker(event: entry.event, date: $0, angle: Self.angle(for: $0, longitude: longitude)) }
         }
         nowAngle = Self.angle(for: now, longitude: longitude)
+        latitude = day.coordinate.latitude
+        declination = SolarCalculator.position(at: day.solarNoon).declination
+    }
+
+    /// The sun's altitude (degrees) at a dial angle: highest at the top, lowest at the
+    /// bottom. Drives the ring's sky gradient.
+    public func altitude(atAngle angle: Double) -> Double {
+        SolarCalculator.altitude(hourAngle: angle, latitude: latitude, declination: declination)
     }
 
     public static func angle(for date: Date, longitude: Double) -> Double {

@@ -7,6 +7,7 @@ struct SolarDialView: View {
     let model: DialModel
     let now: Date
     let solarMinutes: Double
+    @Environment(\.colorScheme) private var colorScheme
 
     /// Events that get a clock-time label outside the ring; the rest get a tick.
     private static let labeledEvents: Set<SolarEvent> = [.sunrise, .sunset, .solarNoon, .solarMidnight]
@@ -64,23 +65,13 @@ struct SolarDialView: View {
             return CGPoint(x: center.x + radius * sin(t), y: center.y - radius * cos(t))
         }
 
-        func ring(from start: Double, to end: Double) -> Path {
-            var path = Path()
-            let steps = max(2, Int((end - start).rounded(.up)))
-            let angles = (0...steps).map { start + (end - start) * Double($0) / Double(steps) }
-            path.move(to: point(outer, angles[0]))
-            for a in angles.dropFirst() { path.addLine(to: point(outer, a)) }
-            for a in angles.reversed() { path.addLine(to: point(inner, a)) }
-            path.closeSubpath()
-            return path
+        var ring: SkyRingRenderer.Ring {
+            SkyRingRenderer.Ring(center: center, inner: inner, outer: outer)
         }
     }
 
     private func drawRing(in context: inout GraphicsContext, _ g: Geometry) {
-        context.fill(g.ring(from: -180, to: 180), with: .color(DialPalette.night))
-        for arc in model.arcs {
-            context.fill(g.ring(from: arc.start, to: arc.end), with: .color(DialPalette.color(for: arc.band)))
-        }
+        SkyRingRenderer.drawSky(in: &context, ring: g.ring, model: model, dark: colorScheme == .dark, monochrome: false)
     }
 
     private func drawHourTicks(in context: inout GraphicsContext, _ g: Geometry) {
@@ -117,14 +108,11 @@ struct SolarDialView: View {
     }
 
     private func drawHand(in context: inout GraphicsContext, _ g: Geometry) {
+        // A thin pointer across the ring for precision, under the glowing sun.
         var hand = Path()
         hand.move(to: g.point(g.inner - 4, model.nowAngle))
         hand.addLine(to: g.point(g.outer + 4, model.nowAngle))
-        context.stroke(hand, with: .style(.primary), style: StrokeStyle(lineWidth: 3, lineCap: .round))
-        let sun = g.point((g.inner + g.outer) / 2, model.nowAngle)
-        let radius = (g.outer - g.inner) * 0.28
-        let disc = Path(ellipseIn: CGRect(x: sun.x - radius, y: sun.y - radius, width: radius * 2, height: radius * 2))
-        context.fill(disc, with: .color(DialPalette.sun))
-        context.stroke(disc, with: .style(.primary), lineWidth: 2)
+        context.stroke(hand, with: .style(.primary.opacity(0.7)), style: StrokeStyle(lineWidth: 1.5, lineCap: .round))
+        SkyRingRenderer.drawSun(in: &context, ring: g.ring, angle: model.nowAngle, monochrome: false)
     }
 }

@@ -9,72 +9,22 @@ struct SunRingView: View {
     var monochrome = false
     /// Ring thickness as a fraction of its outer radius.
     var thickness: CGFloat = 0.3
+    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         Canvas { context, size in
-            let radius = min(size.width, size.height) / 2
-            let center = CGPoint(x: size.width / 2, y: size.height / 2)
-            let sunRadius = radius * thickness * 0.42
-            // Inset so the sun's glow stays inside the frame.
-            let outer = radius - sunRadius * 0.6
-            let inner = outer * (1 - thickness)
-
-            func point(_ r: CGFloat, _ degrees: Double) -> CGPoint {
-                let t = degrees * .pi / 180
-                return CGPoint(x: center.x + r * sin(t), y: center.y - r * cos(t))
-            }
-            func ring(_ start: Double, _ end: Double) -> Path {
-                var path = Path()
-                let steps = max(2, Int((end - start).rounded(.up)))
-                let angles = (0...steps).map { start + (end - start) * Double($0) / Double(steps) }
-                path.move(to: point(outer, angles[0]))
-                for a in angles.dropFirst() { path.addLine(to: point(outer, a)) }
-                for a in angles.reversed() { path.addLine(to: point(inner, a)) }
-                path.closeSubpath()
-                return path
-            }
-
-            context.fill(ring(-180, 180), with: .color(nightColor))
-            for arc in model.arcs {
-                context.fill(ring(arc.start, arc.end), with: .color(color(for: arc.band)))
-            }
-
-            // The sun: a soft glow around a bright disc, no outline.
-            let sun = point((inner + outer) / 2, model.nowAngle)
-            let glow = sunRadius * 2.2
-            context.fill(
-                Path(ellipseIn: CGRect(x: sun.x - glow, y: sun.y - glow, width: glow * 2, height: glow * 2)),
-                with: .radialGradient(
-                    Gradient(colors: [sunColor.opacity(0.55), sunColor.opacity(0)]),
-                    center: sun, startRadius: sunRadius * 0.8, endRadius: glow
-                )
+            let outer = min(size.width, size.height) / 2
+            let ring = SkyRingRenderer.Ring(
+                center: CGPoint(x: size.width / 2, y: size.height / 2),
+                inner: outer * (1 - thickness),
+                outer: outer
             )
-            context.fill(
-                Path(ellipseIn: CGRect(x: sun.x - sunRadius, y: sun.y - sunRadius, width: sunRadius * 2, height: sunRadius * 2)),
-                with: .color(sunColor)
-            )
+            SkyRingRenderer.drawSky(in: &context, ring: ring, model: model, dark: colorScheme == .dark, monochrome: monochrome)
+            SkyRingRenderer.drawSun(in: &context, ring: ring, angle: model.nowAngle, monochrome: monochrome)
         }
         .aspectRatio(1, contentMode: .fit)
         .accessibilityElement()
         .accessibilityLabel("Sun ring")
-    }
-
-    private var nightColor: Color {
-        monochrome ? .white.opacity(0.12) : DialPalette.night
-    }
-
-    private func color(for band: DialModel.Band) -> Color {
-        guard monochrome else { return DialPalette.color(for: band) }
-        return switch band {
-        case .astronomicalTwilight: .white.opacity(0.22)
-        case .nauticalTwilight: .white.opacity(0.32)
-        case .civilTwilight: .white.opacity(0.45)
-        case .day: .white.opacity(0.62)
-        }
-    }
-
-    private var sunColor: Color {
-        monochrome ? .white : DialPalette.sun
     }
 }
 
@@ -95,6 +45,68 @@ struct SunRingWidgetContent: View {
                 .font(.title)
                 .foregroundStyle(.secondary)
                 .accessibilityLabel("Open SunClock to set a location")
+        }
+    }
+}
+
+/// Medium widget content: the ring beside the next sunrise or sunset and the next
+/// event of any kind. Relative times are rendered by the system, so they stay
+/// current between timeline entries.
+struct SunRingMediumContent: View {
+    let place: SharedStore.StoredPlace?
+    let date: Date
+    var monochrome = false
+    /// Let the system keep relative times live. Off for previews frozen at a fake date,
+    /// where "live" would count from the real clock.
+    var liveRelativeTimes = true
+
+    var body: some View {
+        if let place {
+            let readout = SolarReadout(at: date, coordinate: place.coordinate)
+            HStack(spacing: 16) {
+                SunRingWidgetContent(place: place, date: date, monochrome: monochrome)
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(place.name)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                    if let next = readout.nextHorizon {
+                        eventBlock(next, prominent: true)
+                    } else if let polar = readout.polarCondition {
+                        Label(polar == .midnightSun ? "Midnight sun" : "Polar night",
+                              systemImage: polar == .midnightSun ? "sun.max.fill" : "moon.stars.fill")
+                            .font(.headline)
+                    }
+                    if let other = readout.nextEvent, other.event != readout.nextHorizon?.event {
+                        eventBlock(other, prominent: false)
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+        } else {
+            SunRingWidgetContent(place: nil, date: date)
+        }
+    }
+
+    @ViewBuilder
+    private func eventBlock(_ event: SolarReadout.Relative, prominent: Bool) -> some View {
+        VStack(alignment: .leading, spacing: 1) {
+            Label(event.event.displayName, systemImage: event.event.symbolName)
+                .font(prominent ? .headline : .subheadline)
+            HStack(spacing: 4) {
+                Text(event.date, style: .time)
+                Text("·")
+                if liveRelativeTimes {
+                    Text(event.date, style: .relative)
+                } else {
+                    Text("in \(SolarFormat.duration(event.interval))")
+                }
+            }
+            .font(prominent ? .subheadline : .caption)
+            .foregroundStyle(.secondary)
+            .monospacedDigit()
+            .lineLimit(1)
+            .minimumScaleFactor(0.8)
         }
     }
 }

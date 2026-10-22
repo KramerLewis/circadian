@@ -2,7 +2,8 @@ import SunCore
 import SwiftUI
 import WidgetKit
 
-/// Home Screen and Lock Screen widget: the sun ring, no numbers.
+/// Home Screen and Lock Screen widget: the sun ring (no numbers), plus the next
+/// events in the medium size.
 struct SunRingWidget: Widget {
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: "SunRing", provider: SunRingProvider()) { entry in
@@ -10,7 +11,7 @@ struct SunRingWidget: Widget {
         }
         .configurationDisplayName("Sun Ring")
         .description("Where the sun is in its day.")
-        .supportedFamilies([.systemSmall, .systemLarge, .accessoryCircular])
+        .supportedFamilies([.systemSmall, .systemMedium, .systemLarge, .accessoryCircular])
     }
 }
 
@@ -50,12 +51,18 @@ struct SunRingWidgetView: View {
     @Environment(\.widgetRenderingMode) private var renderingMode
 
     var body: some View {
-        SunRingWidgetContent(
-            place: entry.place,
-            date: entry.date,
-            monochrome: renderingMode != .fullColor,
-            thickness: family == .accessoryCircular ? 0.38 : 0.3
-        )
+        Group {
+            if family == .systemMedium {
+                SunRingMediumContent(place: entry.place, date: entry.date, monochrome: renderingMode != .fullColor)
+            } else {
+                SunRingWidgetContent(
+                    place: entry.place,
+                    date: entry.date,
+                    monochrome: renderingMode != .fullColor,
+                    thickness: family == .accessoryCircular ? 0.38 : 0.3
+                )
+            }
+        }
         .padding(family == .accessoryCircular ? 2 : 0)
         .containerBackground(for: .widget) {
             if family == .accessoryCircular {

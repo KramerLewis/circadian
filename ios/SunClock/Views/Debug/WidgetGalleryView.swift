@@ -20,6 +20,9 @@ struct WidgetGalleryView: View {
                     tile("Small", width: 170, height: 170)
                     lockScreen
                 }
+                tile("Medium", width: 364, height: 170) {
+                    SunRingMediumContent(place: stored, date: date, liveRelativeTimes: false)
+                }
                 tile("Large", width: 364, height: 382)
             }
             .padding()
@@ -28,8 +31,14 @@ struct WidgetGalleryView: View {
     }
 
     private func tile(_ title: String, width: CGFloat, height: CGFloat) -> some View {
-        VStack(spacing: 8) {
+        tile(title, width: width, height: height) {
             SunRingWidgetContent(place: stored, date: date)
+        }
+    }
+
+    private func tile(_ title: String, width: CGFloat, height: CGFloat, @ViewBuilder content: () -> some View) -> some View {
+        VStack(spacing: 8) {
+            content()
                 .padding(16)
                 .frame(width: width, height: height)
                 .background(Color(.systemBackground), in: .rect(cornerRadius: 24))
