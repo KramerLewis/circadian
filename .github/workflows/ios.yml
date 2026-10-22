@@ -62,6 +62,8 @@ jobs:
   screenshots:
     name: Simulator screenshots
     runs-on: macos-26
+    permissions:
+      contents: write
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v5
@@ -72,9 +74,9 @@ jobs:
         run: echo "udid=$(.github/scripts/pick-simulator.sh)" >> "$GITHUB_OUTPUT"
       - name: Capture
         run: .github/scripts/screenshots.sh "${{ steps.sim.outputs.udid }}" screenshots
-      - uses: actions/upload-artifact@v4
-        with:
-          name: screenshots
-          path: screenshots/*.png
-          # Screenshots are for quick review; GitHub deletes them after 3 days.
-          retention-days: 3
+      # Only on pushes: pull requests (including from forks) never get write access.
+      - name: Publish to the screenshots branch
+        if: github.event_name == 'push'
+        run: .github/scripts/publish-screenshots.sh screenshots
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
