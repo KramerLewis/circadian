@@ -13,6 +13,11 @@ the solar math natively and is tested against the same `shared/fixtures`.
 
 CI runs per platform, only when that platform's paths change (`.github/workflows/`).
 
+## Credits
+
+Moon imagery: NASA's Scientific Visualization Studio, [CGI Moon Kit](https://svs.gsfc.nasa.gov/4720),
+from Lunar Reconnaissance Orbiter data (`ios/tools/lroc_color_2k.jpg`).
+
 ## License
 
 [MIT](LICENSE) © 2026 Kramer Lewis
