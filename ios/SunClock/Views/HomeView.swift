@@ -51,6 +51,8 @@ struct HomeView: View {
     private func content(place: Place, now: Date) -> some View {
         let day = SolarCalculator.solarDay(containing: now, at: place.coordinate)
         let readout = SolarReadout(at: now, coordinate: place.coordinate)
+        let special = SpecialDayText.today(at: place.coordinate, on: now)
+        let headsUp = special == nil ? SpecialDayText.headsUp(at: place.coordinate, after: now) : nil
         return ScrollViewReader { proxy in
             ScrollView {
                 VStack(spacing: 20) {
@@ -61,11 +63,22 @@ struct HomeView: View {
                         solarMinutes: SolarCalculator.apparentSolarMinutes(at: now, longitude: place.coordinate.longitude),
                         readout: readout,
                         timeDisplay: settings.timeDisplay,
+                        special: special,
                         onCycleDisplay: {
                             withAnimation { settings.timeDisplay = settings.timeDisplay.next }
                         }
                     )
                     .frame(maxWidth: 420)
+                    if let special {
+                        SpecialDayBanner(special: special)
+                    } else if let headsUp {
+                        Label(headsUp, systemImage: "calendar.badge.clock")
+                            .font(.subheadline.weight(.medium))
+                            .foregroundStyle(.secondary)
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 8)
+                            .background(Color(.secondarySystemGroupedBackground), in: .capsule)
+                    }
                     ReadoutView(readout: readout)
                     VStack(alignment: .leading, spacing: 8) {
                         Text("Today")

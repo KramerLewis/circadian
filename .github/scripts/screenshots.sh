@@ -68,6 +68,13 @@ shoot 8-alarms-dark                  dark  America/Los_Angeles 2026-06-20T12:00:
 shoot 9-new-alarm-light              light America/Los_Angeles 2026-06-20T12:00:00-07:00 "${seattle[@]}" -demoTab alarms -demoSheet alarm
 shoot 12-seattle-full-moon-night-dark dark America/Los_Angeles 2026-11-24T22:00:00-08:00 "${seattle[@]}"
 shoot 13-seattle-moon-list-light     light America/Los_Angeles 2026-11-01T09:00:00-08:00 "${seattle[@]}" -demoScroll moon
+# Special sky days
+shoot 15-summer-solstice-light       light America/Los_Angeles 2026-06-21T16:00:00-07:00 "${seattle[@]}"
+shoot 16-equinox-dark                dark  America/Los_Angeles 2026-09-22T18:30:00-07:00 "${seattle[@]}"
+shoot 17-supermoon-dark              dark  America/Los_Angeles 2026-12-23T20:00:00-08:00 "${seattle[@]}"
+shoot 18-blue-moon-dark              dark  America/Los_Angeles 2026-05-31T22:00:00-07:00 "${seattle[@]}"
+shoot 19-new-moon-dark               dark  America/Los_Angeles 2026-12-08T23:00:00-08:00 "${seattle[@]}" -demoTimeDisplay twelveHour
+shoot 20-heads-up-light              light America/Los_Angeles 2026-12-19T12:00:00-08:00 "${seattle[@]}"
 # Largest accessibility text size, to check nothing truncates.
 xcrun simctl ui "$udid" content_size accessibility-extra-extra-extra-large
 shoot 14-accessibility-text-light    light America/Los_Angeles 2026-11-01T09:00:00-08:00 "${seattle[@]}" -demoScroll moon

@@ -82,8 +82,14 @@ struct ComplicationView: View {
                     Text(r.polarCondition == .midnightSun ? "Midnight sun" : "Polar night")
                         .font(.headline)
                 }
-                Text("Moon \(Int((phase.illumination * 100).rounded()))% · \(phase.isWaxing ? "waxing" : "waning")")
-                    .foregroundStyle(.secondary)
+                if let special = SpecialDayText.today(at: place.coordinate, on: date) {
+                    Text(special.short)
+                        .foregroundStyle(.orange)
+                        .widgetAccentable()
+                } else {
+                    Text("Moon \(Int((phase.illumination * 100).rounded()))% · \(phase.isWaxing ? "waxing" : "waning")")
+                        .foregroundStyle(.secondary)
+                }
             }
             .font(.caption)
             .lineLimit(1)
@@ -96,7 +102,9 @@ struct ComplicationView: View {
     private func inline(_ place: SharedStore.StoredPlace) -> some View {
         let r = readout(place)
         return Group {
-            if let next = r.nextHorizon {
+            if let special = SpecialDayText.today(at: place.coordinate, on: date) {
+                Label(special.short, systemImage: special.symbol)
+            } else if let next = r.nextHorizon {
                 Label {
                     Text("\(Text(next.date, style: .relative)) to \(next.event.displayName.lowercased())")
                 } icon: {

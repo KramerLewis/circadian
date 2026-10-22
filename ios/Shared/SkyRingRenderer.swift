@@ -79,19 +79,84 @@ enum SkyRingRenderer {
         }
     }
 
+    // MARK: Special days
+
+    /// Marks for solstices, equinoxes and new moons, drawn around and inside the dial.
+    /// (Full moons are marked by `drawMoonRing`.)
+    static func drawSpecialDay(_ style: SpecialDayText.Style, in context: inout GraphicsContext,
+                               ring: Ring, innerRadius: CGFloat, dark: Bool) {
+        switch style {
+        case .solstice:
+            // A golden halo around the sun ring, strongest at the top (solar noon).
+            context.drawLayer { layer in
+                layer.addFilter(.blur(radius: ring.thickness * 0.35))
+                let r = ring.outer + 3
+                let halo = Path(ellipseIn: CGRect(x: ring.center.x - r, y: ring.center.y - r, width: r * 2, height: r * 2))
+                layer.stroke(halo, with: .conicGradient(
+                    Gradient(colors: [.orange.opacity(0.9), .yellow.opacity(0.35), .orange.opacity(0.15), .yellow.opacity(0.35), .orange.opacity(0.9)]),
+                    center: ring.center, angle: .degrees(-90)
+                ), lineWidth: ring.thickness * 0.45)
+            }
+        case .equinox:
+            // The horizon: sunrise and sunset sit on the 6 and 18 marks today.
+            let left = ring.point(ring.outer + 14, -90), right = ring.point(ring.outer + 14, 90)
+            var line = Path()
+            line.move(to: left)
+            line.addLine(to: right)
+            let gold = Color(red: 1, green: 0.84, blue: 0.55)
+            context.drawLayer { layer in
+                layer.addFilter(.blur(radius: 3))
+                layer.stroke(line, with: .linearGradient(
+                    Gradient(colors: [gold, gold.opacity(0.15), gold]), startPoint: left, endPoint: right
+                ), lineWidth: 3)
+                for point in [left, right] {
+                    layer.fill(Path(ellipseIn: CGRect(x: point.x - 6, y: point.y - 6, width: 12, height: 12)), with: .color(gold))
+                }
+            }
+            context.stroke(line, with: .color(gold.opacity(0.7)), lineWidth: 1)
+        case .newMoon:
+            // A sprinkle of stars: the darkest skies of the month.
+            let color = dark ? Color(red: 0.88, green: 0.9, blue: 1) : Color(red: 0.32, green: 0.36, blue: 0.62)
+            var seed: UInt64 = 0x5EED_5EED
+            func random() -> CGFloat {
+                seed = seed &* 6_364_136_223_846_793_005 &+ 1_442_695_040_888_963_407
+                return CGFloat(seed >> 33) / CGFloat(1 << 31)
+            }
+            for _ in 0..<70 {
+                let angle = Double(random()) * 360
+                let distance = sqrt(random()) * innerRadius * 0.92
+                let point = ring.point(distance, angle)
+                // Keep the center readout clear.
+                if abs(point.y - ring.center.y) < innerRadius * 0.28, abs(point.x - ring.center.x) < innerRadius * 0.75 { continue }
+                let size = 0.6 + random() * 1.4
+                context.fill(Path(ellipseIn: CGRect(x: point.x - size, y: point.y - size, width: size * 2, height: size * 2)),
+                             with: .color(color.opacity(0.35 + 0.6 * Double(random()))))
+            }
+        case .fullMoon, .supermoon, .blueMoon:
+            break
+        }
+    }
+
     // MARK: Moon
 
     /// The moon's ring: its own timeline (angle = the moon's hour angle), colored by
     /// the moon's altitude and fullness, with ticks at moonrise and moonset.
-    static func drawMoonRing(in context: inout GraphicsContext, ring: Ring, moon: MoonDialModel, dark: Bool) {
+    static func drawMoonRing(in context: inout GraphicsContext, ring: Ring, moon: MoonDialModel, dark: Bool,
+                             special: SpecialDayText.Style? = nil) {
+        // Full moons light up the ring; a supermoon most of all.
+        let boost: Double = switch special {
+        case .supermoon: 1.3
+        case .fullMoon, .blueMoon: 1.15
+        default: 1
+        }
         let stops = (0...360).map { degree -> Gradient.Stop in
             let rgb = MoonGradient.color(
                 altitude: moon.altitude(atAngle: Double(degree)),
                 riseSetAltitude: moon.riseSetAltitude,
-                illumination: moon.phase.illumination,
+                illumination: min(moon.phase.illumination * boost, 1.3),
                 dark: dark
             )
-            return Gradient.Stop(color: Color(red: rgb.red, green: rgb.green, blue: rgb.blue), location: Double(degree) / 360)
+            return Gradient.Stop(color: Color(red: min(rgb.red, 1), green: min(rgb.green, 1), blue: min(rgb.blue, 1)), location: Double(degree) / 360)
         }
         context.fill(
             ring.path,
@@ -106,18 +171,26 @@ enum SkyRingRenderer {
                 context.stroke(tick, with: .style(.secondary), lineWidth: 1)
             }
         }
-        let radius = ring.thickness * 0.75
+        let radius = ring.thickness * (special == .supermoon ? 0.95 : 0.75)
+        let glow: Double = switch special {
+        case .supermoon: 2.4
+        case .fullMoon, .blueMoon: 1.8
+        default: 1
+        }
         drawMoon(in: &context, center: ring.point((ring.inner + ring.outer) / 2, moon.nowAngle),
-                 radius: radius, phase: moon.phase, southern: moon.latitude < 0, monochrome: false)
+                 radius: radius, phase: moon.phase, southern: moon.latitude < 0, monochrome: false,
+                 glowScale: glow, blueGlow: special == .blueMoon)
     }
 
     /// The moon as it looks now (NASA texture lit for the phase, see `MoonRenderer`),
     /// with a soft glow that grows as the moon fills.
     static func drawMoon(in context: inout GraphicsContext, center: CGPoint, radius: CGFloat,
-                         phase: LunarCalculator.Phase, southern: Bool, monochrome: Bool) {
-        let k = phase.illumination
-        let glow = radius * 1.9
-        let glowColor = monochrome ? Color.white : Color(red: 0.80, green: 0.84, blue: 0.97)
+                         phase: LunarCalculator.Phase, southern: Bool, monochrome: Bool,
+                         glowScale: Double = 1, blueGlow: Bool = false) {
+        let k = min(phase.illumination * glowScale, 2)
+        let glow = radius * (1.9 + 0.5 * (glowScale - 1))
+        let glowColor = monochrome ? Color.white
+            : blueGlow ? Color(red: 0.45, green: 0.62, blue: 1.0) : Color(red: 0.80, green: 0.84, blue: 0.97)
         context.fill(
             Path(ellipseIn: CGRect(x: center.x - glow, y: center.y - glow, width: glow * 2, height: glow * 2)),
             with: .radialGradient(

@@ -13,7 +13,7 @@ and a richer Watch face all build on), and the open-ended items last.
 | 3 | **App Store readiness**: docs, privacy, listing, screenshots, review notes (see details) | M | 1 for the build; can start now |
 | 4 | **Stage 5: Apple Watch complications + app** (design agreed, see details) | L | Crown scrubbing decision |
 | 5 | **Cat feeder on solar time** | M | Which feeder (later, see details) |
-| 6 | **Special event days** (solstices, equinoxes, full/new moon) | M | Design pass |
+| 6 | **Special event days**: built (solstices, equinoxes, full/super/blue/new moons, heads-up, widgets, Watch); blood moon comes with eclipses | M | - |
 | 7 | **Eclipses** | L | Bundled eclipse data |
 | 8 | **More widgets** (Lock Screen rectangular/inline, readout variants, moon ring/phase in widgets) | S | - |
 | 9 | **Tides** | L | Data source decision (bundle vs. API) |

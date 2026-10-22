@@ -58,11 +58,30 @@ struct WatchDialView: View {
                 let sun = SkyRingRenderer.Ring(center: c, inner: outer * 0.8, outer: outer)
                 let moonRing = SkyRingRenderer.Ring(center: c, inner: outer * 0.8 - 4 - outer * 0.1, outer: outer * 0.8 - 4)
                 SkyRingRenderer.drawSky(in: &context, ring: sun, model: model, dark: true, monochrome: false)
-                SkyRingRenderer.drawMoonRing(in: &context, ring: moonRing, moon: moon, dark: true)
+                let special = SpecialDayText.today(at: coordinate, on: moment)?.style
+                if special == .solstice {
+                    SkyRingRenderer.drawSpecialDay(.solstice, in: &context, ring: sun, innerRadius: moonRing.inner, dark: true)
+                }
+                SkyRingRenderer.drawMoonRing(in: &context, ring: moonRing, moon: moon, dark: true, special: special)
+                if let special, special == .equinox || special == .newMoon {
+                    SkyRingRenderer.drawSpecialDay(special, in: &context, ring: sun, innerRadius: moonRing.inner, dark: true)
+                }
                 SkyRingRenderer.drawSun(in: &context, ring: sun, angle: model.nowAngle,
                                         altitude: model.altitude(atAngle: model.nowAngle), monochrome: false)
             }
             .opacity(dimmed ? 0.55 : 1)
+
+            if let special = SpecialDayText.today(at: coordinate, on: moment) {
+                VStack {
+                    Spacer()
+                    Label(special.short, systemImage: special.symbol)
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(.orange)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
+                        .padding(.bottom, 2)
+                }
+            }
 
             VStack(spacing: 0) {
                 Text(center.primary)

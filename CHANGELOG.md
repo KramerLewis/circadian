@@ -18,4 +18,5 @@ All notable changes to SunClock. Versions follow the app's marketing version.
   A rolling 14-day scheduler refreshes on launch, location and time changes, edits
   and background app refresh.
 - Sun Ring widgets: small, medium, large, and Lock Screen circular.
+- Special sky days: solstices, equinoxes, full moons, supermoons, blue moons and new moons get a banner and a mark on the dial, with a heads-up a few days ahead; widgets and the Watch show them too.
 - App icon (default, dark, tinted).

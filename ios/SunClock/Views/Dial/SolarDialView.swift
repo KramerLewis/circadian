@@ -11,6 +11,7 @@ struct SolarDialView: View {
     let solarMinutes: Double
     let readout: SolarReadout
     let timeDisplay: TimeDisplay
+    var special: SpecialDayText?
     /// Called when the center is tapped, to switch to the next display.
     var onCycleDisplay: () -> Void = {}
     @Environment(\.colorScheme) private var colorScheme
@@ -21,8 +22,15 @@ struct SolarDialView: View {
     var body: some View {
         Canvas { context, size in
             let geometry = Geometry(size: size)
+            let dark = colorScheme == .dark
+            if special?.style == .solstice {
+                SkyRingRenderer.drawSpecialDay(.solstice, in: &context, ring: geometry.ring, innerRadius: geometry.moonInner, dark: dark)
+            }
             drawRing(in: &context, geometry)
-            SkyRingRenderer.drawMoonRing(in: &context, ring: geometry.moonRing, moon: moon, dark: colorScheme == .dark)
+            SkyRingRenderer.drawMoonRing(in: &context, ring: geometry.moonRing, moon: moon, dark: dark, special: special?.style)
+            if let style = special?.style, style == .equinox || style == .newMoon {
+                SkyRingRenderer.drawSpecialDay(style, in: &context, ring: geometry.ring, innerRadius: geometry.moonInner, dark: dark)
+            }
             drawHourTicks(in: &context, geometry)
             drawMarkers(in: &context, geometry)
             drawHand(in: &context, geometry)

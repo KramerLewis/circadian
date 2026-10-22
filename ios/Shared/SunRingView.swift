@@ -36,11 +36,22 @@ struct SunRingWidgetContent: View {
     let date: Date
     var monochrome = false
     var thickness: CGFloat = 0.3
+    /// Mark special sky days with a small badge in the middle of the ring.
+    var showsSpecialDay = true
 
     var body: some View {
         if let place {
             let day = SolarCalculator.solarDay(containing: date, at: place.coordinate)
             SunRingView(model: DialModel(day: day, now: date), monochrome: monochrome, thickness: thickness)
+                .overlay {
+                    if showsSpecialDay, let special = SpecialDayText.today(at: place.coordinate, on: date) {
+                        Image(systemName: special.symbol)
+                            .font(.system(size: 20, weight: .semibold))
+                            .foregroundStyle(monochrome ? .white : .orange)
+                            .shadow(color: .orange.opacity(monochrome ? 0 : 0.6), radius: 6)
+                            .accessibilityLabel(special.title)
+                    }
+                }
         } else {
             Image(systemName: "location.slash")
                 .font(.title)
@@ -65,7 +76,7 @@ struct SunRingMediumContent: View {
         if let place {
             let readout = SolarReadout(at: date, coordinate: place.coordinate)
             HStack(spacing: 16) {
-                SunRingWidgetContent(place: place, date: date, monochrome: monochrome)
+                SunRingWidgetContent(place: place, date: date, monochrome: monochrome, showsSpecialDay: false)
                 VStack(alignment: .leading, spacing: 6) {
                     Text(place.name)
                         .font(.caption)
@@ -78,7 +89,13 @@ struct SunRingMediumContent: View {
                               systemImage: polar == .midnightSun ? "sun.max.fill" : "moon.stars.fill")
                             .font(.headline)
                     }
-                    if let other = readout.nextEvent, other.event != readout.nextHorizon?.event {
+                    if let special = SpecialDayText.today(at: place.coordinate, on: date) {
+                        Label(special.short, systemImage: special.symbol)
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(monochrome ? .primary : Color.orange)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.8)
+                    } else if let other = readout.nextEvent, other.event != readout.nextHorizon?.event {
                         eventBlock(other, prominent: false)
                     }
                 }
