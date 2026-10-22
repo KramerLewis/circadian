@@ -34,6 +34,13 @@ public struct SolarTimeline: Sendable {
         occurrences.last { events.contains($0.event) && $0.date <= instant }
     }
 
+    /// The occurrence of any of `events` closest to `instant`, before or after.
+    public func nearest(of events: Set<SolarEvent>, to instant: Date) -> Occurrence? {
+        occurrences
+            .filter { events.contains($0.event) }
+            .min { abs($0.date.timeIntervalSince(instant)) < abs($1.date.timeIntervalSince(instant)) }
+    }
+
     /// The earliest occurrence of any of `events` after `instant`.
     public func next(of events: Set<SolarEvent> = Set(SolarEvent.allCases), after instant: Date) -> Occurrence? {
         occurrences.first { events.contains($0.event) && $0.date > instant }
@@ -63,6 +70,12 @@ public struct SolarReadout: Hashable, Sendable {
     /// Next event of any kind (twilights, noon, midnight included).
     public let nextEvent: Relative?
     public let polarCondition: PolarCondition?
+    /// The closest of sunrise, solar noon, sunset and solar midnight, before or after,
+    /// for the relative time display ("1h 48m after solar noon").
+    public let nearestAnchor: Relative?
+    public let nearestAnchorIsPast: Bool
+
+    public static let anchors: Set<SolarEvent> = [.sunrise, .solarNoon, .sunset, .solarMidnight]
 
     public init(at instant: Date, coordinate: Coordinate) {
         let timeline = SolarTimeline(around: instant, at: coordinate)
@@ -73,6 +86,9 @@ public struct SolarReadout: Hashable, Sendable {
         previousHorizon = relative(timeline.last(of: horizon, atOrBefore: instant))
         nextHorizon = relative(timeline.next(of: horizon, after: instant))
         nextEvent = relative(timeline.next(after: instant))
+        let anchor = timeline.nearest(of: Self.anchors, to: instant)
+        nearestAnchor = relative(anchor)
+        nearestAnchorIsPast = anchor.map { $0.date <= instant } ?? false
         polarCondition = switch SolarCalculator.solarDay(containing: instant, at: coordinate)[.sunrise] {
         case .sunAlwaysAbove: .midnightSun
         case .sunAlwaysBelow: .polarNight

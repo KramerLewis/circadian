@@ -16,6 +16,9 @@ final class AppSettings {
     var manualLatitude: Double?
     var manualLongitude: Double?
 
+    /// What the dial's center shows; see `TimeDisplay`.
+    var timeDisplayRaw: String = TimeDisplay.relative.rawValue
+
     /// Last fix from CoreLocation, so the app (and later the alarm scheduler) has a
     /// location before the first fix after launch.
     var lastLatitude: Double?
@@ -23,4 +26,37 @@ final class AppSettings {
     var lastLocationDate: Date?
 
     init() {}
+}
+
+/// The dial's center readout.
+enum TimeDisplay: String, CaseIterable, Identifiable {
+    /// Time from the nearest of sunrise, solar noon, sunset, solar midnight.
+    case relative
+    case twelveHour
+    case twentyFourHour
+
+    var id: Self { self }
+
+    var title: String {
+        switch self {
+        case .relative: "Relative to the Sun"
+        case .twelveHour: "12-Hour Clock"
+        case .twentyFourHour: "24-Hour Clock"
+        }
+    }
+
+    var next: TimeDisplay {
+        let all = Self.allCases
+        return all[(all.firstIndex(of: self)! + 1) % all.count]
+    }
+}
+
+extension AppSettings {
+    var timeDisplay: TimeDisplay {
+        get { TimeDisplay(rawValue: timeDisplayRaw) ?? .relative }
+        set {
+            timeDisplayRaw = newValue.rawValue
+            updatedAt = .now
+        }
+    }
 }

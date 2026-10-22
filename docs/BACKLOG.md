@@ -10,15 +10,14 @@ and a richer Watch face all build on), and the open-ended items last.
 |---|---|---|---|
 | 1 | **TestFlight pipeline** (CI builds, signs, uploads), including a real app icon (uploads are rejected without one) | S | Apple Developer enrollment, API key secrets |
 | 2 | **On-device shakedown**: alarms ring/snooze/stop, permission prompts, background refresh, widgets, location | S-M | 1 |
-| 3 | **Time display setting** (relative / 12h / 24h) | S | Your answer on scope (below) |
-| 4 | **App Store readiness**: docs, privacy, listing, screenshots, review notes (see details) | M | 1 for the build; can start now |
-| 5 | **Moon ring + phase** | L | - |
-| 6 | **Stage 5: Apple Watch face / complications**: design discussion now, build after 5 | L | Design decisions |
-| 7 | **Cat feeder on solar time** | M | Which feeder (see details) |
-| 8 | **Special event days** (solstices, equinoxes, full/new moon) | M | 5 for moon days; design pass |
-| 9 | **Eclipses** | L | 5; bundled eclipse data |
-| 10 | **More widgets** (Lock Screen rectangular/inline, readout variants) | S | - |
-| 11 | **Tides** | L | Data source decision (bundle vs. API) |
+| 3 | **App Store readiness**: docs, privacy, listing, screenshots, review notes (see details) | M | 1 for the build; can start now |
+| 4 | **Moon ring + phase** | L | - |
+| 5 | **Stage 5: Apple Watch face / complications**: design discussion now, build after 4 | L | Design decisions |
+| 6 | **Cat feeder on solar time** | M | Which feeder (later, see details) |
+| 7 | **Special event days** (solstices, equinoxes, full/new moon) | M | 4 for moon days; design pass |
+| 8 | **Eclipses** | L | 4; bundled eclipse data |
+| 9 | **More widgets** (Lock Screen rectangular/inline, readout variants) | S | - |
+| 10 | **Tides** | L | Data source decision (bundle vs. API) |
 
 ### Rest of the system (after the iOS app ships)
 
@@ -29,9 +28,12 @@ and a richer Watch face all build on), and the open-ended items last.
 | P3 | **iOS sync client**: account sign-in, background sync of `AppSettings` and `SolarAlarm` | M | P2 |
 | P4 | **Web app** (`web/`, TypeScript): dial, readouts, events, alarm management; solar math ported and tested against `shared/fixtures` | L | P1; P2 for sync |
 | P5 | **Android app** (`android/`, Kotlin + Compose): dial, widgets, exact alarms (`AlarmManager.setAlarmClock`, which, unlike iOS, can be recomputed in the background); solar math ported and tested against `shared/fixtures` | L | P1; P2 for sync |
-| P6 | **Shared fixtures for the moon** (and later eclipses), so every platform tests against the same reference | S | 5 |
+| P6 | **Shared fixtures for the moon** (and later eclipses), so every platform tests against the same reference | S | 4 |
 
 ## Done
+- Time display setting for the dial's center: relative to the nearest of sunrise,
+  solar noon, sunset, solar midnight (default), 12-hour, or 24-hour. Tap the center
+  to cycle, or use the clock menu.
 - Sun Ring widget: small, medium (with next sunrise/sunset and next event), large,
   Lock Screen circular.
 - Smooth sky gradient driven by solar altitude (replaces hard bands); brightest at
@@ -39,16 +41,6 @@ and a richer Watch face all build on), and the open-ended items last.
 - Glowing sun without an outline, sized to stay inside the ring.
 
 ## Details
-
-### Time display setting
-A setting for the dial's main readout, with three options:
-- **Relative** (default): time measured from the nearest anchor among sunrise, solar
-  noon, sunset and solar midnight, e.g. "1h 48m after solar noon".
-- **12-hour** clock: "3:00 PM".
-- **24-hour** clock: "15:00".
-
-Stored in `AppSettings`. Proposed: the setting drives the center readout; the event
-list and ring labels follow 12/24-hour. (Waiting on confirmation.)
 
 ### Moon ring
 An inner ring for the moon on its own timeline, with the same kind of milestones as the

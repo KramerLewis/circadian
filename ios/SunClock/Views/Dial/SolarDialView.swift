@@ -7,6 +7,10 @@ struct SolarDialView: View {
     let model: DialModel
     let now: Date
     let solarMinutes: Double
+    let readout: SolarReadout
+    let timeDisplay: TimeDisplay
+    /// Called when the center is tapped, to switch to the next display.
+    var onCycleDisplay: () -> Void = {}
     @Environment(\.colorScheme) private var colorScheme
 
     /// Events that get a clock-time label outside the ring; the rest get a tick.
@@ -26,12 +30,13 @@ struct SolarDialView: View {
                 // Keep the readout clear of the hour labels inside the ring.
                 let width = Geometry(size: proxy.size).inner * 1.25
                 VStack(spacing: 2) {
-                    Text(now, format: .dateTime.hour().minute())
+                    Text(centerText.primary)
                         .font(.system(.largeTitle, design: .rounded, weight: .semibold))
-                    Text("\(SolarFormat.solarClock(minutes: solarMinutes)) solar")
+                    Text(centerText.secondary)
                         .font(.system(.title3, design: .rounded))
                         .foregroundStyle(.secondary)
                 }
+                .contentTransition(.numericText())
                 .monospacedDigit()
                 .lineLimit(1)
                 .minimumScaleFactor(0.5)
@@ -39,9 +44,35 @@ struct SolarDialView: View {
                 .position(x: proxy.size.width / 2, y: proxy.size.height / 2)
             }
         }
+        .contentShape(.circle)
+        .onTapGesture(perform: onCycleDisplay)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Solar dial")
-        .accessibilityValue("\(now.formatted(date: .omitted, time: .shortened)), \(SolarFormat.solarClock(minutes: solarMinutes)) solar time")
+        .accessibilityValue("\(centerText.primary) \(centerText.secondary)")
+        .accessibilityHint("Double-tap to change the time display.")
+        .accessibilityAddTraits(.isButton)
+    }
+
+    private var centerText: (primary: String, secondary: String) {
+        let solar = "\(SolarFormat.solarClock(minutes: solarMinutes)) solar"
+        switch timeDisplay {
+        case .relative:
+            guard let anchor = readout.nearestAnchor else { return (solar, "") }
+            let direction = readout.nearestAnchorIsPast ? "after" : "until"
+            return (SolarFormat.duration(anchor.interval), "\(direction) \(anchor.event.displayName.lowercased())")
+        case .twelveHour:
+            return (Self.clock(now, format: "h:mm a"), solar)
+        case .twentyFourHour:
+            return (Self.clock(now, format: "HH:mm"), solar)
+        }
+    }
+
+    /// An explicit 12- or 24-hour clock, regardless of the device's setting.
+    private static func clock(_ date: Date, format: String) -> String {
+        let formatter = DateFormatter()
+        formatter.locale = .current
+        formatter.dateFormat = format
+        return formatter.string(from: date)
     }
 
     // MARK: Drawing

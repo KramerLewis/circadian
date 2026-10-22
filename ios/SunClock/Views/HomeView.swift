@@ -3,7 +3,7 @@ import SwiftData
 import SwiftUI
 
 struct HomeView: View {
-    let settings: AppSettings
+    @Bindable var settings: AppSettings
     @Environment(LocationService.self) private var locationService
     @State private var showingLocationSettings = DemoConfig.current?.sheet == "location"
     @State private var showingWidgetGallery = DemoConfig.current?.sheet == "widgets"
@@ -24,6 +24,13 @@ struct HomeView: View {
             .navigationTitle(place?.name ?? "SunClock")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Menu("Time Display", systemImage: "clock") {
+                        Picker("Time Display", selection: $settings.timeDisplay) {
+                            ForEach(TimeDisplay.allCases) { Text($0.title).tag($0) }
+                        }
+                    }
+                }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Location", systemImage: place?.source == .manual ? "mappin.circle" : "location") {
                         showingLocationSettings = true
@@ -43,15 +50,21 @@ struct HomeView: View {
 
     private func content(place: Place, now: Date) -> some View {
         let day = SolarCalculator.solarDay(containing: now, at: place.coordinate)
+        let readout = SolarReadout(at: now, coordinate: place.coordinate)
         return ScrollView {
             VStack(spacing: 20) {
                 SolarDialView(
                     model: DialModel(day: day, now: now),
                     now: now,
-                    solarMinutes: SolarCalculator.apparentSolarMinutes(at: now, longitude: place.coordinate.longitude)
+                    solarMinutes: SolarCalculator.apparentSolarMinutes(at: now, longitude: place.coordinate.longitude),
+                    readout: readout,
+                    timeDisplay: settings.timeDisplay,
+                    onCycleDisplay: {
+                        withAnimation { settings.timeDisplay = settings.timeDisplay.next }
+                    }
                 )
                 .frame(maxWidth: 420)
-                ReadoutView(readout: SolarReadout(at: now, coordinate: place.coordinate))
+                ReadoutView(readout: readout)
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Today")
                         .font(.headline)

@@ -5,7 +5,8 @@ import SwiftData
 /// A frozen place and time, set from launch arguments, for deterministic screenshots:
 ///
 ///     -demoLatitude 47.61 -demoLongitude -122.33 -demoName Seattle
-///     -demoDate 2026-06-21T15:00:00-07:00 [-demoTab alarms] [-demoSheet location|alarm]
+///     -demoDate 2026-06-21T15:00:00-07:00 [-demoTab alarms] [-demoSheet location|alarm|widgets]
+///     [-demoTimeDisplay relative|twelveHour|twentyFourHour]
 ///
 /// Debug builds only. In demo mode the app uses an in-memory store and never
 /// touches CoreLocation, so no permission prompt covers the screen.
@@ -15,6 +16,7 @@ struct DemoConfig {
     var date: Date
     var sheet: String?
     var tab: String?
+    var timeDisplay: String?
 
     static let current: DemoConfig? = {
         #if DEBUG
@@ -35,7 +37,8 @@ struct DemoConfig {
             name: value("-demoName") ?? "Demo",
             date: date,
             sheet: value("-demoSheet"),
-            tab: value("-demoTab")
+            tab: value("-demoTab"),
+            timeDisplay: value("-demoTimeDisplay")
         )
         #else
         return nil
@@ -46,7 +49,9 @@ struct DemoConfig {
 extension DemoConfig {
     /// Sample data for the in-memory demo store.
     func seed(_ context: ModelContext) {
-        context.insert(AppSettings())
+        let settings = AppSettings()
+        if let timeDisplay { settings.timeDisplayRaw = timeDisplay }
+        context.insert(settings)
         let samples: [(String, SolarEvent, Int, [Int], Bool)] = [
             ("Wake up", .sunrise, -30, [2, 3, 4, 5, 6], true),
             ("", .solarNoon, 60, Array(1...7), true),

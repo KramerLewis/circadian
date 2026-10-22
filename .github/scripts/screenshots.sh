@@ -37,8 +37,8 @@ shoot() {
 seattle=(-demoLatitude 47.61 -demoLongitude -122.33 -demoName Seattle)
 tromso=(-demoLatitude 69.65 -demoLongitude 18.96 -demoName Tromsø)
 shoot 1-seattle-june-afternoon-light light America/Los_Angeles 2026-06-21T15:00:00-07:00 "${seattle[@]}"
-shoot 2-seattle-june-afternoon-dark  dark  America/Los_Angeles 2026-06-21T15:00:00-07:00 "${seattle[@]}"
-shoot 3-seattle-december-night-dark  dark  America/Los_Angeles 2026-12-21T21:30:00-08:00 "${seattle[@]}"
+shoot 2-seattle-june-afternoon-dark  dark  America/Los_Angeles 2026-06-21T15:00:00-07:00 "${seattle[@]}" -demoTimeDisplay twelveHour
+shoot 3-seattle-december-night-dark  dark  America/Los_Angeles 2026-12-21T21:30:00-08:00 "${seattle[@]}" -demoTimeDisplay twentyFourHour
 shoot 4-tromso-midnight-sun-light    light Europe/Oslo         2026-06-21T23:30:00+02:00 "${tromso[@]}"
 shoot 5-tromso-polar-night-dark      dark  Europe/Oslo         2026-12-21T12:00:00+01:00 "${tromso[@]}"
 shoot 6-location-settings-light      light America/Los_Angeles 2026-06-21T15:00:00-07:00 "${seattle[@]}" -demoSheet location
