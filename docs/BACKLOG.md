@@ -8,7 +8,7 @@ and a richer Watch face all build on), and the open-ended items last.
 
 | # | Item | Size | Depends on / blocked by |
 |---|---|---|---|
-| 1 | **TestFlight pipeline** (CI builds, signs, uploads), including a real app icon (uploads are rejected without one) | S | Apple Developer enrollment, API key secrets |
+| 1 | **TestFlight pipeline** (CI builds, signs, uploads; the app icon it needs is done) | S | Apple Developer enrollment, API key secrets |
 | 2 | **On-device shakedown**: alarms ring/snooze/stop, permission prompts, background refresh, widgets, location | S-M | 1 |
 | 3 | **App Store readiness**: docs, privacy, listing, screenshots, review notes (see details) | M | 1 for the build; can start now |
 | 4 | **Stage 5: Apple Watch face / complications** | L | Design discussion |
