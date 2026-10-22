@@ -52,8 +52,10 @@ enum SkyRingRenderer {
     }
 
     /// The sun at `angle`, sized to fit within the ring, with its glow clipped to it.
-    static func drawSun(in context: inout GraphicsContext, ring: Ring, angle: Double, monochrome: Bool) {
-        let color = monochrome ? Color.white : DialPalette.sun
+    /// It dims as it sinks below the horizon (`altitude` in degrees).
+    static func drawSun(in context: inout GraphicsContext, ring: Ring, angle: Double, altitude: Double, monochrome: Bool) {
+        let strength = altitude >= -0.833 ? 1 : max(0.3, 1 + (altitude + 0.833) / 25)
+        let color = (monochrome ? Color.white : DialPalette.sun).opacity(strength)
         let center = ring.point((ring.inner + ring.outer) / 2, angle)
         let radius = ring.thickness * 0.3
         context.drawLayer { layer in
@@ -68,8 +70,82 @@ enum SkyRingRenderer {
             )
             layer.fill(
                 Path(ellipseIn: CGRect(x: center.x - radius, y: center.y - radius, width: radius * 2, height: radius * 2)),
-                with: .color(monochrome ? .white : Color(red: 1, green: 0.97, blue: 0.85))
+                with: .color((monochrome ? Color.white : Color(red: 1, green: 0.97, blue: 0.85)).opacity(strength))
             )
         }
+    }
+
+    // MARK: Moon
+
+    /// The moon's ring: its own timeline (angle = the moon's hour angle), colored by
+    /// the moon's altitude and fullness, with ticks at moonrise and moonset.
+    static func drawMoonRing(in context: inout GraphicsContext, ring: Ring, moon: MoonDialModel, dark: Bool) {
+        let stops = (0...360).map { degree -> Gradient.Stop in
+            let rgb = MoonGradient.color(
+                altitude: moon.altitude(atAngle: Double(degree)),
+                riseSetAltitude: moon.riseSetAltitude,
+                illumination: moon.phase.illumination,
+                dark: dark
+            )
+            return Gradient.Stop(color: Color(red: rgb.red, green: rgb.green, blue: rgb.blue), location: Double(degree) / 360)
+        }
+        context.fill(
+            ring.path,
+            with: .conicGradient(Gradient(stops: stops), center: ring.center, angle: .degrees(-90)),
+            style: evenOdd
+        )
+        if let rise = moon.riseSetAngle {
+            for angle in [-rise, rise] {
+                var tick = Path()
+                tick.move(to: ring.point(ring.inner, angle))
+                tick.addLine(to: ring.point(ring.outer, angle))
+                context.stroke(tick, with: .style(.secondary), lineWidth: 1)
+            }
+        }
+        let radius = ring.thickness * 0.75
+        drawMoon(in: &context, center: ring.point((ring.inner + ring.outer) / 2, moon.nowAngle),
+                 radius: radius, phase: moon.phase, southern: moon.latitude < 0, monochrome: false)
+    }
+
+    /// The moon's disc as it looks now: the lit part bounded by the limb and the
+    /// terminator (an ellipse whose width follows the illuminated fraction).
+    static func drawMoon(in context: inout GraphicsContext, center: CGPoint, radius: CGFloat,
+                         phase: LunarCalculator.Phase, southern: Bool, monochrome: Bool) {
+        let disc = Path(ellipseIn: CGRect(x: center.x - radius, y: center.y - radius, width: radius * 2, height: radius * 2))
+        context.fill(disc, with: .color(monochrome ? .white.opacity(0.25) : Color(red: 0.24, green: 0.26, blue: 0.34)))
+        // Seen from the northern hemisphere a waxing moon is lit on the right.
+        let side: CGFloat = (phase.isWaxing != southern) ? 1 : -1
+        let k = CGFloat(phase.illumination)
+        let steps = 48
+        var lit = Path()
+        for i in 0...steps {
+            let t = (-90 + 180 * Double(i) / Double(steps)) * .pi / 180
+            let point = CGPoint(x: center.x + side * radius * cos(t), y: center.y + radius * sin(t))
+            if i == 0 { lit.move(to: point) } else { lit.addLine(to: point) }
+        }
+        for i in (0...steps).reversed() {
+            let t = (-90 + 180 * Double(i) / Double(steps)) * .pi / 180
+            lit.addLine(to: CGPoint(x: center.x + side * radius * (1 - 2 * k) * cos(t), y: center.y + radius * sin(t)))
+        }
+        lit.closeSubpath()
+        context.fill(lit, with: .color(monochrome ? .white : Color(red: 0.95, green: 0.95, blue: 0.90)))
+        context.stroke(disc, with: .color(.black.opacity(0.25)), lineWidth: 0.5)
+    }
+}
+
+/// A moon glyph in its current phase.
+struct MoonPhaseView: View {
+    let phase: LunarCalculator.Phase
+    var southern = false
+
+    var body: some View {
+        Canvas { context, size in
+            let radius = min(size.width, size.height) / 2 - 0.5
+            SkyRingRenderer.drawMoon(in: &context, center: CGPoint(x: size.width / 2, y: size.height / 2),
+                                     radius: radius, phase: phase, southern: southern, monochrome: false)
+        }
+        .aspectRatio(1, contentMode: .fit)
+        .accessibilityElement()
+        .accessibilityLabel("\(phase.name), \(Int((phase.illumination * 100).rounded()))% lit")
     }
 }

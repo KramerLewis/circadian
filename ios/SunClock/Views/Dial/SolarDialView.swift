@@ -2,9 +2,11 @@ import SunCore
 import SwiftUI
 
 /// The 24-hour solar dial: solar noon at the top, solar midnight at the bottom,
-/// twilight and daylight bands, event markers, and the "now" hand.
+/// twilight and daylight bands, event markers, and the "now" hand. Inside it, the moon
+/// ring runs on the moon's own timeline (its highest point at the top).
 struct SolarDialView: View {
     let model: DialModel
+    let moon: MoonDialModel
     let now: Date
     let solarMinutes: Double
     let readout: SolarReadout
@@ -20,6 +22,7 @@ struct SolarDialView: View {
         Canvas { context, size in
             let geometry = Geometry(size: size)
             drawRing(in: &context, geometry)
+            SkyRingRenderer.drawMoonRing(in: &context, ring: geometry.moonRing, moon: moon, dark: colorScheme == .dark)
             drawHourTicks(in: &context, geometry)
             drawMarkers(in: &context, geometry)
             drawHand(in: &context, geometry)
@@ -28,7 +31,7 @@ struct SolarDialView: View {
         .overlay {
             GeometryReader { proxy in
                 // Keep the readout clear of the hour labels inside the ring.
-                let width = Geometry(size: proxy.size).inner * 1.25
+                let width = Geometry(size: proxy.size).tickBase * 1.3
                 VStack(spacing: 2) {
                     Text(centerText.primary)
                         .font(.system(.largeTitle, design: .rounded, weight: .semibold))
@@ -87,7 +90,18 @@ struct SolarDialView: View {
             center = CGPoint(x: size.width / 2, y: size.height / 2)
             // Leave room outside the ring for event time labels.
             outer = side / 2 - 46
-            inner = outer * 0.72
+            inner = outer * 0.8
+            moonOuter = inner - 5
+            moonInner = moonOuter - outer * 0.1
+        }
+
+        let moonOuter: CGFloat
+        let moonInner: CGFloat
+        /// Hour ticks and labels sit just inside the moon ring.
+        var tickBase: CGFloat { moonInner }
+
+        var moonRing: SkyRingRenderer.Ring {
+            SkyRingRenderer.Ring(center: center, inner: moonInner, outer: moonOuter)
         }
 
         /// Point at `radius` and dial angle `degrees` (clockwise from the top).
@@ -110,12 +124,12 @@ struct SolarDialView: View {
             let angle = DialModel.angle(forSolarHour: Double(hour))
             let major = hour % 6 == 0
             var tick = Path()
-            tick.move(to: g.point(g.inner - 2, angle))
-            tick.addLine(to: g.point(g.inner - (major ? 10 : 5), angle))
+            tick.move(to: g.point(g.tickBase - 2, angle))
+            tick.addLine(to: g.point(g.tickBase - (major ? 9 : 5), angle))
             context.stroke(tick, with: .style(.secondary), lineWidth: major ? 2 : 1)
             if hour % 3 == 0 {
                 let label = Text("\(hour)").font(.caption2.weight(major ? .semibold : .regular)).foregroundStyle(.secondary)
-                context.draw(label, at: g.point(g.inner - 20, angle))
+                context.draw(label, at: g.point(g.tickBase - 17, angle))
             }
         }
     }
@@ -144,6 +158,7 @@ struct SolarDialView: View {
         hand.move(to: g.point(g.inner - 4, model.nowAngle))
         hand.addLine(to: g.point(g.outer + 4, model.nowAngle))
         context.stroke(hand, with: .style(.primary.opacity(0.7)), style: StrokeStyle(lineWidth: 1.5, lineCap: .round))
-        SkyRingRenderer.drawSun(in: &context, ring: g.ring, angle: model.nowAngle, monochrome: false)
+        SkyRingRenderer.drawSun(in: &context, ring: g.ring, angle: model.nowAngle,
+                                altitude: model.altitude(atAngle: model.nowAngle), monochrome: false)
     }
 }

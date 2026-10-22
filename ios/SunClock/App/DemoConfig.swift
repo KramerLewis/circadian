@@ -6,7 +6,7 @@ import SwiftData
 ///
 ///     -demoLatitude 47.61 -demoLongitude -122.33 -demoName Seattle
 ///     -demoDate 2026-06-21T15:00:00-07:00 [-demoTab alarms] [-demoSheet location|alarm|widgets]
-///     [-demoTimeDisplay relative|twelveHour|twentyFourHour]
+///     [-demoTimeDisplay relative|twelveHour|twentyFourHour] [-demoScroll moon]
 ///
 /// Debug builds only. In demo mode the app uses an in-memory store and never
 /// touches CoreLocation, so no permission prompt covers the screen.
@@ -17,6 +17,7 @@ struct DemoConfig {
     var sheet: String?
     var tab: String?
     var timeDisplay: String?
+    var scroll: String?
 
     static let current: DemoConfig? = {
         #if DEBUG
@@ -38,7 +39,8 @@ struct DemoConfig {
             date: date,
             sheet: value("-demoSheet"),
             tab: value("-demoTab"),
-            timeDisplay: value("-demoTimeDisplay")
+            timeDisplay: value("-demoTimeDisplay"),
+            scroll: value("-demoScroll")
         )
         #else
         return nil

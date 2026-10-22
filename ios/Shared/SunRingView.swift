@@ -20,7 +20,8 @@ struct SunRingView: View {
                 outer: outer
             )
             SkyRingRenderer.drawSky(in: &context, ring: ring, model: model, dark: colorScheme == .dark, monochrome: monochrome)
-            SkyRingRenderer.drawSun(in: &context, ring: ring, angle: model.nowAngle, monochrome: monochrome)
+            SkyRingRenderer.drawSun(in: &context, ring: ring, angle: model.nowAngle,
+                                    altitude: model.altitude(atAngle: model.nowAngle), monochrome: monochrome)
         }
         .aspectRatio(1, contentMode: .fit)
         .accessibilityElement()

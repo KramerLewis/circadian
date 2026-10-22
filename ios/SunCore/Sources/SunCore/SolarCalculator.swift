@@ -16,6 +16,8 @@ public enum SolarCalculator {
         public let declination: Double
         /// Equation of time in minutes (apparent minus mean solar time).
         public let equationOfTime: Double
+        /// Apparent ecliptic longitude in degrees (used for the moon's phase).
+        public let apparentLongitude: Double
     }
 
     // MARK: Solar days
@@ -127,7 +129,7 @@ public enum SolarCalculator {
             - 0.5 * y * y * sin(4 * l0)
             - 1.25 * e * e * sin(2 * m)
 
-        return Position(declination: declination, equationOfTime: 4 * degrees(eot))
+        return Position(declination: declination, equationOfTime: 4 * degrees(eot), apparentLongitude: mod(apparentLongitude, 360))
     }
 
     // MARK: Helpers

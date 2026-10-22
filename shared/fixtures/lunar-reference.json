@@ -1,0 +1,221 @@
+{
+  "description": "Reference moon events (within each local calendar day) and illumination for every platform's lunar calculator tests.",
+  "generatedBy": "shared/tools/generate_lunar_fixtures.py",
+  "algorithm": "Schlyter low-precision moon; rise/set at 0.7275*parallax - 34'; transits at hour angle 0/180",
+  "toleranceSeconds": 120,
+  "illuminationTolerance": 0.01,
+  "cases": [
+    {
+      "name": "Seattle, June solstice",
+      "latitude": 47.61,
+      "longitude": -122.33,
+      "timeZone": "America/Los_Angeles",
+      "date": "2026-06-21",
+      "events": [
+        {
+          "event": "moonset",
+          "time": "2026-06-21T00:46:22-07:00"
+        },
+        {
+          "event": "moonLowerTransit",
+          "time": "2026-06-21T06:52:54-07:00"
+        },
+        {
+          "event": "moonrise",
+          "time": "2026-06-21T13:13:32-07:00"
+        },
+        {
+          "event": "moonTransit",
+          "time": "2026-06-21T19:14:17-07:00"
+        }
+      ],
+      "illuminationAtNoon": 0.4871,
+      "waxingAtNoon": true
+    },
+    {
+      "name": "Seattle, full moon",
+      "latitude": 47.61,
+      "longitude": -122.33,
+      "timeZone": "America/Los_Angeles",
+      "date": "2026-11-24",
+      "events": [
+        {
+          "event": "moonset",
+          "time": "2026-11-24T07:59:35-08:00"
+        },
+        {
+          "event": "moonLowerTransit",
+          "time": "2026-11-24T12:04:36-08:00"
+        },
+        {
+          "event": "moonrise",
+          "time": "2026-11-24T16:04:05-08:00"
+        }
+      ],
+      "illuminationAtNoon": 0.9975,
+      "waxingAtNoon": false
+    },
+    {
+      "name": "Seattle, new moon",
+      "latitude": 47.61,
+      "longitude": -122.33,
+      "timeZone": "America/Los_Angeles",
+      "date": "2026-12-09",
+      "events": [
+        {
+          "event": "moonLowerTransit",
+          "time": "2026-12-09T00:14:47-08:00"
+        },
+        {
+          "event": "moonrise",
+          "time": "2026-12-09T08:53:26-08:00"
+        },
+        {
+          "event": "moonTransit",
+          "time": "2026-12-09T12:40:34-08:00"
+        },
+        {
+          "event": "moonset",
+          "time": "2026-12-09T16:28:21-08:00"
+        }
+      ],
+      "illuminationAtNoon": 0.0071,
+      "waxingAtNoon": true
+    },
+    {
+      "name": "Seattle, DST ends",
+      "latitude": 47.61,
+      "longitude": -122.33,
+      "timeZone": "America/Los_Angeles",
+      "date": "2026-11-01",
+      "events": [
+        {
+          "event": "moonTransit",
+          "time": "2026-11-01T05:59:56-08:00"
+        },
+        {
+          "event": "moonset",
+          "time": "2026-11-01T13:44:48-08:00"
+        },
+        {
+          "event": "moonLowerTransit",
+          "time": "2026-11-01T18:26:39-08:00"
+        },
+        {
+          "event": "moonrise",
+          "time": "2026-11-01T23:19:13-08:00"
+        }
+      ],
+      "illuminationAtNoon": 0.5021,
+      "waxingAtNoon": false
+    },
+    {
+      "name": "Seattle, December solstice",
+      "latitude": 47.61,
+      "longitude": -122.33,
+      "timeZone": "America/Los_Angeles",
+      "date": "2026-12-21",
+      "events": [
+        {
+          "event": "moonset",
+          "time": "2026-12-21T05:26:06-08:00"
+        },
+        {
+          "event": "moonLowerTransit",
+          "time": "2026-12-21T09:42:00-08:00"
+        },
+        {
+          "event": "moonrise",
+          "time": "2026-12-21T13:50:33-08:00"
+        },
+        {
+          "event": "moonTransit",
+          "time": "2026-12-21T22:13:28-08:00"
+        }
+      ],
+      "illuminationAtNoon": 0.9247,
+      "waxingAtNoon": true
+    },
+    {
+      "name": "Sydney",
+      "latitude": -33.87,
+      "longitude": 151.21,
+      "timeZone": "Australia/Sydney",
+      "date": "2026-06-21",
+      "events": [
+        {
+          "event": "moonLowerTransit",
+          "time": "2026-06-21T05:05:30+10:00"
+        },
+        {
+          "event": "moonrise",
+          "time": "2026-06-21T11:24:48+10:00"
+        },
+        {
+          "event": "moonTransit",
+          "time": "2026-06-21T17:27:30+10:00"
+        },
+        {
+          "event": "moonset",
+          "time": "2026-06-21T23:38:45+10:00"
+        }
+      ],
+      "illuminationAtNoon": 0.4133,
+      "waxingAtNoon": true
+    },
+    {
+      "name": "Tromso, January",
+      "latitude": 69.65,
+      "longitude": 18.96,
+      "timeZone": "Europe/Oslo",
+      "date": "2026-01-12",
+      "events": [
+        {
+          "event": "moonrise",
+          "time": "2026-01-12T04:54:43+01:00"
+        },
+        {
+          "event": "moonTransit",
+          "time": "2026-01-12T06:38:54+01:00"
+        },
+        {
+          "event": "moonset",
+          "time": "2026-01-12T08:04:46+01:00"
+        },
+        {
+          "event": "moonLowerTransit",
+          "time": "2026-01-12T19:01:10+01:00"
+        }
+      ],
+      "illuminationAtNoon": 0.332,
+      "waxingAtNoon": false
+    },
+    {
+      "name": "Equator, prime meridian",
+      "latitude": 0.0,
+      "longitude": 0.0,
+      "timeZone": "UTC",
+      "date": "2026-10-22",
+      "events": [
+        {
+          "event": "moonset",
+          "time": "2026-10-22T02:32:27+00:00"
+        },
+        {
+          "event": "moonLowerTransit",
+          "time": "2026-10-22T08:43:50+00:00"
+        },
+        {
+          "event": "moonrise",
+          "time": "2026-10-22T14:55:15+00:00"
+        },
+        {
+          "event": "moonTransit",
+          "time": "2026-10-22T21:05:42+00:00"
+        }
+      ],
+      "illuminationAtNoon": 0.8431,
+      "waxingAtNoon": true
+    }
+  ]
+}

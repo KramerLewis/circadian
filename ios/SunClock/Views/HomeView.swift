@@ -51,31 +51,44 @@ struct HomeView: View {
     private func content(place: Place, now: Date) -> some View {
         let day = SolarCalculator.solarDay(containing: now, at: place.coordinate)
         let readout = SolarReadout(at: now, coordinate: place.coordinate)
-        return ScrollView {
-            VStack(spacing: 20) {
-                SolarDialView(
-                    model: DialModel(day: day, now: now),
-                    now: now,
-                    solarMinutes: SolarCalculator.apparentSolarMinutes(at: now, longitude: place.coordinate.longitude),
-                    readout: readout,
-                    timeDisplay: settings.timeDisplay,
-                    onCycleDisplay: {
-                        withAnimation { settings.timeDisplay = settings.timeDisplay.next }
+        return ScrollViewReader { proxy in
+            ScrollView {
+                VStack(spacing: 20) {
+                    SolarDialView(
+                        model: DialModel(day: day, now: now),
+                        moon: MoonDialModel(now: now, coordinate: place.coordinate),
+                        now: now,
+                        solarMinutes: SolarCalculator.apparentSolarMinutes(at: now, longitude: place.coordinate.longitude),
+                        readout: readout,
+                        timeDisplay: settings.timeDisplay,
+                        onCycleDisplay: {
+                            withAnimation { settings.timeDisplay = settings.timeDisplay.next }
+                        }
+                    )
+                    .frame(maxWidth: 420)
+                    ReadoutView(readout: readout)
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Today")
+                            .font(.headline)
+                            .padding(.horizontal, 4)
+                        EventListView(day: day, now: now)
                     }
-                )
-                .frame(maxWidth: 420)
-                ReadoutView(readout: readout)
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Today")
-                        .font(.headline)
-                        .padding(.horizontal, 4)
-                    EventListView(day: day, now: now)
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Moon")
+                            .font(.headline)
+                            .padding(.horizontal, 4)
+                        MoonListView(day: day, coordinate: place.coordinate, now: now)
+                    }
+                    .id("moon")
+                    Text(place.coordinate.formatted)
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
                 }
-                Text(place.coordinate.formatted)
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
+                .padding()
             }
-            .padding()
+            .onAppear {
+                if let target = DemoConfig.current?.scroll { proxy.scrollTo(target, anchor: .bottom) }
+            }
         }
     }
 }
