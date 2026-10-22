@@ -3,6 +3,7 @@ import CoreLocation
 import SwiftData
 import SwiftUI
 import UIKit
+import WidgetKit
 
 @main
 struct SunClockApp: App {
@@ -63,8 +64,9 @@ struct RootView: View {
                         AlarmListView(settings: settings)
                     }
                 }
-                .onChange(of: Place.resolve(settings: settings, live: locationService.location)) {
-                    refresh.request("location changed")
+                .onChange(of: Place.resolve(settings: settings, live: locationService.location), initial: true) { old, place in
+                    if old != place { refresh.request("location changed") }
+                    shareWithWidgets(place)
                 }
             } else {
                 Color.clear
@@ -99,6 +101,17 @@ struct RootView: View {
         }
         .onReceive(NotificationCenter.default.publisher(for: .NSSystemTimeZoneDidChange)) { _ in
             refresh.request("time zone changed")
+        }
+    }
+
+    /// The widgets draw from the place the app last shared.
+    private func shareWithWidgets(_ place: Place?) {
+        guard DemoConfig.current == nil else { return }
+        let stored = place.map {
+            SharedStore.StoredPlace(name: $0.name, latitude: $0.coordinate.latitude, longitude: $0.coordinate.longitude)
+        }
+        if SharedStore.savePlace(stored) {
+            WidgetCenter.shared.reloadTimelines(ofKind: "SunRing")
         }
     }
 }

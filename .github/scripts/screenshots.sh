@@ -45,3 +45,5 @@ shoot 6-location-settings-light      light America/Los_Angeles 2026-06-21T15:00:
 shoot 7-alarms-light                 light America/Los_Angeles 2026-06-20T12:00:00-07:00 "${seattle[@]}" -demoTab alarms
 shoot 8-alarms-dark                  dark  America/Los_Angeles 2026-06-20T12:00:00-07:00 "${seattle[@]}" -demoTab alarms
 shoot 9-new-alarm-light              light America/Los_Angeles 2026-06-20T12:00:00-07:00 "${seattle[@]}" -demoTab alarms -demoSheet alarm
+shoot 10-widgets-light               light America/Los_Angeles 2026-06-21T15:00:00-07:00 "${seattle[@]}" -demoSheet widgets
+shoot 11-widgets-dark-evening        dark  America/Los_Angeles 2026-12-21T17:00:00-08:00 "${seattle[@]}" -demoSheet widgets

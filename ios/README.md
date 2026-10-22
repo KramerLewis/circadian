@@ -18,8 +18,8 @@ regenerate it: `python3 shared/tools/generate_solar_fixtures.py --ephem`.
 |---|---|---|
 | `SunCore/` | Swift package | Solar math, dial geometry, alarm planning. Pure, tested. |
 | `SunClock/` | App | SwiftUI views, SwiftData models, location, AlarmKit scheduler. |
-| `SunClockAlarmUI/` | Widget extension | Lock Screen / Dynamic Island UI for a snoozed alarm. |
-| `Shared/` | Both | `SolarAlarmMetadata`, the data attached to each system alarm. |
+| `SunClockWidgets/` | Widget extension | Sun Ring widgets; Lock Screen / Dynamic Island UI for a snoozed alarm. |
+| `Shared/` | Both | Alarm metadata, the ring view and palette, and the App Group store. |
 | `Config/` | | Info.plist keys that can't be build settings. |
 
 ## How solar alarms are scheduled

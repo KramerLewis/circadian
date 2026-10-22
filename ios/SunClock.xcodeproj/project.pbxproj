@@ -8,7 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		5C0000000000000000000301 /* SunCore in Frameworks */ = {isa = PBXBuildFile; productRef = 5C0000000000000000000501 /* SunCore */; };
-		5C0000000000000000000302 /* SunClockAlarmUI.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 5C0000000000000000000102 /* SunClockAlarmUI.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		5C0000000000000000000303 /* SunCore in Frameworks */ = {isa = PBXBuildFile; productRef = 5C0000000000000000000502 /* SunCore */; };
+		5C0000000000000000000302 /* SunClockWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 5C0000000000000000000102 /* SunClockWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -17,7 +18,7 @@
 			containerPortal = 5C0000000000000000000801 /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = 5C0000000000000000000702;
-			remoteInfo = SunClockAlarmUI;
+			remoteInfo = SunClockWidgets;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -28,7 +29,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 13;
 			files = (
-				5C0000000000000000000302 /* SunClockAlarmUI.appex in Embed Foundation Extensions */,
+				5C0000000000000000000302 /* SunClockWidgets.appex in Embed Foundation Extensions */,
 			);
 			name = "Embed Foundation Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -37,7 +38,7 @@
 
 /* Begin PBXFileReference section */
 		5C0000000000000000000101 /* SunClock.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SunClock.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		5C0000000000000000000102 /* SunClockAlarmUI.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = SunClockAlarmUI.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		5C0000000000000000000102 /* SunClockWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = SunClockWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -46,9 +47,9 @@
 			path = SunClock;
 			sourceTree = "<group>";
 		};
-		5C0000000000000000000202 /* SunClockAlarmUI */ = {
+		5C0000000000000000000202 /* SunClockWidgets */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = SunClockAlarmUI;
+			path = SunClockWidgets;
 			sourceTree = "<group>";
 		};
 		5C0000000000000000000203 /* Shared */ = {
@@ -71,6 +72,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5C0000000000000000000303 /* SunCore in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -81,7 +83,7 @@
 			isa = PBXGroup;
 			children = (
 				5C0000000000000000000201 /* SunClock */,
-				5C0000000000000000000202 /* SunClockAlarmUI */,
+				5C0000000000000000000202 /* SunClockWidgets */,
 				5C0000000000000000000203 /* Shared */,
 				5C0000000000000000000002 /* Products */,
 			);
@@ -91,7 +93,7 @@
 			isa = PBXGroup;
 			children = (
 				5C0000000000000000000101 /* SunClock.app */,
-				5C0000000000000000000102 /* SunClockAlarmUI.appex */,
+				5C0000000000000000000102 /* SunClockWidgets.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -125,9 +127,9 @@
 			productReference = 5C0000000000000000000101 /* SunClock.app */;
 			productType = "com.apple.product-type.application";
 		};
-		5C0000000000000000000702 /* SunClockAlarmUI */ = {
+		5C0000000000000000000702 /* SunClockWidgets */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 5C0000000000000000000903 /* Build configuration list for PBXNativeTarget "SunClockAlarmUI" */;
+			buildConfigurationList = 5C0000000000000000000903 /* Build configuration list for PBXNativeTarget "SunClockWidgets" */;
 			buildPhases = (
 				5C0000000000000000000611 /* Sources */,
 				5C0000000000000000000612 /* Frameworks */,
@@ -138,12 +140,15 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				5C0000000000000000000202 /* SunClockAlarmUI */,
+				5C0000000000000000000202 /* SunClockWidgets */,
 				5C0000000000000000000203 /* Shared */,
 			);
-			name = SunClockAlarmUI;
-			productName = SunClockAlarmUI;
-			productReference = 5C0000000000000000000102 /* SunClockAlarmUI.appex */;
+			name = SunClockWidgets;
+			packageProductDependencies = (
+				5C0000000000000000000502 /* SunCore */,
+			);
+			productName = SunClockWidgets;
+			productReference = 5C0000000000000000000102 /* SunClockWidgets.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
@@ -182,7 +187,7 @@
 			projectRoot = "";
 			targets = (
 				5C0000000000000000000701 /* SunClock */,
-				5C0000000000000000000702 /* SunClockAlarmUI */,
+				5C0000000000000000000702 /* SunClockWidgets */,
 			);
 		};
 /* End PBXProject section */
@@ -224,7 +229,7 @@
 /* Begin PBXTargetDependency section */
 		5C0000000000000000000B02 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 5C0000000000000000000702 /* SunClockAlarmUI */;
+			target = 5C0000000000000000000702 /* SunClockWidgets */;
 			targetProxy = 5C0000000000000000000B01 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -301,6 +306,7 @@
 				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				CODE_SIGN_ENTITLEMENTS = Config/SunClock.entitlements;
 				INFOPLIST_FILE = "Config/SunClock-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = SunClock;
 				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
@@ -334,6 +340,7 @@
 				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				CODE_SIGN_ENTITLEMENTS = Config/SunClock.entitlements;
 				INFOPLIST_FILE = "Config/SunClock-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = SunClock;
 				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
@@ -364,7 +371,8 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = "";
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "Config/SunClockAlarmUI-Info.plist";
+				CODE_SIGN_ENTITLEMENTS = Config/SunClockWidgets.entitlements;
+				INFOPLIST_FILE = "Config/SunClockWidgets-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = SunClock;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -372,7 +380,7 @@
 					"@executable_path/../../Frameworks",
 				);
 				MARKETING_VERSION = 0.1;
-				PRODUCT_BUNDLE_IDENTIFIER = com.kray.circadian.AlarmUI;
+				PRODUCT_BUNDLE_IDENTIFIER = com.kray.circadian.widgets;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -390,7 +398,8 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = "";
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "Config/SunClockAlarmUI-Info.plist";
+				CODE_SIGN_ENTITLEMENTS = Config/SunClockWidgets.entitlements;
+				INFOPLIST_FILE = "Config/SunClockWidgets-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = SunClock;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -398,7 +407,7 @@
 					"@executable_path/../../Frameworks",
 				);
 				MARKETING_VERSION = 0.1;
-				PRODUCT_BUNDLE_IDENTIFIER = com.kray.circadian.AlarmUI;
+				PRODUCT_BUNDLE_IDENTIFIER = com.kray.circadian.widgets;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -430,7 +439,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		5C0000000000000000000903 /* Build configuration list for PBXNativeTarget "SunClockAlarmUI" */ = {
+		5C0000000000000000000903 /* Build configuration list for PBXNativeTarget "SunClockWidgets" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				5C0000000000000000000A05 /* Debug */,
@@ -450,6 +459,11 @@
 
 /* Begin XCSwiftPackageProductDependency section */
 		5C0000000000000000000501 /* SunCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 5C0000000000000000000401 /* XCLocalSwiftPackageReference "SunCore" */;
+			productName = SunCore;
+		};
+		5C0000000000000000000502 /* SunCore */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 5C0000000000000000000401 /* XCLocalSwiftPackageReference "SunCore" */;
 			productName = SunCore;

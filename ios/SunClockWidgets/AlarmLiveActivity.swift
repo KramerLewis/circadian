@@ -3,13 +3,6 @@ import AlarmKit
 import SwiftUI
 import WidgetKit
 
-@main
-struct SunClockAlarmUIBundle: WidgetBundle {
-    var body: some Widget {
-        AlarmLiveActivity()
-    }
-}
-
 /// Lock Screen and Dynamic Island UI for a SunClock alarm while it counts down (i.e.
 /// while snoozed). The ringing alert itself is drawn by the system from the alarm's
 /// `AlarmPresentation`; AlarmKit requires this extension for the countdown state.

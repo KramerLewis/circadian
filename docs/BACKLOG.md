@@ -4,7 +4,7 @@ Not scheduled. Newest at the bottom.
 
 ## Planned stages
 - **Stage 5: Apple Watch face / complication.** Needs a design discussion first.
-- Home Screen and Lock Screen widgets (reuse SunCore).
+- More widgets beyond the Sun Ring (e.g. a medium one with next event, readouts). The Sun Ring widget (small, large, Lock Screen circular) is built.
 - TestFlight pipeline via GitHub Actions (waiting on Apple Developer enrollment).
 
 ## iOS

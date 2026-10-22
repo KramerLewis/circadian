@@ -6,6 +6,7 @@ struct HomeView: View {
     let settings: AppSettings
     @Environment(LocationService.self) private var locationService
     @State private var showingLocationSettings = DemoConfig.current?.sheet == "location"
+    @State private var showingWidgetGallery = DemoConfig.current?.sheet == "widgets"
 
     var body: some View {
         let place = Place.resolve(settings: settings, live: locationService.location)
@@ -32,6 +33,11 @@ struct HomeView: View {
             .sheet(isPresented: $showingLocationSettings) {
                 LocationSettingsView(settings: settings)
             }
+            #if DEBUG
+            .sheet(isPresented: $showingWidgetGallery) {
+                WidgetGalleryView(place: place, date: DemoConfig.current?.date ?? .now)
+            }
+            #endif
         }
     }
 
