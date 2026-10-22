@@ -14,8 +14,8 @@ struct MoonListView: View {
         VStack(spacing: 0) {
             HStack(spacing: 12) {
                 MoonPhaseView(phase: phase, southern: coordinate.latitude < 0)
-                    .frame(width: 40, height: 40)
-                    .padding(-6)
+                    .frame(width: 56, height: 56)
+                    .padding(-14)
                 Text(phase.name)
                 Spacer()
                 Text("\(Int((phase.illumination * 100).rounded()))% lit")

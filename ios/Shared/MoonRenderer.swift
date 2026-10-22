@@ -80,11 +80,14 @@ enum MoonRenderer {
                 let gOut = min(green * 1.15 * lit + green * earthshine * 0.7, 1)
                 let bOut = min(blue * 1.15 * lit + blue * earthshine * 1.0, 1)
 
+                // Like the real moon in a lit sky, the unlit part is mostly see-through:
+                // just a hint of the disc (with its earthshine) over whatever is behind.
+                let a = alpha * (0.18 + 0.82 * min(lit * 2, 1))
                 let i = (row * n + col) * 4
-                out[i] = UInt8(rOut * alpha * 255)
-                out[i + 1] = UInt8(gOut * alpha * 255)
-                out[i + 2] = UInt8(bOut * alpha * 255)
-                out[i + 3] = UInt8(alpha * 255)
+                out[i] = UInt8(rOut * a * 255)
+                out[i + 1] = UInt8(gOut * a * 255)
+                out[i + 2] = UInt8(bOut * a * 255)
+                out[i + 3] = UInt8(a * 255)
             }
         }
 

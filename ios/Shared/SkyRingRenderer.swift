@@ -140,8 +140,8 @@ struct MoonPhaseView: View {
 
     var body: some View {
         Canvas { context, size in
-            // Leave room inside the frame for the glow.
-            let radius = min(size.width, size.height) / 2 / 1.5
+            // Leave room inside the frame for the glow (1.9 x the radius).
+            let radius = min(size.width, size.height) / 2 / 2
             SkyRingRenderer.drawMoon(in: &context, center: CGPoint(x: size.width / 2, y: size.height / 2),
                                      radius: radius, phase: phase, southern: southern, monochrome: false)
         }
