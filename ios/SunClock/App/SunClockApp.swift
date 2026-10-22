@@ -1,5 +1,6 @@
 import Combine
 import CoreLocation
+import SunCore
 import SwiftData
 import SwiftUI
 import UIKit
