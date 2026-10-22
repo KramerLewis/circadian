@@ -115,8 +115,9 @@ Everything needed beyond the code to publish:
   an alarm a few minutes out).
 - **Accessibility pass:** VoiceOver labels on the dial and widgets, Dynamic Type,
   contrast in both modes.
-- **Localization plan:** strings are already in a String Catalog; decide initial
-  languages.
+- **Localization plan:** add a String Catalog (the build already extracts strings);
+  some UI text is built from strings in code and needs converting first. Decide
+  initial languages.
 - **Repo docs:** user-facing README section, `CHANGELOG.md` / release notes,
   `LICENSE` (the repo is public, so pick one deliberately; "all rights reserved" is
   an option), `SECURITY.md`.
