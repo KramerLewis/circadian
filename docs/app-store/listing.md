@@ -12,8 +12,8 @@ Fallbacks if taken: *SunClock: Solar Time* · *SunClock Solar Alarms*
 Alternatives: *Alarms for sunrise and sunset* (29) · *Solar time, sun & moon alarms* (29)
 
 ## Promotional text (170, editable any time without review)
-Wake 30 minutes before sunrise, get nudged at golden hour, or catch the full moon rising.
-SunClock tells time by the sun, and sets alarms that move with it.
+Wake 30 minutes before sunrise, get a nudge an hour before sunset, or catch the full moon
+rising. SunClock tells time by the sun, and sets alarms that move with it.
 
 ## Description (4,000)
 SunClock is a clock for the sky. Instead of hours and minutes, it shows where you are in
