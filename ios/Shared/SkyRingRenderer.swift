@@ -107,29 +107,25 @@ enum SkyRingRenderer {
                  radius: radius, phase: moon.phase, southern: moon.latitude < 0, monochrome: false)
     }
 
-    /// The moon's disc as it looks now: the lit part bounded by the limb and the
-    /// terminator (an ellipse whose width follows the illuminated fraction).
+    /// The moon as it looks now (NASA texture lit for the phase, see `MoonRenderer`),
+    /// with a soft glow that grows as the moon fills.
     static func drawMoon(in context: inout GraphicsContext, center: CGPoint, radius: CGFloat,
                          phase: LunarCalculator.Phase, southern: Bool, monochrome: Bool) {
-        let disc = Path(ellipseIn: CGRect(x: center.x - radius, y: center.y - radius, width: radius * 2, height: radius * 2))
-        context.fill(disc, with: .color(monochrome ? .white.opacity(0.25) : Color(red: 0.24, green: 0.26, blue: 0.34)))
-        // Seen from the northern hemisphere a waxing moon is lit on the right.
-        let side: CGFloat = (phase.isWaxing != southern) ? 1 : -1
-        let k = CGFloat(phase.illumination)
-        let steps = 48
-        var lit = Path()
-        for i in 0...steps {
-            let t = (-90 + 180 * Double(i) / Double(steps)) * .pi / 180
-            let point = CGPoint(x: center.x + side * radius * cos(t), y: center.y + radius * sin(t))
-            if i == 0 { lit.move(to: point) } else { lit.addLine(to: point) }
+        let k = phase.illumination
+        let glow = radius * 1.9
+        let glowColor = monochrome ? Color.white : Color(red: 0.80, green: 0.84, blue: 0.97)
+        context.fill(
+            Path(ellipseIn: CGRect(x: center.x - glow, y: center.y - glow, width: glow * 2, height: glow * 2)),
+            with: .radialGradient(
+                Gradient(colors: [glowColor.opacity(0.10 + 0.35 * k), glowColor.opacity(0)]),
+                center: center, startRadius: radius * 0.95, endRadius: glow
+            )
+        )
+        let scale = context.environment.displayScale
+        let rect = CGRect(x: center.x - radius, y: center.y - radius, width: radius * 2, height: radius * 2)
+        if let image = MoonRenderer.image(phase: phase, southern: southern, pixels: Int((radius * 2 * scale).rounded(.up)), monochrome: monochrome) {
+            context.draw(Image(decorative: image, scale: scale), in: rect)
         }
-        for i in (0...steps).reversed() {
-            let t = (-90 + 180 * Double(i) / Double(steps)) * .pi / 180
-            lit.addLine(to: CGPoint(x: center.x + side * radius * (1 - 2 * k) * cos(t), y: center.y + radius * sin(t)))
-        }
-        lit.closeSubpath()
-        context.fill(lit, with: .color(monochrome ? .white : Color(red: 0.95, green: 0.95, blue: 0.90)))
-        context.stroke(disc, with: .color(.black.opacity(0.25)), lineWidth: 0.5)
     }
 }
 
@@ -140,7 +136,8 @@ struct MoonPhaseView: View {
 
     var body: some View {
         Canvas { context, size in
-            let radius = min(size.width, size.height) / 2 - 0.5
+            // Leave room inside the frame for the glow.
+            let radius = min(size.width, size.height) / 2 / 1.5
             SkyRingRenderer.drawMoon(in: &context, center: CGPoint(x: size.width / 2, y: size.height / 2),
                                      radius: radius, phase: phase, southern: southern, monochrome: false)
         }

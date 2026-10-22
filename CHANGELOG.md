@@ -7,6 +7,7 @@ All notable changes to SunClock. Versions follow the app's marketing version.
 ### Added
 - Solar calculations on device (NOAA algorithm) for all ten solar events, with polar
   day/night handling; tested against shared reference data cross-checked with PyEphem.
+- Realistic moon: NASA LRO imagery lit for the current phase, with a soft glow.
 - Moon ring (own timeline, phase glyph) and moon events; lunar math tested against shared reference data.
 - 24-hour solar dial with a sky gradient that follows the sun's altitude, a glowing
   sun, event markers, and relative readouts ("2h 14m after sunrise").
