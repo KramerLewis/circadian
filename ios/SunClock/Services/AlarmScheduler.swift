@@ -16,7 +16,7 @@ final class AlarmScheduler {
     static let horizonDays = 14
     /// Apple doesn't document a per-app alarm limit; stay well clear of any.
     static let maxScheduled = 64
-    static let snoozeDuration: TimeInterval = 9 * 60
+    nonisolated static let snoozeDuration: TimeInterval = 9 * 60
 
     struct Status: Equatable {
         enum Outcome: Equatable {
@@ -31,7 +31,7 @@ final class AlarmScheduler {
         var outcome: Outcome
     }
 
-    private let manager = AlarmManager.shared
+    private var manager: AlarmManager { .shared }
 
     var authorization: AlarmManager.AuthorizationState {
         manager.authorizationState
@@ -42,7 +42,7 @@ final class AlarmScheduler {
         switch manager.authorizationState {
         case .authorized: return true
         case .denied: return false
-        default: return (try? await manager.requestAuthorization()) == .authorized
+        default: return await Self.requestSystemAuthorization() == .authorized
         }
     }
 
@@ -78,7 +78,12 @@ final class AlarmScheduler {
             }
             for occurrence in changes.schedule {
                 guard let alarm = byID[occurrence.ruleID] else { continue }
-                _ = try await manager.schedule(id: occurrence.id, configuration: configuration(for: alarm, at: occurrence.date))
+                try await Self.schedule(
+                    id: occurrence.id,
+                    at: occurrence.date,
+                    metadata: SolarAlarmMetadata(alarmID: alarm.id, detail: alarm.detail),
+                    title: alarm.title
+                )
             }
             return status(.scheduled(count: desired.count, through: desired.last?.date))
         } catch {
@@ -86,9 +91,18 @@ final class AlarmScheduler {
         }
     }
 
-    private func configuration(for alarm: SolarAlarm, at date: Date) -> AlarmManager.AlarmConfiguration<SolarAlarmMetadata> {
+    // MARK: AlarmKit calls
+    //
+    // AlarmManager isn't Sendable, so its async methods are called from nonisolated
+    // helpers that create everything they pass in, rather than from the main actor.
+
+    private nonisolated static func requestSystemAuthorization() async -> AlarmManager.AuthorizationState? {
+        try? await AlarmManager.shared.requestAuthorization()
+    }
+
+    private nonisolated static func schedule(id: UUID, at date: Date, metadata: SolarAlarmMetadata, title: String) async throws {
         let alert = AlarmPresentation.Alert(
-            title: LocalizedStringResource("\(alarm.title)"),
+            title: LocalizedStringResource("\(title)"),
             stopButton: AlarmButton(text: "Stop", textColor: .white, systemImageName: "stop.circle"),
             secondaryButton: AlarmButton(text: "Snooze", textColor: .white, systemImageName: "zzz"),
             // "Snooze" starts a countdown of `postAlert` seconds, then rings again.
@@ -99,18 +113,15 @@ final class AlarmScheduler {
             countdown: AlarmPresentation.Countdown(title: "Snoozing"),
             paused: nil
         )
-        let attributes = AlarmAttributes(
-            presentation: presentation,
-            metadata: SolarAlarmMetadata(alarmID: alarm.id, detail: alarm.detail),
-            tintColor: .orange
-        )
-        return AlarmManager.AlarmConfiguration(
-            countdownDuration: Alarm.CountdownDuration(preAlert: nil, postAlert: Self.snoozeDuration),
+        let attributes = AlarmAttributes(presentation: presentation, metadata: metadata, tintColor: .orange)
+        let configuration = AlarmManager.AlarmConfiguration(
+            countdownDuration: Alarm.CountdownDuration(preAlert: nil, postAlert: snoozeDuration),
             schedule: .fixed(date),
             attributes: attributes,
             stopIntent: nil,
             secondaryIntent: nil,
             sound: .default
         )
+        _ = try await AlarmManager.shared.schedule(id: id, configuration: configuration)
     }
 }
