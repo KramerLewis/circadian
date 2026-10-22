@@ -2,7 +2,9 @@ name: TestFlight
 
 # Builds, signs and uploads the iOS app (with its widgets and Watch app) to App Store
 # Connect, where it appears in TestFlight after Apple's processing (10-15 minutes).
-# Run it from the Actions tab ("Run workflow"). Needs these repository secrets:
+# Start it by pushing a tag named testflight-<anything> (git tag testflight-1 && git push
+# origin testflight-1), or from the Actions tab ("Run workflow") once this file is on the
+# default branch. Needs these repository secrets:
 #   ASC_KEY_ID, ASC_ISSUER_ID, ASC_KEY_P8   App Store Connect API key (Admin role), .p8 text
 #   APPLE_TEAM_ID                           the 10-character team ID
 # Signing is automatic: Xcode creates the certificate, App IDs, app group and profiles
@@ -10,6 +12,8 @@ name: TestFlight
 
 on:
   workflow_dispatch:
+  push:
+    tags: ["testflight-*"]
 
 concurrency:
   group: testflight

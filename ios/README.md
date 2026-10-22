@@ -86,8 +86,8 @@ while debugging on device, pause in the debugger and run:
 ## TestFlight
 
 `.github/workflows/testflight.yml` archives the app (with its widgets and Watch app),
-signs it and uploads it to App Store Connect. Run it from the Actions tab with
-**Run workflow**. It needs four repository secrets: `ASC_KEY_ID`, `ASC_ISSUER_ID`,
+signs it and uploads it to App Store Connect. Start it by pushing a `testflight-*` tag
+(or with **Run workflow** in the Actions tab, once the workflow is on `main`). It needs four repository secrets: `ASC_KEY_ID`, `ASC_ISSUER_ID`,
 `ASC_KEY_P8` (the text of an App Store Connect API key with the Admin role) and
 `APPLE_TEAM_ID`. Signing is automatic: Xcode registers the extra App IDs and the app
 group and makes the certificate and profiles through that key. The build number is the
