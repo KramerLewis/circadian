@@ -46,10 +46,12 @@ struct ReadoutTests {
         #expect(SolarReadout(at: now, coordinate: tromso).polarCondition == .polarNight)
     }
 
-    @Test(arguments: [
-        (0.0, "<1m"), (59.0, "<1m"), (60.0, "1m"), (14 * 60.0, "14m"),
-        (2 * 3600 + 14 * 60 + 59.0, "2h 14m"), (27 * 3600.0, "27h 0m"),
-    ])
+    static let durations: [(Double, String)] = [
+        (0, "<1m"), (59, "<1m"), (60, "1m"), (840, "14m"),
+        (8099, "2h 14m"), (97_200, "27h 0m"),
+    ]
+
+    @Test(arguments: durations)
     func durationFormatting(seconds: Double, expected: String) {
         #expect(SolarFormat.duration(seconds) == expected)
     }
@@ -96,7 +98,7 @@ struct DialModelTests {
         let (day, now) = try day("2026-06-21T12:00:00+02:00", tromso)
         let model = DialModel(day: day, now: now)
         #expect(model.arcs.count == 4)
-        #expect(model.arcs.allSatisfy(\.isFullCircle))
+        #expect(model.arcs.allSatisfy { $0.isFullCircle })
     }
 
     @Test func polarNightHasTwilightButNoDay() throws {

@@ -1,4 +1,5 @@
 import SunCore
+import SwiftData
 import SwiftUI
 
 struct HomeView: View {
