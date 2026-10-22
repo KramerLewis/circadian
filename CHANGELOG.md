@@ -5,6 +5,7 @@ All notable changes to SunClock. Versions follow the app's marketing version.
 ## [Unreleased]
 
 ### Added
+- Web app (`web/`): the solar dial with the moon ring, readouts, sun and moon events, special days and eclipses, a time scrubber, and light/dark (follows the system, or pick one). Runs entirely in the browser; tested against the same shared fixtures as iOS.
 - Solar calculations on device (NOAA algorithm) for all ten solar events, with polar
   day/night handling; tested against shared reference data cross-checked with PyEphem.
 - Realistic moon: NASA LRO imagery lit for the current phase, with a soft glow.

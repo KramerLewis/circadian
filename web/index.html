@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>SunClock</title>
+    <meta name="description" content="A 24-hour solar clock: sunrise, sunset, twilight, the moon and special sky days, computed in your browser." />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#f4f1ea" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0b0d18" media="(prefers-color-scheme: dark)" />
+    <link rel="icon" type="image/png" href="favicon.png" />
+    <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <header class="top">
+      <h1 class="brand"><img src="favicon.png" alt="" width="24" height="24" />SunClock</h1>
+      <div class="top-actions">
+        <button id="place-button" class="pill" type="button" aria-haspopup="dialog">
+          <svg aria-hidden="true" viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="M12 2a7 7 0 0 0-7 7c0 5.2 7 13 7 13s7-7.8 7-13a7 7 0 0 0-7-7Zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5Z"/></svg> <span id="place-name">Choose a place</span>
+        </button>
+        <div class="segmented" role="radiogroup" aria-label="Appearance" id="theme">
+          <button type="button" role="radio" data-theme-choice="system" title="Match the system">Auto</button>
+          <button type="button" role="radio" data-theme-choice="light" title="Light">Light</button>
+          <button type="button" role="radio" data-theme-choice="dark" title="Dark">Dark</button>
+        </div>
+      </div>
+    </header>
+
+    <main id="app">
+      <section id="welcome" class="card welcome" hidden>
+        <h2>Your day, on the sun's clock</h2>
+        <p>
+          SunClock draws today as a 24-hour dial with solar noon at the top: daylight, every twilight, the moon,
+          and special sky days. Everything is computed in your browser; your location never leaves it.
+        </p>
+        <div class="row">
+          <button type="button" class="primary" data-action="locate">Use my location</button>
+          <button type="button" class="secondary" data-action="choose">Choose a place</button>
+        </div>
+      </section>
+
+      <section id="today" hidden>
+        <p id="date-line" class="date-line"></p>
+        <div class="dial-wrap">
+          <canvas id="dial" role="img" aria-label="Solar dial"></canvas>
+          <button id="dial-center" class="dial-center" type="button" title="Change the time display">
+            <span id="center-primary" class="center-primary"></span>
+            <span id="center-secondary" class="center-secondary"></span>
+          </button>
+        </div>
+
+        <div id="special" class="card special" hidden>
+          <span id="special-symbol" class="special-symbol" aria-hidden="true"></span>
+          <div>
+            <h2 id="special-title"></h2>
+            <p id="special-lines"></p>
+          </div>
+        </div>
+        <p id="heads-up" class="heads-up" hidden></p>
+
+        <div class="scrub card">
+          <label for="scrubber">
+            <span>Scrub through the day</span>
+            <span id="scrub-label" class="muted"></span>
+          </label>
+          <div class="row">
+            <input id="scrubber" type="range" min="-1440" max="1440" step="5" value="0" />
+            <button id="now-button" type="button" class="secondary small" disabled>Now</button>
+          </div>
+        </div>
+
+        <div class="card readouts" id="readouts"></div>
+
+        <h2 class="section">Sun</h2>
+        <ul class="card list" id="events"></ul>
+
+        <h2 class="section">Moon</h2>
+        <ul class="card list" id="moon"></ul>
+      </section>
+    </main>
+
+    <footer class="foot">
+      <p>
+        Times are computed on this device with the NOAA solar algorithm and Meeus's lunar theory.
+        Moon imagery: NASA's Scientific Visualization Studio (LRO).
+      </p>
+      <p>
+        <a href="https://github.com/kramerlewis/circadian">Source on GitHub</a> ·
+        <a href="../privacy">Privacy</a> · <a href="../support">Support</a> · MIT License
+      </p>
+    </footer>
+
+    <dialog id="place-dialog" aria-labelledby="place-title">
+      <form method="dialog" id="place-form">
+        <h2 id="place-title">Choose a place</h2>
+        <button type="button" class="primary wide" data-action="locate">Use my location</button>
+        <p class="muted small-text">Rounded to about a kilometer and kept in this browser only.</p>
+        <h3>Cities</h3>
+        <div class="cities" id="cities"></div>
+        <h3>Coordinates</h3>
+        <div class="fields">
+          <label>Name <input name="name" autocomplete="off" placeholder="Home" /></label>
+          <label>Latitude <input name="latitude" inputmode="decimal" required placeholder="47.61" /></label>
+          <label>Longitude <input name="longitude" inputmode="decimal" required placeholder="-122.33" /></label>
+          <label>Time zone <select name="timeZone" id="tz-select"></select></label>
+        </div>
+        <p id="place-error" class="error" role="alert"></p>
+        <div class="row end">
+          <button value="cancel" formnovalidate class="secondary">Cancel</button>
+          <button value="save" id="place-save" class="primary">Save</button>
+        </div>
+      </form>
+    </dialog>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

@@ -11,7 +11,7 @@ and a richer Watch face all build on), and the open-ended items last.
 | 1 | **TestFlight pipeline** (CI builds, signs, uploads; the app icon it needs is done) | S | Apple Developer enrollment, API key secrets |
 | 2 | **On-device shakedown**: alarms ring/snooze/stop, permission prompts, background refresh, widgets, location | S-M | 1 |
 | 3 | **App Store readiness**: docs, privacy, listing, screenshots, review notes (see details) | M | 1 for the build; can start now |
-| 4 | **Stage 5: Apple Watch complications + app** (design agreed, see details) | L | Crown scrubbing decision |
+| 4 | **Stage 5: Apple Watch complications + app**: built (complications, Smart Stack, app with Crown scrubbing) | L | - |
 | 5 | **Cat feeder on solar time** | M | Which feeder (later, see details) |
 | 6 | **Special event days**: built (solstices, equinoxes, full/super/blue/new moons, eclipses, heads-up, widgets, Watch) | M | - |
 | 7 | **Eclipses**: built (computed on device, no bundled data; fixtures cross-checked with PyEphem) | L | - |
@@ -26,7 +26,7 @@ and a richer Watch face all build on), and the open-ended items last.
 | P1 | **Sync API contract**: `shared/api/openapi.yaml` for settings and alarms (rules, not times), last-write-wins on `updatedAt`, soft deletes | S | - |
 | P2 | **AWS backend** (`backend/` + `infra/`): API Gateway + Lambda (TypeScript) + DynamoDB, Cognito with Sign in with Apple / Google, infra as code with CDK, GitHub Actions deploys via OIDC (no long-lived keys) | L | P1 |
 | P3 | **iOS sync client**: account sign-in, background sync of `AppSettings` and `SolarAlarm` | M | P2 |
-| P4 | **Web app** (`web/`, TypeScript): dial, readouts, events, alarm management; solar math ported and tested against `shared/fixtures` | L | P1; P2 for sync |
+| P4 | **Web app** (`web/`): built without accounts (dial, readouts, events, moon, special days, eclipses, light/dark, scrubber; math tested against `shared/fixtures`). Left: alarm management once sync exists | L | P1; P2 for sync |
 | P5 | **Android app** (`android/`, Kotlin + Compose): dial, widgets, exact alarms (`AlarmManager.setAlarmClock`, which, unlike iOS, can be recomputed in the background); solar math ported and tested against `shared/fixtures` | L | P1; P2 for sync |
 | P6 | **Eclipse fixtures** for every platform: done (`shared/fixtures/eclipse-reference.json`) | S | 7 |
 
