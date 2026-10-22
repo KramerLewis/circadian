@@ -21,14 +21,21 @@ struct SolarDialView: View {
         }
         .aspectRatio(1, contentMode: .fit)
         .overlay {
-            VStack(spacing: 2) {
-                Text(now, format: .dateTime.hour().minute())
-                    .font(.system(.largeTitle, design: .rounded, weight: .semibold))
-                    .monospacedDigit()
-                Text("\(SolarFormat.solarClock(minutes: solarMinutes)) solar")
-                    .font(.system(.title3, design: .rounded))
-                    .monospacedDigit()
-                    .foregroundStyle(.secondary)
+            GeometryReader { proxy in
+                // Keep the readout clear of the hour labels inside the ring.
+                let width = Geometry(size: proxy.size).inner * 1.25
+                VStack(spacing: 2) {
+                    Text(now, format: .dateTime.hour().minute())
+                        .font(.system(.largeTitle, design: .rounded, weight: .semibold))
+                    Text("\(SolarFormat.solarClock(minutes: solarMinutes)) solar")
+                        .font(.system(.title3, design: .rounded))
+                        .foregroundStyle(.secondary)
+                }
+                .monospacedDigit()
+                .lineLimit(1)
+                .minimumScaleFactor(0.5)
+                .frame(width: width)
+                .position(x: proxy.size.width / 2, y: proxy.size.height / 2)
             }
         }
         .accessibilityElement(children: .ignore)

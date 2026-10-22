@@ -28,7 +28,7 @@ struct ReadoutView: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding()
-        .background(.background.secondary, in: .rect(cornerRadius: 16))
+        .background(Color(.secondarySystemGroupedBackground), in: .rect(cornerRadius: 16))
     }
 
     private func row(_ symbol: String, _ text: String) -> some View {

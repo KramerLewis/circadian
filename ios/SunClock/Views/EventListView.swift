@@ -25,7 +25,7 @@ struct EventListView: View {
             }
         }
         .padding(.horizontal)
-        .background(.background.secondary, in: .rect(cornerRadius: 16))
+        .background(Color(.secondarySystemGroupedBackground), in: .rect(cornerRadius: 16))
     }
 
     private func timeText(_ time: EventTime) -> String {
