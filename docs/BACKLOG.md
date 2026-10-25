@@ -15,7 +15,8 @@ and a richer Watch face all build on), and the open-ended items last.
 | 5 | **Cat feeder on solar time** | M | Which feeder (later, see details) |
 | 6 | **Special event days**: built (solstices, equinoxes, full/super/blue/new moons, eclipses, heads-up, widgets, Watch) | M | - |
 | 7 | **Eclipses**: built (computed on device, no bundled data; fixtures cross-checked with PyEphem) | L | - |
-| 8 | **More widgets** (Lock Screen rectangular/inline, readout variants, moon ring/phase in widgets) | S | - |
+| 8 | **More widgets** (Lock Screen rectangular/inline, readout variants, moon ring/phase in widgets, CarPlay, see details) | S | - |
+| 8b | **Sun over time**: how sunrise, sunset, twilight and day length change across weeks to a year, with special days and eclipses on the same timeline (see details) | M | - |
 | 9 | **Tides** | L | Data source decision (bundle vs. API) |
 | 10 | **Native macOS app + widget** | M | - (for now, iPhone widgets on the Mac desktop) |
 
@@ -48,6 +49,33 @@ and a richer Watch face all build on), and the open-ended items last.
 - Glowing sun without an outline, sized to stay inside the ring.
 
 ## Details
+
+### More widgets: CarPlay
+iOS 26 shows iPhone widgets in CarPlay (no CarPlay app entitlement needed; full CarPlay
+apps are limited to categories like navigation and audio). Make sure the Sun Ring small
+widget is offered there and reads at a glance: the ring has no numbers, which suits
+driving; the medium widget's text is less glanceable. Alarm Live Activities may also
+appear in CarPlay on iOS 26. Look up the current WidgetKit CarPlay rules when building
+this; CI can't capture CarPlay (Apple's CarPlay Simulator needs a Mac), so verify in
+the car via TestFlight.
+
+### Sun over time
+See how the sun's events shift over a chosen span (a month, a season, a year):
+- A chart with dates along one axis and time of day along the other: sunrise, sunset,
+  solar noon, and the civil, nautical and astronomical twilights as lines, with
+  daylight and the twilight bands shaded between them (the familiar "sun graph").
+  DST jumps show as steps in clock time; a toggle could plot solar time instead.
+- Day length on its own, with the change per day ("+2m 31s since yesterday").
+- Special days and eclipses on the same timeline: solstices and equinoxes (where the
+  curves turn), full, super and blue moons, new moons, and eclipses visible from the
+  place, as markers you can tap for the banner text. Moonrise/moonset could be an
+  optional layer.
+- Pick a day on the chart to jump the dial to it; Watch and web versions later (the
+  web app already has all the math).
+- All on device from SunCore: a year is 365 solar days plus one SkyCalendar and
+  eclipse search, fast enough to compute when opened. Swift Charts draws it.
+- Needs a design pass: where it lives (a tab or from the event list), default span,
+  and how polar days (no sunrise or sunset) look on the chart.
 
 ### Tides in the center
 Show the tide for the current location inside both rings (rising/falling, next
