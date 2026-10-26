@@ -91,6 +91,8 @@ The 3D view uses NASA's Blue Marble for June 2004 and the Black Marble 2016 nigh
   shown, blending between neighboring months, so scrubbing into winter whitens the north.
   Twelve 2048 x 1024 JPEGs are about 4 MB, fine for the web (loaded on demand) and for
   an app bundle.
+- **Started**: `.github/workflows/nasa-assets.yml` fetches what `shared/tools/nasa_sources.json` lists
+  and converts it (the Deep Star Map EXR so far). Add the Blue Marble months there.
 - **Automatic updates**: a scheduled GitHub Actions job (CI runners can reach NASA,
   which this cloud session can't) fetches NASA imagery, resizes it with
   `shared/tools/make_earth_textures.py`, and commits or publishes it with the web app:

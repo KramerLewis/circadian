@@ -1,0 +1,16 @@
+{
+  "description": "NASA imagery fetched by .github/workflows/nasa-assets.yml (shared/tools/fetch_nasa_assets.py). Check each credit against its page before release (docs/app-store/README.md).",
+  "sources": [
+    {
+      "name": "Deep Star Maps 2020, 4k, celestial coordinates",
+      "page": "https://svs.gsfc.nasa.gov/4851",
+      "credit": "NASA/Goddard Space Flight Center Scientific Visualization Studio",
+      "url": "https://svs.gsfc.nasa.gov/vis/a000000/a004800/a004851/starmap_2020_4k.exr",
+      "convert": "exr-to-jpeg",
+      "outputs": [
+        { "path": "shared/assets/nasa/starmap_2020_4k.jpg", "width": 4096, "quality": 92 },
+        { "path": "web/public/starmap.jpg", "width": 3072, "quality": 82 }
+      ]
+    }
+  ]
+}

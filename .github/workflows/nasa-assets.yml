@@ -1,0 +1,46 @@
+name: NASA assets
+
+# Downloads the NASA images listed in shared/tools/nasa_sources.json, converts them
+# (EXR star maps are tone-mapped to JPEG), and commits the results to the branch.
+# CI runners can reach NASA's servers; the dev environment and the GitHub web uploader
+# (25 MB limit) can't handle them directly. Runs when the manifest or script changes,
+# or on demand once this file is on the default branch.
+
+on:
+  push:
+    branches: [main, sunclock]
+    paths:
+      - "shared/tools/nasa_sources.json"
+      - "shared/tools/fetch_nasa_assets.py"
+      - ".github/workflows/nasa-assets.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: nasa-assets-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  fetch:
+    name: Fetch and convert NASA imagery
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: pip install OpenEXR numpy pillow
+      - run: python3 shared/tools/fetch_nasa_assets.py
+      - name: Commit the converted images
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add shared/assets/nasa web/public
+          if git diff --cached --quiet; then
+            echo "no changes"
+          else
+            git commit -m "NASA assets: fetched and converted by CI" -m "From shared/tools/nasa_sources.json."
+            git push origin "HEAD:${GITHUB_REF_NAME}"
+          fi
