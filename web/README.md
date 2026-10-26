@@ -8,6 +8,10 @@ browser. Plain TypeScript and canvas, built with Vite; no runtime dependencies.
   can't drift apart.
 - `src/render/`: the dial, sun and moon drawing (ported from `ios/Shared`).
 - `src/main.ts`: the page.
+- `public/`: images. The Earth, night-lights and sky maps come from NASA (see the root
+  README); the star map is fetched and converted by `.github/workflows/nasa-assets.yml`.
+  Commits made by that workflow don't start other workflows, so the next push to `web/`
+  is what deploys a refreshed image.
 
 Light and dark follow the system; the Auto / Light / Dark control overrides it (saved
 in this browser). Everything runs locally: the location is rounded to about a kilometer
