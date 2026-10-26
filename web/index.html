@@ -84,6 +84,15 @@
 
         <div class="card readouts" id="readouts"></div>
 
+        <h2 class="section">In 3D</h2>
+        <div class="card orbit-card">
+          <canvas id="orbit" role="img" aria-label="Earth, sun and moon in 3D"></canvas>
+          <p class="muted orbit-caption">
+            Sunlight comes from the sun's direction; the moon's lit side is its phase. Your place turns with Earth.
+            Drag to look around, double-click to reset.
+          </p>
+        </div>
+
         <h2 class="section">Sun</h2>
         <ul class="card list" id="events"></ul>
 
@@ -95,7 +104,7 @@
     <footer class="foot">
       <p>
         Times are computed on this device with the NOAA solar algorithm and Meeus's lunar theory.
-        Moon imagery: NASA's Scientific Visualization Studio (LRO).
+        Moon imagery: NASA's Scientific Visualization Studio (LRO). Earth map from Natural Earth.
       </p>
       <p>
         <a href="https://github.com/kramerlewis/circadian">Source on GitHub</a> ·

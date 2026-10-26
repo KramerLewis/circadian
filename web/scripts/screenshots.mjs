@@ -23,6 +23,9 @@ const shots = [
   ["web-13-moon-in-sky-first-quarter-light", "light", `${seattle}&date=2026-06-21T15:00:00-07:00&moon=sky`],
   ["web-14-moon-in-sky-full-dark", "dark", `${seattle}&date=2026-11-24T22:00:00-08:00&moon=sky&dial=now`],
   ["web-15-moon-in-sky-crescent-light", "light", `${seattle}&date=2026-06-17T19:00:00-07:00&moon=sky`],
+  ["web-16-3d-first-quarter", "dark", `${seattle}&date=2026-06-21T15:00:00-07:00#orbit`],
+  ["web-17-3d-full-moon", "light", `${seattle}&date=2026-11-24T22:00:00-08:00#orbit`],
+  ["web-18-3d-blood-moon", "dark", `${seattle}&date=2026-03-03T03:30:00-08:00#orbit`],
 ];
 
 const browser = await chromium.launch();
@@ -37,7 +40,14 @@ for (const [viewport, size] of [["phone", { width: 390, height: 1500 }], ["deskt
     page.on("console", (m) => m.type() === "error" && errors.push(m.text()));
     await page.goto(`${base}?${query}`, { waitUntil: "networkidle" });
     await page.waitForTimeout(400);
-    await page.screenshot({ path: `${out}/${name}${viewport === "desktop" ? "-desktop" : ""}.png`, fullPage: true });
+    if (query.endsWith("#orbit")) {
+      // Just the 3D view.
+      await page.locator("#orbit").scrollIntoViewIfNeeded();
+      await page.waitForTimeout(500);
+      await page.locator(".orbit-card").screenshot({ path: `${out}/${name}${viewport === "desktop" ? "-desktop" : ""}.png` });
+    } else {
+      await page.screenshot({ path: `${out}/${name}${viewport === "desktop" ? "-desktop" : ""}.png`, fullPage: true });
+    }
     if (errors.length) {
       failures++;
       console.error(`${name}: ${errors.join("; ")}`);

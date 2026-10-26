@@ -96,12 +96,16 @@ export function moonPosition(instant: number): MoonPosition {
   return { longitude: lon, latitude: lat, rightAscension: ra, declination: dec, distance, parallax: degrees(Math.asin(1 / distance)) };
 }
 
-/** Local hour angle of a body with right ascension `ra`, in (-180, 180]. */
-export function hourAngleFor(instant: number, longitude: number, ra: number): number {
+/** Greenwich mean sidereal time, degrees: how far Earth has turned under the stars. */
+export function siderealTime(instant: number): number {
   const jd = instant / 86_400_000 + 2_440_587.5;
   const t = (jd - 2_451_545) / 36_525;
-  const gmst = 280.46061837 + 360.98564736629 * (jd - 2_451_545) + 0.000387933 * t * t;
-  return normalize(gmst + longitude - ra);
+  return 280.46061837 + 360.98564736629 * (jd - 2_451_545) + 0.000387933 * t * t;
+}
+
+/** Local hour angle of a body with right ascension `ra`, in (-180, 180]. */
+export function hourAngleFor(instant: number, longitude: number, ra: number): number {
+  return normalize(siderealTime(instant) + longitude - ra);
 }
 
 export function moonHourAngle(instant: number, longitude: number): number {

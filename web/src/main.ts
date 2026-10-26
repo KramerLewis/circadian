@@ -11,6 +11,7 @@ import { type SpecialDay, type SpecialStyle, eclipseDate, fromEclipse, headsUp, 
 import { browserTimeZone, startOfDay } from "./core/tz";
 import { dialGeometry, drawDial, drawMoon } from "./render/dial";
 import { loadMoonTexture } from "./render/moon";
+import { type OrbitCamera, drawOrbit, loadOrbitTextures } from "./render/orbit";
 
 // MARK: State
 
@@ -233,10 +234,57 @@ function render() {
   const sign = state.scrubMinutes < 0 ? "−" : "+";
   $("scrub-label").textContent = scrubbing ? `${sign}${duration(Math.abs(state.scrubMinutes) * 60_000)} from now` : "";
 
+  renderOrbit(now, place);
   renderSpecial(special, upcoming);
   renderReadouts(now, place, r, day);
   renderEvents(now, tz, day);
   renderMoon(now, place, day);
+}
+
+// MARK: 3D view
+
+const orbitCanvas = $<HTMLCanvasElement>("orbit");
+const orbitCamera: OrbitCamera = { yaw: 0, pitch: 0 };
+let orbitVisible = false;
+let lastOrbit: { now: number; place: Place } | undefined;
+
+function renderOrbit(now: number, place: Place) {
+  lastOrbit = { now, place };
+  // Drawn per pixel, so only while it's on screen.
+  if (!orbitVisible) return;
+  drawOrbit(orbitCanvas, { now, place, dark: isDark(), camera: orbitCamera });
+}
+
+const redrawOrbit = () => {
+  if (lastOrbit && orbitVisible) drawOrbit(orbitCanvas, { ...lastOrbit, dark: isDark(), camera: orbitCamera });
+};
+
+new IntersectionObserver((entries) => {
+  orbitVisible = entries.some((e) => e.isIntersecting);
+  redrawOrbit();
+}).observe(orbitCanvas);
+
+{
+  let drag: { x: number; y: number; yaw: number; pitch: number } | undefined;
+  let pending = 0;
+  orbitCanvas.addEventListener("pointerdown", (e) => {
+    drag = { x: e.clientX, y: e.clientY, yaw: orbitCamera.yaw, pitch: orbitCamera.pitch };
+    orbitCanvas.setPointerCapture(e.pointerId);
+  });
+  orbitCanvas.addEventListener("pointermove", (e) => {
+    if (!drag) return;
+    orbitCamera.yaw = drag.yaw - (e.clientX - drag.x) * 0.5;
+    orbitCamera.pitch = Math.max(-100, Math.min(60, drag.pitch + (e.clientY - drag.y) * 0.4));
+    cancelAnimationFrame(pending);
+    pending = requestAnimationFrame(redrawOrbit);
+  });
+  const end = () => (drag = undefined);
+  orbitCanvas.addEventListener("pointerup", end);
+  orbitCanvas.addEventListener("pointercancel", end);
+  orbitCanvas.addEventListener("dblclick", () => {
+    orbitCamera.yaw = orbitCamera.pitch = 0;
+    redrawOrbit();
+  });
 }
 
 function renderSpecial(special: SpecialDay | undefined, upcoming: string | undefined) {
@@ -467,4 +515,5 @@ setUpPlaceDialog();
 applyTheme();
 render();
 loadMoonTexture(`${import.meta.env.BASE_URL}moon.png`).then(render, () => {});
+loadOrbitTextures(`${import.meta.env.BASE_URL}earth.png`, `${import.meta.env.BASE_URL}moon.png`).then(redrawOrbit, () => {});
 if (!Number.isFinite(frozenNow)) setInterval(render, 15_000);

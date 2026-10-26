@@ -19,6 +19,9 @@ CI runs per platform, only when that platform's paths change (`.github/workflows
 Moon imagery: NASA's Scientific Visualization Studio, [CGI Moon Kit](https://svs.gsfc.nasa.gov/4720),
 from Lunar Reconnaissance Orbiter data (`ios/tools/lroc_color_2k.jpg`).
 
+Earth map (web 3D view): drawn from [Natural Earth](https://www.naturalearthdata.com/) land polygons (public domain) via the
+[world-atlas](https://github.com/topojson/world-atlas) package, by `shared/tools/make_earth_texture.py`.
+
 ## License
 
 [MIT](LICENSE) © 2026 Kramer Lewis

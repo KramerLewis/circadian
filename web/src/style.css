@@ -352,6 +352,29 @@ a:focus-visible {
   font-size: 0.9rem;
 }
 
+.orbit-card {
+  padding: 0;
+  overflow: hidden;
+}
+
+#orbit {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  touch-action: none;
+  cursor: grab;
+}
+
+#orbit:active {
+  cursor: grabbing;
+}
+
+.orbit-caption {
+  margin: 0;
+  padding: 10px 14px 12px;
+  font-size: 0.9rem;
+}
+
 .section {
   font-size: 0.85rem;
   text-transform: uppercase;
