@@ -28,7 +28,7 @@ About or Credits screen, and the App Store description if it mentions the imager
 | Moon (LRO color map) | `ios/tools/lroc_color_2k.jpg` | NASA SVS, CGI Moon Kit (svs.gsfc.nasa.gov/4720) |
 | Earth by day | `shared/assets/nasa/world.topo.bathy.200406.3x5400x2700.jpg` | NASA Earth Observatory / Visible Earth, Blue Marble Next Generation |
 | Earth at night | `shared/assets/nasa/BlackMarble_2016_01deg.jpg` | NASA Earth Observatory, Black Marble 2016 (Earth at Night) |
-| Stars and Milky Way | `shared/assets/nasa/starmap_2020_4k_exr_2576.jpg` | NASA SVS, Deep Star Maps 2020 (svs.gsfc.nasa.gov/4851) |
+| Stars and Milky Way | `shared/assets/nasa/starmap_2020_4k.jpg` | NASA SVS, Deep Star Maps 2020 (svs.gsfc.nasa.gov/4851) |
 
 Also confirm there's no non-NASA content mixed in (some SVS pages credit partner
 missions or data, such as ESA's Gaia for the star maps), and record the date checked

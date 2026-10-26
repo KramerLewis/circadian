@@ -24,7 +24,7 @@ Earth imagery (3D view): NASA Earth Observatory, [Blue Marble Next Generation](h
 night lights (`shared/assets/nasa/`, resized by `shared/tools/make_earth_textures.py`).
 
 Sky (3D view): NASA/Goddard Space Flight Center Scientific Visualization Studio, [Deep Star Maps 2020](https://svs.gsfc.nasa.gov/4851)
-(`shared/assets/nasa/starmap_2020_4k_exr_2576.jpg`, converted from `starmap_2020_4k.exr` to a 2576 x 1288 JPEG). Credit lines are to be checked against each source page before release (`docs/app-store/README.md`).
+(`shared/assets/nasa/starmap_2020_4k.jpg`, fetched and tone-mapped from `starmap_2020_4k.exr` by the NASA assets workflow). Credit lines are to be checked against each source page before release (`docs/app-store/README.md`).
 
 ## License
 

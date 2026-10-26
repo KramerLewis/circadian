@@ -39,9 +39,10 @@ def tone_map(rgb):
     """Linear HDR -> 8-bit sRGB."""
     luminance = rgb @ np.array([0.2126, 0.7152, 0.0722], dtype=np.float32)
     # Exposure from the sky itself: the 99th percentile (the bright Milky Way) maps to
-    # about 0.8 before the shoulder, so faint glow stays visible and stars still pop.
+    # 0.14 in linear light, a dark sky with the Milky Way glowing in it. Calibrated
+    # against Apple's own EXR-to-JPEG conversion of the same map (Photos on iPhone).
     key = float(np.percentile(luminance, 99.0)) or 1.0
-    x = rgb * (0.8 / key)
+    x = rgb * (0.14 / key)
     # Extended Reinhard: smooth roll-off, white point well above the Milky Way.
     white = 6.0
     x = x * (1 + x / (white * white)) / (1 + x)
