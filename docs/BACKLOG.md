@@ -216,6 +216,8 @@ Everything needed beyond the code to publish:
 - **Localization plan:** add a String Catalog (the build already extracts strings);
   some UI text is built from strings in code and needs converting first. Decide
   initial languages.
+- **Image credits:** before submitting, check every credit line against what each NASA
+  source page asks for (table in `docs/app-store/README.md`), and show them in the app.
 - **Repo docs:** user-facing README section, `CHANGELOG.md` / release notes,
   `SECURITY.md`. (`LICENSE` is done: MIT.)
 - **Release process:** versioning (marketing version + CI build number), TestFlight

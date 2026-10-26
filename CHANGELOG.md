@@ -5,7 +5,7 @@ All notable changes to SunClock. Versions follow the app's marketing version.
 ## [Unreleased]
 
 ### Added
-- Web 3D view: Earth lit by the sun, with NASA's Blue Marble by day and Black Marble city lights at night, a pin at your place turning with Earth, Earth's axis, and the moon on its orbit with its phase and eclipse shadow; drag to look around. Follows the time scrubber.
+- Web 3D view: Earth lit by the sun, with NASA's Blue Marble by day and Black Marble city lights at night, against NASA's Deep Star Map sky (stars and the Milky Way where they really are), a pin at your place turning with Earth, Earth's axis, and the moon on its orbit with its phase and eclipse shadow; drag to look around. Follows the time scrubber.
 - Web app (`web/`): the solar dial with the moon ring, readouts, sun and moon events, special days and eclipses, a time scrubber, and light/dark (follows the system, or pick one). Runs entirely in the browser; tested against the same shared fixtures as iOS.
 - Solar calculations on device (NOAA algorithm) for all ten solar events, with polar
   day/night handling; tested against shared reference data cross-checked with PyEphem.

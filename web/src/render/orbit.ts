@@ -32,10 +32,10 @@ interface Texture {
   pixels: Uint8ClampedArray;
 }
 
-const textures: { earth?: Texture; night?: Texture; moon?: Texture } = {};
+const textures: { earth?: Texture; night?: Texture; moon?: Texture; sky?: Texture } = {};
 
-/** NASA's Blue Marble (day) and Black Marble (night lights), and the moon. */
-export async function loadOrbitTextures(earthUrl: string, nightUrl: string, moonUrl: string): Promise<void> {
+/** NASA's Blue Marble (day), Black Marble (night lights), the moon, and the Deep Star Map sky. */
+export async function loadOrbitTextures(earthUrl: string, nightUrl: string, moonUrl: string, skyUrl: string): Promise<void> {
   const load = async (url: string): Promise<Texture> => {
     const image = new Image();
     image.src = url;
@@ -47,7 +47,9 @@ export async function loadOrbitTextures(earthUrl: string, nightUrl: string, moon
     ctx.drawImage(image, 0, 0);
     return { width: image.width, height: image.height, pixels: ctx.getImageData(0, 0, image.width, image.height).data };
   };
-  [textures.earth, textures.night, textures.moon] = await Promise.all([load(earthUrl), load(nightUrl), load(moonUrl)]);
+  [textures.earth, textures.night, textures.moon, textures.sky] = await Promise.all([
+    load(earthUrl), load(nightUrl), load(moonUrl), load(skyUrl),
+  ]);
 }
 
 function sample(t: Texture | undefined, u: number, v: number, fallback: Vec): Vec {
@@ -113,9 +115,11 @@ export function drawOrbit(canvas: HTMLCanvasElement, scene: OrbitScene): void {
   const cx = (width / 2) * dpr, cy = (height / 2) * dpr;
   const project = (p: Vec): [number, number, number] => [cx + dot(p, right) * s, cy - dot(p, up) * s, dot(p, toCamera)];
 
-  drawStars(ctx, canvas.width, canvas.height, scene.dark);
-  // Drawn first: it's the farthest thing in the scene.
-  drawSun(ctx, sun, right, up, toCamera, cx, cy, Math.min(cx, cy) - 30 * dpr, dpr);
+  // The sky and the sun are at infinity, drawn with a wide fisheye view behind the
+  // (orthographic) Earth and moon.
+  const sky = { forward, right, up, cx, cy, radius: Math.hypot(cx, cy) };
+  drawSky(ctx, sky, canvas.width, canvas.height);
+  drawSun(ctx, sun, sky, canvas.width, canvas.height, dpr);
 
   // The orbit over the month around now, split so the far side passes behind Earth.
   const path: [number, number, number][] = [];
@@ -305,16 +309,85 @@ function drawPin(ctx: CanvasRenderingContext2D, project: (p: Vec) => [number, nu
   ctx.restore();
 }
 
+/** How far from the view's center the fisheye reaches at its rim, degrees. */
+const skyReach = 100;
+
+interface SkyView {
+  forward: Vec;
+  right: Vec;
+  up: Vec;
+  cx: number;
+  cy: number;
+  /** Fisheye radius in pixels (center to corner). */
+  radius: number;
+}
+
+/** Where a direction lands in the fisheye: angle from the view's center maps to distance. */
+function skyPoint(d: Vec, v: SkyView): { x: number; y: number; angle: number } {
+  const angle = Math.acos(Math.max(-1, Math.min(1, dot(d, v.forward)))) * (180 / Math.PI);
+  const sx = dot(d, v.right), sy = dot(d, v.up);
+  const len = Math.hypot(sx, sy) || 1;
+  const r = (angle / skyReach) * v.radius;
+  return { x: v.cx + (sx / len) * r, y: v.cy - (sy / len) * r, angle };
+}
+
 /**
- * The sun, far beyond the moon. It's placed by its direction on a sphere that just fits
- * the frame: look toward it and it slides to the middle, behind Earth (its glow rims the
- * planet); turn away and it moves out to the edge and fades, since it's behind you.
+ * The sky: NASA's Deep Star Map (stars and the Milky Way in celestial coordinates,
+ * right ascension increasing to the left with 0h in the middle), turned with the view.
+ * Rendered at a lower resolution than the canvas and scaled up; the map is soft anyway.
  */
-function drawSun(
-  ctx: CanvasRenderingContext2D, sun: Vec, right: Vec, up: Vec, toCamera: Vec, cx: number, cy: number, reach: number, dpr: number,
-) {
-  const x = cx + dot(sun, right) * reach, y = cy - dot(sun, up) * reach;
-  const behindViewer = dot(sun, toCamera) > 0;
+function drawSky(ctx: CanvasRenderingContext2D, v: SkyView, w: number, h: number) {
+  ctx.fillStyle = "#020309";
+  ctx.fillRect(0, 0, w, h);
+  const t = textures.sky;
+  if (!t) return;
+  const step = 2;
+  const bw = Math.ceil(w / step), bh = Math.ceil(h / step);
+  const image = ctx.createImageData(bw, bh);
+  const out = image.data;
+  for (let by = 0; by < bh; by++) {
+    for (let bx = 0; bx < bw; bx++) {
+      const dx = bx * step - v.cx, dy = v.cy - by * step;
+      const rho = Math.hypot(dx, dy) / v.radius;
+      const theta = rad(rho * skyReach);
+      const c = rho > 0 ? 1 / (rho * v.radius) : 0;
+      const sinT = Math.sin(theta), cosT = Math.cos(theta);
+      const d: Vec = [
+        v.forward[0] * cosT + (v.right[0] * dx + v.up[0] * dy) * c * sinT,
+        v.forward[1] * cosT + (v.right[1] * dx + v.up[1] * dy) * c * sinT,
+        v.forward[2] * cosT + (v.right[2] * dx + v.up[2] * dy) * c * sinT,
+      ];
+      const ra = Math.atan2(d[1], d[0]) / (2 * Math.PI); // turns, -0.5...0.5
+      const dec = Math.asin(Math.max(-1, Math.min(1, d[2])));
+      const u = ((0.5 - ra) % 1 + 1) % 1;
+      const color = sample(t, u, 0.5 - dec / Math.PI, [0, 0, 0]);
+      const i = (by * bw + bx) * 4;
+      out[i] = color[0] * 255;
+      out[i + 1] = color[1] * 255;
+      out[i + 2] = color[2] * 255;
+      out[i + 3] = 255;
+    }
+  }
+  const scratch = document.createElement("canvas");
+  scratch.width = bw;
+  scratch.height = bh;
+  scratch.getContext("2d")!.putImageData(image, 0, 0);
+  ctx.imageSmoothingEnabled = true;
+  ctx.drawImage(scratch, 0, 0, bw * step, bh * step);
+}
+
+/**
+ * The sun, on the same sky as the stars: look toward it and it comes to the middle,
+ * behind Earth. When it's behind you it sits at the edge, faded, so you know which way
+ * the light comes from.
+ */
+function drawSun(ctx: CanvasRenderingContext2D, sun: Vec, v: SkyView, w: number, h: number, dpr: number) {
+  let { x, y, angle } = skyPoint(sun, v);
+  const behindViewer = angle > 90;
+  // Keep the glow and its label inside the frame.
+  const mx = (behindViewer ? 58 : 34) * dpr, my = 34 * dpr;
+  x = Math.max(mx, Math.min(w - mx, x));
+  y = Math.max(my, Math.min(h - my, y));
   ctx.save();
   ctx.globalAlpha = behindViewer ? 0.45 : 1;
   const r = 60 * dpr;
@@ -332,20 +405,5 @@ function drawSun(
   ctx.font = `600 ${11 * dpr}px system-ui, sans-serif`;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.fillText(behindViewer ? "Sun (behind you)" : "Sun", x, behindViewer ? y : y + 1);
-}
-
-function drawStars(ctx: CanvasRenderingContext2D, w: number, h: number, dark: boolean) {
-  ctx.fillStyle = dark ? "#05060d" : "#10142a";
-  ctx.fillRect(0, 0, w, h);
-  let seed = 7;
-  const random = () => {
-    seed = (seed * 16807) % 2147483647;
-    return seed / 2147483647;
-  };
-  for (let i = 0; i < 140; i++) {
-    const x = random() * w, y = random() * h, size = 0.4 + random() * 1.2;
-    ctx.fillStyle = `rgba(255, 255, 255, ${0.25 + 0.6 * random()})`;
-    ctx.fillRect(x, y, size, size);
-  }
+  ctx.fillText(behindViewer ? "Sun (behind you)" : "Sun", x, y);
 }

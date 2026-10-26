@@ -516,5 +516,5 @@ applyTheme();
 render();
 loadMoonTexture(`${import.meta.env.BASE_URL}moon.png`).then(render, () => {});
 const asset = (name: string) => `${import.meta.env.BASE_URL}${name}`;
-loadOrbitTextures(asset("earth-day.jpg"), asset("earth-night.jpg"), asset("moon.png")).then(redrawOrbit, () => {});
+loadOrbitTextures(asset("earth-day.jpg"), asset("earth-night.jpg"), asset("moon.png"), asset("starmap.jpg")).then(redrawOrbit, () => {});
 if (!Number.isFinite(frozenNow)) setInterval(render, 15_000);

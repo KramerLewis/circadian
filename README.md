@@ -23,6 +23,9 @@ Earth imagery (3D view): NASA Earth Observatory, [Blue Marble Next Generation](h
 (June 2004, topography and bathymetry) and [Black Marble 2016](https://earthobservatory.nasa.gov/features/NightLights)
 night lights (`shared/assets/nasa/`, resized by `shared/tools/make_earth_textures.py`).
 
+Sky (3D view): NASA/Goddard Space Flight Center Scientific Visualization Studio, [Deep Star Maps 2020](https://svs.gsfc.nasa.gov/4851)
+(`shared/assets/nasa/starmap_2020_4k_print.jpg`). Credit lines are to be checked against each source page before release (`docs/app-store/README.md`).
+
 ## License
 
 [MIT](LICENSE) © 2026 Kramer Lewis
