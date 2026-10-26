@@ -85,6 +85,10 @@ struct WatchDialView: View {
                         .foregroundStyle(.orange)
                         .lineLimit(1)
                         .minimumScaleFactor(0.7)
+                        // A backing keeps it readable when the moon or the ring passes under it.
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 1)
+                        .background(.black.opacity(0.65), in: .capsule)
                         .padding(.bottom, 2)
                 }
             }
