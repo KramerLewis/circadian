@@ -3,7 +3,7 @@ import SwiftUI
 
 /// The 24-hour solar dial: solar noon at the top, solar midnight at the bottom,
 /// twilight and daylight bands, event markers, and the "now" hand. Inside it, the moon
-/// ring runs on the moon's own timeline (its highest point at the top).
+/// ring shows when the moon is up on the same 24 hours, with ticks at moonrise and moonset.
 struct SolarDialView: View {
     let model: DialModel
     let moon: MoonDialModel

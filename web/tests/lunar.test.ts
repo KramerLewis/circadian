@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
-import { moonDialModel, moonRingColor, dialAltitude } from "../src/core/dial";
+import { moonAltitudeAt, moonDialModel, moonRingColor } from "../src/core/dial";
+import { solarDayContaining, solarHourAngle } from "../src/core/solar";
 import { lunarEvents, moonAltitude, moonPhase, phaseName } from "../src/core/lunar";
 import { addDays, dayAt, zonedInstant } from "../src/core/tz";
 import { fixture, instant } from "./fixtures";
@@ -37,15 +38,22 @@ test("phase names", () => {
   expect(phaseName({ illumination: 0.99, isWaxing: false })).toBe("Full moon");
 });
 
-test("the moon ring peaks at the top and rises where the events say", () => {
+test("the moon ring shares the sun's timeline", () => {
   const seattle = { latitude: 47.61, longitude: -122.33 };
-  const now = instant("2026-11-24T12:00:00-08:00");
-  const model = moonDialModel(now, seattle);
-  expect(dialAltitude(model, 0)).toBeGreaterThan(dialAltitude(model, 90));
-  expect(dialAltitude(model, 0)).toBeGreaterThan(dialAltitude(model, -90));
-  expect(model.riseSetAngle).toBeDefined();
-  expect(Math.abs(dialAltitude(model, model.riseSetAngle!) - model.riseSetAltitude)).toBeLessThan(0.01);
-  expect(Math.abs(model.altitudeNow - moonAltitude(now, seattle))).toBeLessThan(0.01);
+  for (const iso of ["2026-11-24T12:00:00-08:00", "2026-06-21T15:00:00-07:00", "2026-03-03T03:30:00-08:00"]) {
+    const now = instant(iso);
+    const model = moonDialModel(now, seattle);
+    expect(model.nowAngle).toBeCloseTo(solarHourAngle(now, seattle.longitude), 9);
+    expect(Math.abs(moonAltitudeAt(model, model.nowAngle) - model.altitudeNow)).toBeLessThan(0.5);
+    expect(Math.abs(model.altitudeNow - moonAltitude(now, seattle))).toBeLessThan(0.01);
+    const day = solarDayContaining(now, seattle);
+    const events = lunarEvents(day.solarMidnight, day.nextSolarMidnight, seattle).filter((e) => e.event === "moonrise" || e.event === "moonset");
+    expect(model.horizonMarkers.map((m) => m.event)).toEqual(events.map((e) => e.event));
+    model.horizonMarkers.forEach((m, i) => {
+      expect(Math.abs(m.date - events[i].date) / 1000, m.event).toBeLessThan(120);
+      expect(Math.abs(m.angle - solarHourAngle(events[i].date, seattle.longitude))).toBeLessThan(0.5);
+    });
+  }
 });
 
 test("moon colors brighten with height and fullness", () => {

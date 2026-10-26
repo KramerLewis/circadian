@@ -155,8 +155,8 @@ enum SkyRingRenderer {
 
     // MARK: Moon
 
-    /// The moon's ring: its own timeline (angle = the moon's hour angle), colored by
-    /// the moon's altitude and fullness, with ticks at moonrise and moonset.
+    /// The moon's ring: on the sun ring's timeline, colored by the moon's altitude and
+    /// fullness through the day, with ticks at moonrise and moonset.
     static func drawMoonRing(in context: inout GraphicsContext, ring: Ring, moon: MoonDialModel, dark: Bool,
                              special: SpecialDayText.Style? = nil, eclipseShadow: Double = 0) {
         // Full moons light up the ring; a supermoon most of all.
@@ -179,13 +179,11 @@ enum SkyRingRenderer {
             with: .conicGradient(Gradient(stops: stops), center: ring.center, angle: .degrees(-90)),
             style: evenOdd
         )
-        if let rise = moon.riseSetAngle {
-            for angle in [-rise, rise] {
-                var tick = Path()
-                tick.move(to: ring.point(ring.inner, angle))
-                tick.addLine(to: ring.point(ring.outer, angle))
-                context.stroke(tick, with: .style(.secondary), lineWidth: 1)
-            }
+        for marker in moon.horizonMarkers {
+            var tick = Path()
+            tick.move(to: ring.point(ring.inner, marker.angle))
+            tick.addLine(to: ring.point(ring.outer, marker.angle))
+            context.stroke(tick, with: .style(.secondary), lineWidth: 1)
         }
         let radius = ring.thickness * (special == .supermoon ? 0.95 : 0.75)
         let glow: Double = switch special {

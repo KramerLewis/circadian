@@ -239,39 +239,68 @@ public enum LunarCalculator {
 
 private func degrees(_ radians: Double) -> Double { radians * 180 / .pi }
 
-/// The moon ring on the dial: its own timeline, where the angle is the moon's hour
-/// angle, so the moon's highest point is at the top and moonrise/moonset sit
-/// symmetrically either side, just like the sun ring.
+/// The moon ring on the dial. It shares the sun ring's timeline (the dial angle is the
+/// sun's hour angle, so solar noon is at the top), which puts the moon right under the
+/// "now" hand and its rise and set at their clock times against the hour marks.
 public struct MoonDialModel: Hashable, Sendable {
+    public struct Marker: Hashable, Sendable {
+        public let event: LunarEvent
+        public let date: Date
+        public let angle: Double
+    }
+
     public let latitude: Double
-    public let declination: Double
-    /// The moon's current hour angle (degrees, clockwise from the top).
+    /// The current dial angle (the same as the sun's hand).
     public let nowAngle: Double
     public let altitudeNow: Double
     public let riseSetAltitude: Double
     public let phase: LunarCalculator.Phase
+    /// Moonrise and moonset during this solar day, chronological.
+    public let horizonMarkers: [Marker]
+    /// The moon's altitude every `step` degrees of the dial, from -180 to 180.
+    private let samples: [Double]
+    private static let step = 2.0
 
     public init(now: Date, coordinate: Coordinate) {
+        let day = SolarCalculator.solarDay(containing: now, at: coordinate)
         let position = LunarCalculator.position(at: now)
         latitude = coordinate.latitude
-        declination = position.declination
-        nowAngle = LunarCalculator.hourAngle(at: now, longitude: coordinate.longitude, rightAscension: position.rightAscension)
+        nowAngle = DialModel.angle(for: now, longitude: coordinate.longitude)
         riseSetAltitude = LunarCalculator.riseSetAltitude(distance: position.distance)
-        altitudeNow = SolarCalculator.altitude(hourAngle: nowAngle, latitude: latitude, declination: declination)
+        altitudeNow = LunarCalculator.altitude(at: now, coordinate: coordinate)
         phase = LunarCalculator.phase(at: now)
+
+        // The instant at each dial angle: solar midnight at -180, noon at 0, the next
+        // midnight at 180 (solar time runs within seconds of evenly between them).
+        func instant(_ angle: Double) -> Date {
+            let half = angle < 0 ? day.solarNoon.timeIntervalSince(day.solarMidnight) : day.nextSolarMidnight.timeIntervalSince(day.solarNoon)
+            return day.solarNoon.addingTimeInterval(angle / 180 * half)
+        }
+        let count = Int(360 / Self.step)
+        let samples = (0...count).map { LunarCalculator.altitude(at: instant(-180 + Double($0) * Self.step), coordinate: coordinate) }
+        self.samples = samples
+
+        // Rise and set where the samples cross the rise/set altitude. The moon moves about
+        // 2 degrees in the 8 minutes between samples, so a straight line between them is
+        // within a minute or so of the full search in LunarCalculator.events.
+        var markers: [Marker] = []
+        for i in 0..<count {
+            let a = samples[i] - riseSetAltitude, b = samples[i + 1] - riseSetAltitude
+            guard (a < 0) != (b < 0) else { continue }
+            let angle = -180 + (Double(i) + a / (a - b)) * Self.step
+            markers.append(Marker(event: a < 0 ? .moonrise : .moonset, date: instant(angle), angle: angle))
+        }
+        horizonMarkers = markers
     }
 
+    /// The moon's altitude at a dial angle during this solar day.
     public func altitude(atAngle angle: Double) -> Double {
-        SolarCalculator.altitude(hourAngle: angle, latitude: latitude, declination: declination)
-    }
-
-    /// Hour angle of moonrise/moonset on the ring (moonrise at minus this), or nil if
-    /// the moon stays up or stays down all day.
-    public var riseSetAngle: Double? {
-        let lat = latitude * .pi / 180, dec = declination * .pi / 180
-        let cosH = (sin(riseSetAltitude * .pi / 180) - sin(lat) * sin(dec)) / (cos(lat) * cos(dec))
-        guard (-1...1).contains(cosH) else { return nil }
-        return acos(cosH) * 180 / .pi
+        var a = fmod(angle + 180, 360)
+        if a < 0 { a += 360 }
+        let x = a / Self.step
+        let i = min(Int(x), samples.count - 2)
+        let t = x - Double(i)
+        return samples[i] * (1 - t) + samples[i + 1] * t
     }
 }
 

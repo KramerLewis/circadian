@@ -10,7 +10,7 @@ All notable changes to SunClock. Versions follow the app's marketing version.
   day/night handling; tested against shared reference data cross-checked with PyEphem.
 - Realistic moon: NASA LRO imagery lit for the current phase, with a soft glow.
 - Physically drawn sun: limb darkening, granulation, two-layer corona, and color by altitude (white-gold at noon to red at the horizon, a dim ember below it).
-- Moon ring (own timeline, phase glyph) and moon events; lunar math tested against shared reference data.
+- Moon ring on the same 24-hour timeline as the sun (ticks at moonrise and moonset), phase glyph, and moon events; lunar math tested against shared reference data.
 - Eclipses: lunar (penumbral, partial, total "blood moon") and solar (partial, annular, total) computed on device for your location, shown as special days with a red-tinted moon or the moon crossing the sun on the dial, and the next eclipse in the moon list.
 - Moon position now uses Meeus's ELP-2000/82 series (accurate to seconds), so eclipse timing holds up.
 - 24-hour solar dial with a sky gradient that follows the sun's altitude, a glowing

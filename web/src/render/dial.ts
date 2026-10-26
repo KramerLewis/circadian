@@ -1,10 +1,10 @@
 // Draws the 24-hour solar dial on a canvas: the sky ring (solar noon at the top), the
-// moon ring inside it on the moon's own timeline, hour ticks, event markers, the hand,
+// moon ring inside it on the same timeline, hour ticks, event markers, the hand,
 // the glowing sun, and the marks for special sky days. A port of the iOS dial
 // (SolarDialView + SkyRingRenderer).
 
 import {
-  type DialModel, type MoonDialModel, type RGB, angleForSolarHour, dialAltitude, moonRingColor, skyColor, sunColor,
+  type DialModel, type MoonDialModel, type RGB, angleForSolarHour, dialAltitude, moonAltitudeAt, moonRingColor, skyColor, sunColor,
 } from "../core/dial";
 import type { SolarEvent } from "../core/solar";
 import type { SpecialStyle } from "../core/specialDay";
@@ -109,18 +109,16 @@ function drawMoonRing(ctx: CanvasRenderingContext2D, r: Ring, scene: DialScene, 
   // Full moons light up the ring; a supermoon most of all.
   const boost = special === "supermoon" ? 1.3 : special === "fullMoon" || special === "blueMoon" ? 1.15 : 1;
   ctx.fillStyle = conic(ctx, r, (d) =>
-    moonRingColor(dialAltitude(moon, d), moon.riseSetAltitude, Math.min(moon.phase.illumination * boost, 1.3), scene.dark),
+    moonRingColor(moonAltitudeAt(moon, d), moon.riseSetAltitude, Math.min(moon.phase.illumination * boost, 1.3), scene.dark),
   );
   ctx.fill(ringPath(r), "evenodd");
-  if (moon.riseSetAngle !== undefined) {
-    ctx.strokeStyle = scene.colors.secondary;
-    ctx.lineWidth = 1;
-    for (const angle of [-moon.riseSetAngle, moon.riseSetAngle]) {
-      ctx.beginPath();
-      ctx.moveTo(...point(r, r.inner, angle));
-      ctx.lineTo(...point(r, r.outer, angle));
-      ctx.stroke();
-    }
+  ctx.strokeStyle = scene.colors.secondary;
+  ctx.lineWidth = 1;
+  for (const marker of moon.horizonMarkers) {
+    ctx.beginPath();
+    ctx.moveTo(...point(r, r.inner, marker.angle));
+    ctx.lineTo(...point(r, r.outer, marker.angle));
+    ctx.stroke();
   }
   const thickness = r.outer - r.inner;
   const glow = special === "supermoon" ? 2.4 : special === "fullMoon" || special === "blueMoon" ? 1.8 : 1;

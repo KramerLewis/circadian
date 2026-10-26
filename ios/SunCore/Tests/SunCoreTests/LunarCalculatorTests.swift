@@ -35,15 +35,23 @@ struct LunarCalculatorTests {
         #expect(LunarCalculator.Phase(illumination: 0.99, isWaxing: false).name == "Full moon")
     }
 
-    @Test func moonRingPeaksAtTheTopAndRisesWhereTheEventsSay() throws {
+    @Test func moonRingSharesTheSunsTimeline() throws {
         let seattle = Coordinate(latitude: 47.61, longitude: -122.33)
         let now = try #require(ReferenceFixture.parseInstant("2026-11-24T12:00:00-08:00"))
         let model = MoonDialModel(now: now, coordinate: seattle)
-        #expect(model.altitude(atAngle: 0) > model.altitude(atAngle: 90))
-        #expect(model.altitude(atAngle: 0) > model.altitude(atAngle: -90))
-        let rise = try #require(model.riseSetAngle)
-        #expect(abs(model.altitude(atAngle: rise) - model.riseSetAltitude) < 0.01)
+        // The moon sits under the sun's hand.
+        #expect(abs(model.nowAngle - DialModel.angle(for: now, longitude: seattle.longitude)) < 1e-9)
+        #expect(abs(model.altitude(atAngle: model.nowAngle) - model.altitudeNow) < 0.5)
         #expect(abs(model.altitudeNow - LunarCalculator.altitude(at: now, coordinate: seattle)) < 0.01)
+        // Rise and set ticks land where the full event search puts them.
+        let day = SolarCalculator.solarDay(containing: now, at: seattle)
+        let events = LunarCalculator.events(from: day.solarMidnight, to: day.nextSolarMidnight, at: seattle)
+            .filter { $0.event == .moonrise || $0.event == .moonset }
+        #expect(model.horizonMarkers.map(\.event) == events.map(\.event))
+        for (marker, event) in zip(model.horizonMarkers, events) {
+            #expect(abs(marker.date.timeIntervalSince(event.date)) < 120, "\(marker.event)")
+            #expect(abs(marker.angle - DialModel.angle(for: event.date, longitude: seattle.longitude)) < 0.5)
+        }
     }
 
     @Test func moonColorsBrightenWithHeightAndFullness() {

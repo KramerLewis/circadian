@@ -4,9 +4,9 @@
 // Angles are degrees clockwise from the top, in (-180, 180]: the sun's hour angle, so
 // solar noon is at the top and solar midnight at the bottom.
 
-import { hourAngleFor, moonPhase, moonPosition, type Phase, riseSetAltitude } from "./lunar";
-import { type Coordinate, radians } from "./math";
-import { type SolarDay, type SolarEvent, altitude, isInstant, solarEvents, solarHourAngle, sunPosition } from "./solar";
+import { moonAltitude, moonPhase, moonPosition, type Phase, riseSetAltitude } from "./lunar";
+import type { Coordinate } from "./math";
+import { type SolarDay, type SolarEvent, altitude, isInstant, solarDayContaining, solarEvents, solarHourAngle, sunPosition } from "./solar";
 
 export interface Marker {
   event: SolarEvent;
@@ -110,33 +110,66 @@ export function sunColor(alt: number): { core: RGB; glow: RGB } {
 
 // MARK: Moon ring
 
+export interface MoonMarker {
+  event: "moonrise" | "moonset";
+  date: number;
+  angle: number;
+}
+
+/**
+ * The moon ring, on the sun ring's timeline: the dial angle is the sun's hour angle, so
+ * the moon sits under the "now" hand and its rise and set land at their clock times.
+ */
 export interface MoonDialModel {
   latitude: number;
-  declination: number;
-  /** The moon's current hour angle (dial angle). */
+  /** The current dial angle (the same as the sun's hand). */
   nowAngle: number;
   altitudeNow: number;
   riseSetAltitude: number;
   phase: Phase;
-  /** Hour angle of moonrise/moonset on the ring, or undefined if it stays up or down. */
-  riseSetAngle?: number;
+  /** Moonrise and moonset during this solar day, chronological. */
+  horizonMarkers: MoonMarker[];
+  /** The moon's altitude every 2 degrees of the dial, from -180 to 180. */
+  samples: number[];
 }
 
+const moonStep = 2;
+
 export function moonDialModel(now: number, coordinate: Coordinate): MoonDialModel {
-  const p = moonPosition(now);
-  const nowAngle = hourAngleFor(now, coordinate.longitude, p.rightAscension);
-  const rsa = riseSetAltitude(p.distance);
-  const lat = radians(coordinate.latitude), dec = radians(p.declination);
-  const cosH = (Math.sin(radians(rsa)) - Math.sin(lat) * Math.sin(dec)) / (Math.cos(lat) * Math.cos(dec));
+  const day = solarDayContaining(now, coordinate);
+  // The instant at each dial angle: solar midnight at -180, noon at 0, the next at 180.
+  const instant = (angle: number) =>
+    day.solarNoon + (angle / 180) * (angle < 0 ? day.solarNoon - day.solarMidnight : day.nextSolarMidnight - day.solarNoon);
+  const count = 360 / moonStep;
+  const samples = Array.from({ length: count + 1 }, (_, i) => moonAltitude(instant(-180 + i * moonStep), coordinate));
+  const rsa = riseSetAltitude(moonPosition(now).distance);
+  // Rise and set where the samples cross the rise/set altitude; a straight line between
+  // samples 8 minutes apart is within a minute or so of the full event search.
+  const horizonMarkers: MoonMarker[] = [];
+  for (let i = 0; i < count; i++) {
+    const a = samples[i] - rsa, b = samples[i + 1] - rsa;
+    if (a < 0 === b < 0) continue;
+    const angle = -180 + (i + a / (a - b)) * moonStep;
+    horizonMarkers.push({ event: a < 0 ? "moonrise" : "moonset", date: instant(angle), angle });
+  }
   return {
     latitude: coordinate.latitude,
-    declination: p.declination,
-    nowAngle,
-    altitudeNow: altitude(nowAngle, coordinate.latitude, p.declination),
+    nowAngle: solarHourAngle(now, coordinate.longitude),
+    altitudeNow: moonAltitude(now, coordinate),
     riseSetAltitude: rsa,
     phase: moonPhase(now),
-    riseSetAngle: cosH >= -1 && cosH <= 1 ? (Math.acos(cosH) * 180) / Math.PI : undefined,
+    horizonMarkers,
+    samples,
   };
+}
+
+/** The moon's altitude at a dial angle during this solar day. */
+export function moonAltitudeAt(model: MoonDialModel, angle: number): number {
+  const a = (((angle + 180) % 360) + 360) % 360;
+  const x = a / moonStep;
+  const i = Math.min(Math.floor(x), model.samples.length - 2);
+  const t = x - i;
+  return model.samples[i] * (1 - t) + model.samples[i + 1] * t;
 }
 
 /** Moon ring colors: dark while the moon is down, silver while it's up. */
