@@ -20,6 +20,9 @@ const shots = [
   ["web-10-welcome-light", "light", ""],
   ["web-11-now-at-top-light", "light", `${seattle}&date=2026-06-21T15:00:00-07:00&dial=now`],
   ["web-12-now-at-top-night-dark", "dark", `${seattle}&date=2026-11-24T22:00:00-08:00&dial=now`],
+  ["web-13-moon-in-sky-first-quarter-light", "light", `${seattle}&date=2026-06-21T15:00:00-07:00&moon=sky`],
+  ["web-14-moon-in-sky-full-dark", "dark", `${seattle}&date=2026-11-24T22:00:00-08:00&moon=sky&dial=now`],
+  ["web-15-moon-in-sky-crescent-light", "light", `${seattle}&date=2026-06-17T19:00:00-07:00&moon=sky`],
 ];
 
 const browser = await chromium.launch();

@@ -65,7 +65,8 @@ struct WatchDialView: View {
                     SkyRingRenderer.drawSpecialDay(.solstice, in: &context, ring: sun, innerRadius: moonRing.inner, dark: true)
                 }
                 SkyRingRenderer.drawMoonRing(in: &context, ring: moonRing, moon: moon, dark: true, special: special,
-                                             eclipseShadow: special == .lunarEclipse ? EclipseCalculator.umbralCoverage(at: moment) : 0)
+                                             eclipseShadow: special == .lunarEclipse ? EclipseCalculator.umbralCoverage(at: moment) : 0,
+                                             placement: self.model.moonPlacement)
                 if let special, special == .equinox || special == .newMoon {
                     SkyRingRenderer.drawSpecialDay(special, in: &context, ring: sun, innerRadius: moonRing.inner, dark: true)
                 }

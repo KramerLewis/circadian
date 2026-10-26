@@ -6,6 +6,7 @@ import SunCore
 ///     -demoLatitude 47.61 -demoLongitude -122.33 -demoName Seattle
 ///     -demoDate 2026-06-21T15:00:00-07:00 [-demoTab alarms] [-demoSheet location|alarm|widgets]
 ///     [-demoTimeDisplay relative|twelveHour|twentyFourHour] [-demoDialOrientation noonAtTop|nowAtTop]
+///     [-demoMoonPlacement clock|sky]
 ///     [-demoScroll moon] [-demoScrub minutes]
 ///
 /// Debug builds only. In demo mode the app uses an in-memory store and never
@@ -18,6 +19,7 @@ struct DemoConfig {
     var tab: String?
     var timeDisplay: String?
     var dialOrientation: String?
+    var moonPlacement: String?
     var scroll: String?
     /// Watch: start scrubbed this many minutes from now (and don't snap back).
     var scrub: Double?
@@ -44,6 +46,7 @@ struct DemoConfig {
             tab: value("-demoTab"),
             timeDisplay: value("-demoTimeDisplay"),
             dialOrientation: value("-demoDialOrientation"),
+            moonPlacement: value("-demoMoonPlacement"),
             scroll: value("-demoScroll"),
             scrub: value("-demoScrub").flatMap(Double.init)
         )

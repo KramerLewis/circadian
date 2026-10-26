@@ -84,6 +84,9 @@ shoot 24-eclipse-heads-up-dark       dark  America/Los_Angeles 2026-03-01T20:00:
 # The rotating dial: now at the top
 shoot 25-now-at-top-light            light America/Los_Angeles 2026-06-21T15:00:00-07:00 "${seattle[@]}" -demoDialOrientation nowAtTop
 shoot 26-now-at-top-night-dark       dark  America/Los_Angeles 2026-11-24T22:00:00-08:00 "${seattle[@]}" -demoDialOrientation nowAtTop
+# The moon where it is in the sky (its angle from the sun shows the phase)
+shoot 27-moon-in-sky-light           light America/Los_Angeles 2026-06-21T15:00:00-07:00 "${seattle[@]}" -demoMoonPlacement sky
+shoot 28-moon-in-sky-full-dark       dark  America/Los_Angeles 2026-11-24T22:00:00-08:00 "${seattle[@]}" -demoMoonPlacement sky -demoDialOrientation nowAtTop
 # Largest accessibility text size, to check nothing truncates.
 xcrun simctl ui "$udid" content_size accessibility-extra-extra-extra-large
 shoot 14-accessibility-text-light    light America/Los_Angeles 2026-11-01T09:00:00-08:00 "${seattle[@]}" -demoScroll moon

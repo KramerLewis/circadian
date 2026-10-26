@@ -50,10 +50,15 @@
           </button>
         </div>
 
+        <p id="moon-times" class="moon-times" hidden></p>
         <div class="dial-options">
           <div class="segmented" role="radiogroup" aria-label="Dial">
             <button type="button" role="radio" data-dial-choice="noon" title="Solar noon fixed at the top; the sun travels round">Noon at top</button>
             <button type="button" role="radio" data-dial-choice="now" title="The dial turns so now is always at the top">Now at top</button>
+          </div>
+          <div class="segmented" role="radiogroup" aria-label="Moon">
+            <button type="button" role="radio" data-moon-choice="clock" title="The moon ring on the same hours as the sun: read moonrise and moonset against the clock">Moon on clock</button>
+            <button type="button" role="radio" data-moon-choice="sky" title="The moon where it is in the sky: its angle from the sun shows the phase">Moon in sky</button>
           </div>
         </div>
 

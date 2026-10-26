@@ -4,7 +4,7 @@
 // Angles are degrees clockwise from the top, in (-180, 180]: the sun's hour angle, so
 // solar noon is at the top and solar midnight at the bottom.
 
-import { moonAltitude, moonPhase, moonPosition, type Phase, riseSetAltitude } from "./lunar";
+import { hourAngleFor, lunarEvents, moonAltitude, moonPhase, moonPosition, type Phase, riseSetAltitude } from "./lunar";
 import type { Coordinate } from "./math";
 import { type SolarDay, type SolarEvent, altitude, isInstant, solarDayContaining, solarEvents, solarHourAngle, sunPosition } from "./solar";
 
@@ -131,6 +131,18 @@ export interface MoonDialModel {
   horizonMarkers: MoonMarker[];
   /** The moon's altitude every 2 degrees of the dial, from -180 to 180. */
   samples: number[];
+  /**
+   * Where the moon is in the sky, for the "in the sky" view: its own hour angle, so its
+   * angle from the sun on the dial is its angle from the sun in the sky (which sets the
+   * phase). Rise and set are where it crosses the horizon, with their next clock times.
+   */
+  sky: {
+    nowAngle: number;
+    declination: number;
+    riseSetAngle?: number;
+    nextRise?: number;
+    nextSet?: number;
+  };
 }
 
 const moonStep = 2;
@@ -152,7 +164,18 @@ export function moonDialModel(now: number, coordinate: Coordinate): MoonDialMode
     const angle = -180 + (i + a / (a - b)) * moonStep;
     horizonMarkers.push({ event: a < 0 ? "moonrise" : "moonset", date: instant(angle), angle });
   }
+  const position = moonPosition(now);
+  const lat = (coordinate.latitude * Math.PI) / 180, dec = (position.declination * Math.PI) / 180;
+  const cosH = (Math.sin((rsa * Math.PI) / 180) - Math.sin(lat) * Math.sin(dec)) / (Math.cos(lat) * Math.cos(dec));
+  const upcoming = lunarEvents(now, now + 30 * 3_600_000, coordinate);
   return {
+    sky: {
+      nowAngle: hourAngleFor(now, coordinate.longitude, position.rightAscension),
+      declination: position.declination,
+      riseSetAngle: cosH >= -1 && cosH <= 1 ? (Math.acos(cosH) * 180) / Math.PI : undefined,
+      nextRise: upcoming.find((e) => e.event === "moonrise")?.date,
+      nextSet: upcoming.find((e) => e.event === "moonset")?.date,
+    },
     latitude: coordinate.latitude,
     nowAngle: solarHourAngle(now, coordinate.longitude),
     altitudeNow: moonAltitude(now, coordinate),

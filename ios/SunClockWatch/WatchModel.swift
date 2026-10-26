@@ -20,13 +20,15 @@ final class WatchModel: NSObject, WCSessionDelegate {
             context = WatchContext(
                 place: SharedStore.StoredPlace(name: demo.name, latitude: demo.coordinate.latitude, longitude: demo.coordinate.longitude),
                 timeDisplay: demo.timeDisplay ?? TimeDisplay.relative.rawValue,
-                dialOrientation: demo.dialOrientation ?? DialOrientation.noonAtTop.rawValue
+                dialOrientation: demo.dialOrientation ?? DialOrientation.noonAtTop.rawValue,
+                moonPlacement: demo.moonPlacement ?? MoonPlacement.clock.rawValue
             )
         } else {
             context = WatchContext(
                 place: SharedStore.loadPlace(),
                 timeDisplay: SharedStore.loadTimeDisplay() ?? TimeDisplay.relative.rawValue,
-                dialOrientation: SharedStore.loadDialOrientation() ?? DialOrientation.noonAtTop.rawValue
+                dialOrientation: SharedStore.loadDialOrientation() ?? DialOrientation.noonAtTop.rawValue,
+                moonPlacement: SharedStore.loadMoonPlacement() ?? MoonPlacement.clock.rawValue
             )
         }
         super.init()
@@ -34,6 +36,7 @@ final class WatchModel: NSObject, WCSessionDelegate {
 
     var timeDisplay: TimeDisplay { TimeDisplay(rawValue: context.timeDisplay) ?? .relative }
     var dialOrientation: DialOrientation { DialOrientation(rawValue: context.dialOrientation) ?? .noonAtTop }
+    var moonPlacement: MoonPlacement { MoonPlacement(rawValue: context.moonPlacement) ?? .clock }
 
     func start() {
         guard DemoConfig.current == nil, WCSession.isSupported() else { return }
@@ -79,6 +82,7 @@ final class WatchModel: NSObject, WCSessionDelegate {
         SharedStore.savePlace(new.place)
         SharedStore.saveTimeDisplay(new.timeDisplay)
         SharedStore.saveDialOrientation(new.dialOrientation)
+        SharedStore.saveMoonPlacement(new.moonPlacement)
         WidgetCenter.shared.reloadAllTimelines()
     }
 

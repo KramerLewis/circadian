@@ -257,6 +257,26 @@ public struct MoonDialModel: Hashable, Sendable {
     public let phase: LunarCalculator.Phase
     /// Moonrise and moonset during this solar day, chronological.
     public let horizonMarkers: [Marker]
+
+    /// Where the moon is in the sky, for the "in the sky" view: its own hour angle, so
+    /// its angle from the sun on the dial is its angle from the sun in the sky (which
+    /// sets the phase).
+    public struct Sky: Hashable, Sendable {
+        public let nowAngle: Double
+        public let declination: Double
+        /// Hour angle where it crosses the horizon (rising at minus this), or nil if it
+        /// stays up or down all day.
+        public let riseSetAngle: Double?
+        public let nextRise: Date?
+        public let nextSet: Date?
+
+        /// The moon's altitude at an hour angle, for coloring the ring.
+        public func altitude(atAngle angle: Double, latitude: Double) -> Double {
+            SolarCalculator.altitude(hourAngle: angle, latitude: latitude, declination: declination)
+        }
+    }
+
+    public let sky: Sky
     /// The moon's altitude every `step` degrees of the dial, from -180 to 180.
     private let samples: [Double]
     private static let step = 2.0
@@ -291,6 +311,17 @@ public struct MoonDialModel: Hashable, Sendable {
             markers.append(Marker(event: a < 0 ? .moonrise : .moonset, date: instant(angle), angle: angle))
         }
         horizonMarkers = markers
+
+        let lat = coordinate.latitude * .pi / 180, dec = position.declination * .pi / 180
+        let cosH = (sin(riseSetAltitude * .pi / 180) - sin(lat) * sin(dec)) / (cos(lat) * cos(dec))
+        let upcoming = LunarCalculator.events(from: now, to: now.addingTimeInterval(30 * 3600), at: coordinate)
+        sky = Sky(
+            nowAngle: LunarCalculator.hourAngle(at: now, longitude: coordinate.longitude, rightAscension: position.rightAscension),
+            declination: position.declination,
+            riseSetAngle: (-1...1).contains(cosH) ? acos(cosH) * 180 / .pi : nil,
+            nextRise: upcoming.first { $0.event == .moonrise }?.date,
+            nextSet: upcoming.first { $0.event == .moonset }?.date
+        )
     }
 
     /// The moon's altitude at a dial angle during this solar day.

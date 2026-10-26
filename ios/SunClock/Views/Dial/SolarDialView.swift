@@ -13,6 +13,7 @@ struct SolarDialView: View {
     let timeDisplay: TimeDisplay
     var special: SpecialDayText?
     var orientation: DialOrientation = .noonAtTop
+    var moonPlacement: MoonPlacement = .clock
     /// Where the dial is drawn for; only needed to place the moon over the sun in a solar eclipse.
     var coordinate: Coordinate?
     /// Called when the center is tapped, to switch to the next display.
@@ -31,7 +32,8 @@ struct SolarDialView: View {
             }
             drawRing(in: &context, geometry)
             SkyRingRenderer.drawMoonRing(in: &context, ring: geometry.moonRing, moon: moon, dark: dark, special: special?.style,
-                                         eclipseShadow: special?.style == .lunarEclipse ? EclipseCalculator.umbralCoverage(at: now) : 0)
+                                         eclipseShadow: special?.style == .lunarEclipse ? EclipseCalculator.umbralCoverage(at: now) : 0,
+                                         placement: moonPlacement)
             if let style = special?.style, style == .equinox || style == .newMoon {
                 SkyRingRenderer.drawSpecialDay(style, in: &context, ring: geometry.ring, innerRadius: geometry.moonInner, dark: dark)
             }

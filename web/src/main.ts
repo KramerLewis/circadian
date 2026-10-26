@@ -22,6 +22,7 @@ interface Place extends Coordinate {
 type TimeDisplay = "relative" | "twelveHour" | "twentyFourHour";
 type Theme = "system" | "light" | "dark";
 type Orientation = "noon" | "now";
+type MoonMode = "clock" | "sky";
 
 const displays: TimeDisplay[] = ["relative", "twelveHour", "twentyFourHour"];
 const displayTitles: Record<TimeDisplay, string> = {
@@ -64,10 +65,12 @@ const state = {
   display: (params.get("display") as TimeDisplay) ?? storage.get<TimeDisplay>("display") ?? "relative",
   theme: (params.get("theme") as Theme) ?? storage.get<Theme>("theme") ?? "system",
   orientation: (params.get("dial") as Orientation) ?? storage.get<Orientation>("orientation") ?? "noon",
+  moonMode: (params.get("moon") as MoonMode) ?? storage.get<MoonMode>("moonMode") ?? "clock",
   scrubMinutes: Number(params.get("scrub") ?? 0),
 };
 if (!displays.includes(state.display)) state.display = "relative";
 if (state.orientation !== "now") state.orientation = "noon";
+if (state.moonMode !== "sky") state.moonMode = "clock";
 
 function isValid(latitude: number, longitude: number): boolean {
   return Number.isFinite(latitude) && Number.isFinite(longitude) && Math.abs(latitude) <= 90 && Math.abs(longitude) <= 180;
@@ -196,11 +199,23 @@ function render() {
     solarEclipse: special?.style === "solarEclipse" ? solarCoverage(now, place) : undefined,
     label: (date) => clockTime(date, tz),
     orientation: state.orientation,
+    moonMode: state.moonMode,
     readout: readoutBox,
   });
   for (const button of document.querySelectorAll<HTMLButtonElement>("[data-dial-choice]")) {
     button.setAttribute("aria-checked", String(button.dataset.dialChoice === state.orientation));
   }
+  for (const button of document.querySelectorAll<HTMLButtonElement>("[data-moon-choice]")) {
+    button.setAttribute("aria-checked", String(button.dataset.moonChoice === state.moonMode));
+  }
+  // The sky view's moon ticks don't line up with the hours, so say when they are.
+  const moonTimes = $("moon-times");
+  const times = [
+    moon.sky.nextRise !== undefined ? { at: moon.sky.nextRise, text: `Moonrise ${clockTime(moon.sky.nextRise, tz)}` } : undefined,
+    moon.sky.nextSet !== undefined ? { at: moon.sky.nextSet, text: `Moonset ${clockTime(moon.sky.nextSet, tz)}` } : undefined,
+  ].filter((t) => t !== undefined).sort((a, b) => a.at - b.at);
+  moonTimes.hidden = state.moonMode !== "sky" || times.length === 0;
+  moonTimes.textContent = `Next: ${times.map((t) => t.text).join(" · ")}`;
 
   const sun = Math.round(dialAltitude(model, model.nowAngle));
   dial.setAttribute(
@@ -415,6 +430,13 @@ for (const button of document.querySelectorAll<HTMLButtonElement>("[data-dial-ch
   button.addEventListener("click", () => {
     state.orientation = button.dataset.dialChoice as Orientation;
     storage.set("orientation", state.orientation);
+    render();
+  });
+}
+for (const button of document.querySelectorAll<HTMLButtonElement>("[data-moon-choice]")) {
+  button.addEventListener("click", () => {
+    state.moonMode = button.dataset.moonChoice as MoonMode;
+    storage.set("moonMode", state.moonMode);
     render();
   });
 }

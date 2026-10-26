@@ -8,6 +8,7 @@ extension DemoConfig {
         let settings = AppSettings()
         if let timeDisplay { settings.timeDisplayRaw = timeDisplay }
         if let dialOrientation { settings.dialOrientationRaw = dialOrientation }
+        if let moonPlacement { settings.moonPlacementRaw = moonPlacement }
         context.insert(settings)
         let samples: [(String, SolarEvent, Int, [Int], Bool)] = [
             ("Wake up", .sunrise, -30, [2, 3, 4, 5, 6], true),

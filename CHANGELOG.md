@@ -16,6 +16,7 @@ All notable changes to SunClock. Versions follow the app's marketing version.
 - 24-hour solar dial with a sky gradient that follows the sun's altitude, a glowing
   sun, event markers, and relative readouts ("2h 14m after sunrise").
 - Center readout setting: relative to the nearest solar anchor, 12-hour, or 24-hour.
+- Moon setting: on the clock (moonrise and moonset against the hours) or in the sky (the moon at its real angle from the sun, which shows the phase), with the next moonrise and moonset under the dial.
 - Dial setting: noon at top (fixed dial, the sun travels round) or now at top (the dial turns under the sun), on iPhone, Watch and web.
 - Location (when in use, approximate) with a manual fallback.
 - Solar alarms via AlarmKit: any event plus an offset, repeat days, labels, snooze.

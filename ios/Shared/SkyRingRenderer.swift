@@ -160,7 +160,9 @@ enum SkyRingRenderer {
     /// The moon's ring: on the sun ring's timeline, colored by the moon's altitude and
     /// fullness through the day, with ticks at moonrise and moonset.
     static func drawMoonRing(in context: inout GraphicsContext, ring: Ring, moon: MoonDialModel, dark: Bool,
-                             special: SpecialDayText.Style? = nil, eclipseShadow: Double = 0) {
+                             special: SpecialDayText.Style? = nil, eclipseShadow: Double = 0,
+                             placement: MoonPlacement = .clock) {
+        let sky = placement == .sky
         // Full moons light up the ring; a supermoon most of all.
         let boost: Double = switch special {
         case .supermoon: 1.3
@@ -168,8 +170,10 @@ enum SkyRingRenderer {
         default: 1
         }
         let stops = (0...360).map { degree -> Gradient.Stop in
+            // In the sky view the ring is directions round the sky (the moon's hour angle),
+            // so the part above the horizon is centered on the top, like the sun's.
             let rgb = MoonGradient.color(
-                altitude: moon.altitude(atAngle: Double(degree)),
+                altitude: sky ? moon.sky.altitude(atAngle: Double(degree), latitude: moon.latitude) : moon.altitude(atAngle: Double(degree)),
                 riseSetAltitude: moon.riseSetAltitude,
                 illumination: min(moon.phase.illumination * boost, 1.3),
                 dark: dark
@@ -181,10 +185,11 @@ enum SkyRingRenderer {
             with: .conicGradient(Gradient(stops: stops), center: ring.center, angle: .degrees(-90 + ring.rotation)),
             style: evenOdd
         )
-        for marker in moon.horizonMarkers {
+        let ticks = sky ? moon.sky.riseSetAngle.map { [-$0, $0] } ?? [] : moon.horizonMarkers.map(\.angle)
+        for angle in ticks {
             var tick = Path()
-            tick.move(to: ring.point(ring.inner, marker.angle))
-            tick.addLine(to: ring.point(ring.outer, marker.angle))
+            tick.move(to: ring.point(ring.inner, angle))
+            tick.addLine(to: ring.point(ring.outer, angle))
             context.stroke(tick, with: .style(.secondary), lineWidth: 1)
         }
         let radius = ring.thickness * (special == .supermoon ? 0.95 : 0.75)
@@ -193,7 +198,7 @@ enum SkyRingRenderer {
         case .fullMoon, .blueMoon: 1.8
         default: 1
         }
-        drawMoon(in: &context, center: ring.point((ring.inner + ring.outer) / 2, moon.nowAngle),
+        drawMoon(in: &context, center: ring.point((ring.inner + ring.outer) / 2, sky ? moon.sky.nowAngle : moon.nowAngle),
                  radius: radius, phase: moon.phase, southern: moon.latitude < 0, monochrome: false,
                  glowScale: glow, blueGlow: special == .blueMoon, shadow: eclipseShadow)
     }

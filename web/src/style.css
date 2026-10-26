@@ -266,8 +266,17 @@ a:focus-visible {
   color: var(--muted);
 }
 
+.moon-times {
+  text-align: center;
+  color: var(--muted);
+  margin: 2px 0 8px;
+  font-variant-numeric: tabular-nums;
+}
+
 .dial-options {
   display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
   justify-content: center;
   margin-top: 4px;
 }

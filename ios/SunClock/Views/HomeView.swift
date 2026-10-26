@@ -32,6 +32,9 @@ struct HomeView: View {
                         Picker("Dial", selection: $settings.dialOrientation) {
                             ForEach(DialOrientation.allCases) { Text($0.title).tag($0) }
                         }
+                        Picker("Moon", selection: $settings.moonPlacement) {
+                            ForEach(MoonPlacement.allCases) { Text($0.title).tag($0) }
+                        }
                     }
                 }
                 ToolbarItem(placement: .topBarTrailing) {
@@ -51,29 +54,48 @@ struct HomeView: View {
         }
     }
 
+    /// "Next: Moonset 1:01 AM · Moonrise 2:24 PM"
+    private func nextMoonTimes(_ sky: MoonDialModel.Sky) -> String? {
+        let times = [(sky.nextRise, "Moonrise"), (sky.nextSet, "Moonset")]
+            .compactMap { date, name in date.map { ($0, name) } }
+            .sorted { $0.0 < $1.0 }
+            .map { "\($0.1) \($0.0.formatted(date: .omitted, time: .shortened))" }
+        return times.isEmpty ? nil : "Next: " + times.joined(separator: " · ")
+    }
+
     private func content(place: Place, now: Date) -> some View {
         let day = SolarCalculator.solarDay(containing: now, at: place.coordinate)
         let readout = SolarReadout(at: now, coordinate: place.coordinate)
         let special = SpecialDayText.today(at: place.coordinate, on: now)
         let headsUp = special == nil ? SpecialDayText.headsUp(at: place.coordinate, after: now) : nil
+        let moon = MoonDialModel(now: now, coordinate: place.coordinate)
         return ScrollViewReader { proxy in
             ScrollView {
                 VStack(spacing: 20) {
                     SolarDialView(
                         model: DialModel(day: day, now: now),
-                        moon: MoonDialModel(now: now, coordinate: place.coordinate),
+                        moon: moon,
                         now: now,
                         solarMinutes: SolarCalculator.apparentSolarMinutes(at: now, longitude: place.coordinate.longitude),
                         readout: readout,
                         timeDisplay: settings.timeDisplay,
                         special: special,
                         orientation: settings.dialOrientation,
+                        moonPlacement: settings.moonPlacement,
                         coordinate: place.coordinate,
                         onCycleDisplay: {
                             withAnimation { settings.timeDisplay = settings.timeDisplay.next }
                         }
                     )
                     .frame(maxWidth: 420)
+                    if settings.moonPlacement == .sky, let times = nextMoonTimes(moon.sky) {
+                        // The sky view's moon ticks don't line up with the hours.
+                        Text(times)
+                            .font(.subheadline)
+                            .monospacedDigit()
+                            .foregroundStyle(.secondary)
+                            .padding(.top, -12)
+                    }
                     if let special {
                         SpecialDayBanner(special: special)
                     } else if let headsUp {

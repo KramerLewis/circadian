@@ -6,7 +6,7 @@
 import {
   type DialModel, type MoonDialModel, type RGB, angleForSolarHour, dialAltitude, moonAltitudeAt, moonRingColor, skyColor, sunColor,
 } from "../core/dial";
-import type { SolarEvent } from "../core/solar";
+import { type SolarEvent, altitude } from "../core/solar";
 import type { SpecialStyle } from "../core/specialDay";
 import type { Phase } from "../core/lunar";
 import { moonImage } from "./moon";
@@ -31,6 +31,8 @@ export interface DialScene {
   label: (date: number) => string;
   /** "noon": solar noon fixed at the top; "now": the dial turns so now is at the top. */
   orientation: "noon" | "now";
+  /** "clock": the moon ring on the sun's timeline; "sky": the moon where it is in the sky. */
+  moonMode: "clock" | "sky";
   /** Half the size of the center readout, to keep hour numbers out from under it. */
   readout: { halfWidth: number; halfHeight: number };
 }
@@ -115,21 +117,30 @@ function drawMoonRing(ctx: CanvasRenderingContext2D, r: Ring, scene: DialScene, 
   const { moon, special } = scene;
   // Full moons light up the ring; a supermoon most of all.
   const boost = special === "supermoon" ? 1.3 : special === "fullMoon" || special === "blueMoon" ? 1.15 : 1;
+  const sky = scene.moonMode === "sky";
+  // In the sky view the ring is directions round the sky (the moon's hour angle), so the
+  // part above the horizon is centered on the top, like the sun's.
+  const altitudeAt = (d: number) => (sky ? altitude(d, moon.latitude, moon.sky.declination) : moonAltitudeAt(moon, d));
   ctx.fillStyle = conic(ctx, r, (d) =>
-    moonRingColor(moonAltitudeAt(moon, d), moon.riseSetAltitude, Math.min(moon.phase.illumination * boost, 1.3), scene.dark),
+    moonRingColor(altitudeAt(d), moon.riseSetAltitude, Math.min(moon.phase.illumination * boost, 1.3), scene.dark),
   );
   ctx.fill(ringPath(r), "evenodd");
   ctx.strokeStyle = scene.colors.secondary;
   ctx.lineWidth = 1;
-  for (const marker of moon.horizonMarkers) {
+  // In the sky view the ticks are where the moon crosses the horizon; they don't line
+  // up with the hours (those follow the sun), so the page prints the times below.
+  const ticks = sky
+    ? moon.sky.riseSetAngle === undefined ? [] : [-moon.sky.riseSetAngle, moon.sky.riseSetAngle]
+    : moon.horizonMarkers.map((m) => m.angle);
+  for (const angle of ticks) {
     ctx.beginPath();
-    ctx.moveTo(...point(r, r.inner, marker.angle));
-    ctx.lineTo(...point(r, r.outer, marker.angle));
+    ctx.moveTo(...point(r, r.inner, angle));
+    ctx.lineTo(...point(r, r.outer, angle));
     ctx.stroke();
   }
   const thickness = r.outer - r.inner;
   const glow = special === "supermoon" ? 2.4 : special === "fullMoon" || special === "blueMoon" ? 1.8 : 1;
-  const [x, y] = point(r, (r.inner + r.outer) / 2, moon.nowAngle);
+  const [x, y] = point(r, (r.inner + r.outer) / 2, sky ? moon.sky.nowAngle : moon.nowAngle);
   drawMoon(ctx, x, y, thickness * (special === "supermoon" ? 0.95 : 0.75), moon.phase, moon.latitude < 0, scale, {
     glowScale: glow,
     blueGlow: special === "blueMoon",

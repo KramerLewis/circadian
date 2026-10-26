@@ -54,7 +54,21 @@ struct LunarCalculatorTests {
         }
     }
 
-    @Test func moonColorsBrightenWithHeightAndFullness() {
+    @Test func skyViewPutsTheMoonAtItsAngleFromTheSun() throws {
+        let seattle = Coordinate(latitude: 47.61, longitude: -122.33)
+        // Near first quarter (June 21, 2026), the moon is about 90 degrees behind the sun.
+        let now = try #require(ReferenceFixture.parseInstant("2026-06-21T15:00:00-07:00"))
+        let sky = MoonDialModel(now: now, coordinate: seattle).sky
+        let sun = DialModel.angle(for: now, longitude: seattle.longitude)
+        var gap = (sun - sky.nowAngle).truncatingRemainder(dividingBy: 360)
+        if gap < 0 { gap += 360 }
+        #expect(abs(gap - 90) < 12)
+        let rise = try #require(sky.riseSetAngle)
+        #expect(abs(sky.altitude(atAngle: rise, latitude: seattle.latitude) - MoonDialModel(now: now, coordinate: seattle).riseSetAltitude) < 0.01)
+        #expect(sky.nextRise != nil && sky.nextSet != nil)
+    }
+
+        @Test func moonColorsBrightenWithHeightAndFullness() {
         let low = MoonGradient.color(altitude: 5, riseSetAltitude: 0.1, illumination: 1, dark: false)
         let high = MoonGradient.color(altitude: 50, riseSetAltitude: 0.1, illumination: 1, dark: false)
         let newMoonHigh = MoonGradient.color(altitude: 50, riseSetAltitude: 0.1, illumination: 0, dark: false)

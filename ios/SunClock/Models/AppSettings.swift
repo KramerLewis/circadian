@@ -20,6 +20,8 @@ final class AppSettings {
     var timeDisplayRaw: String = TimeDisplay.relative.rawValue
     /// How the dial is turned; see `DialOrientation`.
     var dialOrientationRaw: String = DialOrientation.noonAtTop.rawValue
+    /// Where the moon ring puts the moon; see `MoonPlacement`.
+    var moonPlacementRaw: String = MoonPlacement.clock.rawValue
 
     /// Last fix from CoreLocation, so the app (and later the alarm scheduler) has a
     /// location before the first fix after launch.
@@ -35,6 +37,14 @@ extension AppSettings {
         get { TimeDisplay(rawValue: timeDisplayRaw) ?? .relative }
         set {
             timeDisplayRaw = newValue.rawValue
+            updatedAt = .now
+        }
+    }
+
+    var moonPlacement: MoonPlacement {
+        get { MoonPlacement(rawValue: moonPlacementRaw) ?? .clock }
+        set {
+            moonPlacementRaw = newValue.rawValue
             updatedAt = .now
         }
     }
