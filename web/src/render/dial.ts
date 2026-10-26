@@ -74,13 +74,16 @@ export function drawDial(canvas: HTMLCanvasElement, scene: DialScene): void {
   const moonRing: Ring = { cx: side / 2, cy: side / 2, inner: g.moonInner, outer: g.moonOuter, rotation };
 
   if (scene.special === "solstice") drawSolsticeHalo(ctx, sunRing);
+  // The hand runs beneath both rings, from inside the moon ring to past the sun ring.
+  drawHand(ctx, sunRing, g.moonInner - 14, scene);
   drawSky(ctx, sunRing, scene.model, scene.dark);
   drawMoonRing(ctx, moonRing, scene, scale);
   if (scene.special === "equinox") drawEquinox(ctx, sunRing);
   if (scene.special === "newMoon") drawStars(ctx, sunRing, g.moonInner, scene.dark);
   drawHourTicks(ctx, sunRing, g.moonInner, scene.colors, scene.readout);
   drawMarkers(ctx, sunRing, scene);
-  drawHand(ctx, sunRing, scene, scale);
+  const angle = scene.model.nowAngle;
+  drawSun(ctx, sunRing, angle, dialAltitude(scene.model, angle), scale, scene.solarEclipse);
 }
 
 // MARK: Rings
@@ -221,20 +224,32 @@ function drawMarkers(ctx: CanvasRenderingContext2D, r: Ring, scene: DialScene) {
   }
 }
 
-function drawHand(ctx: CanvasRenderingContext2D, r: Ring, scene: DialScene, scale: number) {
+/** The "now" hand: a vivid glowing blue line, drawn before (beneath) the rings. */
+function drawHand(ctx: CanvasRenderingContext2D, r: Ring, innerEnd: number, scene: DialScene) {
   const angle = scene.model.nowAngle;
+  const from = point(r, innerEnd, angle), to = point(r, r.outer + 8, angle);
   ctx.save();
-  ctx.globalAlpha = 0.7;
-  ctx.strokeStyle = scene.colors.primary;
-  ctx.lineWidth = 1.5;
   ctx.lineCap = "round";
+  // Glow: a soft wide stroke, then the bright core with a blur shadow.
+  ctx.strokeStyle = handGlow;
+  ctx.lineWidth = 9;
   ctx.beginPath();
-  ctx.moveTo(...point(r, r.inner - 4, angle));
-  ctx.lineTo(...point(r, r.outer + 4, angle));
+  ctx.moveTo(...from);
+  ctx.lineTo(...to);
+  ctx.stroke();
+  ctx.shadowColor = handColor;
+  ctx.shadowBlur = 12;
+  ctx.strokeStyle = handColor;
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  ctx.moveTo(...from);
+  ctx.lineTo(...to);
   ctx.stroke();
   ctx.restore();
-  drawSun(ctx, r, angle, dialAltitude(scene.model, angle), scale, scene.solarEclipse);
 }
+
+const handColor = "rgb(28, 138, 255)";
+const handGlow = "rgba(28, 138, 255, 0.28)";
 
 /** The sun inside a two-layer corona tinted for its altitude, clipped to the ring. */
 function drawSun(
@@ -244,10 +259,10 @@ function drawSun(
   const strength = altitude >= -0.833 ? 1 : Math.max(0.3, 1 + (altitude + 0.833) / 25);
   const glow = sunColor(altitude).glow;
   const [x, y] = point(r, (r.inner + r.outer) / 2, angle);
-  const radius = (r.outer - r.inner) * 0.3;
+  const radius = (r.outer - r.inner) * 0.4;
   ctx.save();
   ctx.clip(ringPath(r), "evenodd");
-  for (const [reach, opacity] of [[radius * 4.6, 0.35], [radius * 2.0, 0.6]]) {
+  for (const [reach, opacity] of [[radius * 3.6, 0.35], [radius * 1.8, 0.6]]) {
     const gradient = ctx.createRadialGradient(x, y, radius * 0.9, x, y, reach);
     gradient.addColorStop(0, css(glow, opacity * strength));
     gradient.addColorStop(1, css(glow, 0));

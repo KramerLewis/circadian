@@ -30,6 +30,8 @@ struct SolarDialView: View {
             if special?.style == .solstice {
                 SkyRingRenderer.drawSpecialDay(.solstice, in: &context, ring: geometry.ring, innerRadius: geometry.moonInner, dark: dark)
             }
+            // The hand runs beneath both rings, from inside the moon ring to past the sun ring.
+            drawHand(in: &context, geometry)
             drawRing(in: &context, geometry)
             SkyRingRenderer.drawMoonRing(in: &context, ring: geometry.moonRing, moon: moon, dark: dark, special: special?.style,
                                          eclipseShadow: special?.style == .lunarEclipse ? EclipseCalculator.umbralCoverage(at: now) : 0,
@@ -39,7 +41,9 @@ struct SolarDialView: View {
             }
             drawHourTicks(in: &context, geometry)
             drawMarkers(in: &context, geometry)
-            drawHand(in: &context, geometry)
+            SkyRingRenderer.drawSun(in: &context, ring: geometry.ring, angle: model.nowAngle,
+                                    altitude: model.altitude(atAngle: model.nowAngle), monochrome: false,
+                                    eclipse: special?.style == .solarEclipse ? solarEclipseOverlay : nil)
         }
         .aspectRatio(1, contentMode: .fit)
         .overlay {
@@ -175,14 +179,16 @@ struct SolarDialView: View {
         }
     }
 
+    /// The "now" hand: a vivid glowing blue line, drawn before (beneath) the rings.
     private func drawHand(in context: inout GraphicsContext, _ g: Geometry) {
-        // A thin pointer across the ring for precision, under the glowing sun.
         var hand = Path()
-        hand.move(to: g.point(g.inner - 4, model.nowAngle))
-        hand.addLine(to: g.point(g.outer + 4, model.nowAngle))
-        context.stroke(hand, with: .style(.primary.opacity(0.7)), style: StrokeStyle(lineWidth: 1.5, lineCap: .round))
-        SkyRingRenderer.drawSun(in: &context, ring: g.ring, angle: model.nowAngle,
-                                altitude: model.altitude(atAngle: model.nowAngle), monochrome: false,
-                                eclipse: special?.style == .solarEclipse ? solarEclipseOverlay : nil)
+        hand.move(to: g.point(g.moonInner - 14, model.nowAngle))
+        hand.addLine(to: g.point(g.outer + 8, model.nowAngle))
+        let blue = Color(red: 0.11, green: 0.54, blue: 1.0)
+        context.drawLayer { glow in
+            glow.addFilter(.blur(radius: 5))
+            glow.stroke(hand, with: .color(blue.opacity(0.9)), style: StrokeStyle(lineWidth: 6, lineCap: .round))
+        }
+        context.stroke(hand, with: .color(blue), style: StrokeStyle(lineWidth: 2.5, lineCap: .round))
     }
 }

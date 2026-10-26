@@ -64,11 +64,11 @@ enum SkyRingRenderer {
         let rgb = SkyGradient.sunColor(altitude: altitude).glow
         let glowColor = monochrome ? Color.white : Color(red: rgb.red, green: rgb.green, blue: rgb.blue)
         let center = ring.point((ring.inner + ring.outer) / 2, angle)
-        let radius = ring.thickness * 0.3
+        let radius = ring.thickness * 0.4
         let scale = context.environment.displayScale
         context.drawLayer { layer in
             layer.clip(to: ring.path, style: evenOdd)
-            for (reach, opacity) in [(radius * 4.6, 0.35), (radius * 2.0, 0.6)] {
+            for (reach, opacity) in [(radius * 3.6, 0.35), (radius * 1.8, 0.6)] {
                 layer.fill(
                     Path(ellipseIn: CGRect(x: center.x - reach, y: center.y - reach, width: reach * 2, height: reach * 2)),
                     with: .radialGradient(
