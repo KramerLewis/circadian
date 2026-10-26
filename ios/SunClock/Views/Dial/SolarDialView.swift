@@ -101,8 +101,9 @@ struct SolarDialView: View {
             self.rotation = rotation
             let side = min(size.width, size.height)
             center = CGPoint(x: size.width / 2, y: size.height / 2)
-            // Leave room outside the ring for event time labels.
-            outer = side / 2 - 46
+            // Leave room outside the ring for event time labels, which sit beside the ring
+            // at 3 and 9 o'clock when the dial turns.
+            outer = side / 2 - 58
             inner = outer * 0.8
             moonOuter = inner - 5
             moonInner = moonOuter - outer * 0.1
@@ -142,7 +143,7 @@ struct SolarDialView: View {
             context.stroke(tick, with: .style(.secondary), lineWidth: major ? 2 : 1)
             // Skip a number that the turning dial would put under the center readout.
             let at = g.point(g.tickBase - 17, angle)
-            let underReadout = abs(at.x - g.center.x) < g.tickBase * 0.65 && abs(at.y - g.center.y) < g.tickBase * 0.32
+            let underReadout = abs(at.x - g.center.x) < g.tickBase * 0.65 + 12 && abs(at.y - g.center.y) < g.tickBase * 0.32
             if hour % 3 == 0, !underReadout {
                 let label = Text("\(hour)").font(.caption2.weight(major ? .semibold : .regular)).foregroundStyle(.secondary)
                 context.draw(label, at: at)
