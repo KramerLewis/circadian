@@ -7,6 +7,7 @@ extension DemoConfig {
     func seed(_ context: ModelContext) {
         let settings = AppSettings()
         if let timeDisplay { settings.timeDisplayRaw = timeDisplay }
+        if let dialOrientation { settings.dialOrientationRaw = dialOrientation }
         context.insert(settings)
         let samples: [(String, SolarEvent, Int, [Int], Bool)] = [
             ("Wake up", .sunrise, -30, [2, 3, 4, 5, 6], true),

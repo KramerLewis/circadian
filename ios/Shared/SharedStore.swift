@@ -24,6 +24,15 @@ nonisolated enum SharedStore {
     }
 
     private static let timeDisplayKey = "timeDisplay"
+    private static let dialOrientationKey = "dialOrientation"
+
+    static func loadDialOrientation() -> String? {
+        defaults?.string(forKey: dialOrientationKey)
+    }
+
+    static func saveDialOrientation(_ raw: String) {
+        defaults?.set(raw, forKey: dialOrientationKey)
+    }
 
     static func loadTimeDisplay() -> String? {
         defaults?.string(forKey: timeDisplayKey)

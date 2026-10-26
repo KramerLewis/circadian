@@ -44,6 +44,7 @@ shoot watch-4-events          America/Los_Angeles 2026-11-01T15:00:00-08:00 "${s
 shoot watch-5-complications   America/Los_Angeles 2026-11-01T15:00:00-08:00 "${seattle[@]}" -demoSheet complications
 shoot watch-6-blood-moon      America/Los_Angeles 2026-03-03T03:30:00-08:00 "${seattle[@]}"
 shoot watch-7-solar-eclipse   America/Chicago     2024-04-08T13:30:00-05:00 -demoLatitude 32.78 -demoLongitude -96.80 -demoName Dallas
+shoot watch-8-now-at-top      America/Los_Angeles 2026-11-01T15:00:00-08:00 "${seattle[@]}" -demoDialOrientation nowAtTop
 
 if (( failures > 0 )); then
   echo "$failures screenshot(s) caught a crashed app"

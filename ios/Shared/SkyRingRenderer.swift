@@ -9,12 +9,14 @@ enum SkyRingRenderer {
         var center: CGPoint
         var inner: CGFloat
         var outer: CGFloat
+        /// Degrees the whole dial is turned clockwise (see `DialOrientation`).
+        var rotation: Double = 0
 
         var thickness: CGFloat { outer - inner }
 
         /// Point at `radius` and dial angle `degrees` (clockwise from the top).
         func point(_ radius: CGFloat, _ degrees: Double) -> CGPoint {
-            let t = degrees * .pi / 180
+            let t = (degrees + rotation) * .pi / 180
             return CGPoint(x: center.x + radius * sin(t), y: center.y - radius * cos(t))
         }
 
@@ -46,7 +48,7 @@ enum SkyRingRenderer {
         // the top, matching dial angles.
         context.fill(
             ring.path,
-            with: .conicGradient(Gradient(stops: stops), center: ring.center, angle: .degrees(-90)),
+            with: .conicGradient(Gradient(stops: stops), center: ring.center, angle: .degrees(-90 + ring.rotation)),
             style: evenOdd
         )
     }
@@ -110,7 +112,7 @@ enum SkyRingRenderer {
                 let halo = Path(ellipseIn: CGRect(x: ring.center.x - r, y: ring.center.y - r, width: r * 2, height: r * 2))
                 layer.stroke(halo, with: .conicGradient(
                     Gradient(colors: [.orange.opacity(0.9), .yellow.opacity(0.35), .orange.opacity(0.15), .yellow.opacity(0.35), .orange.opacity(0.9)]),
-                    center: ring.center, angle: .degrees(-90)
+                    center: ring.center, angle: .degrees(-90 + ring.rotation)
                 ), lineWidth: ring.thickness * 0.45)
             }
         case .equinox:
@@ -176,7 +178,7 @@ enum SkyRingRenderer {
         }
         context.fill(
             ring.path,
-            with: .conicGradient(Gradient(stops: stops), center: ring.center, angle: .degrees(-90)),
+            with: .conicGradient(Gradient(stops: stops), center: ring.center, angle: .degrees(-90 + ring.rotation)),
             style: evenOdd
         )
         for marker in moon.horizonMarkers {

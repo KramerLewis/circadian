@@ -55,8 +55,10 @@ struct WatchDialView: View {
             Canvas { context, size in
                 let outer = min(size.width, size.height) / 2 - 2
                 let c = CGPoint(x: size.width / 2, y: size.height / 2)
-                let sun = SkyRingRenderer.Ring(center: c, inner: outer * 0.8, outer: outer)
-                let moonRing = SkyRingRenderer.Ring(center: c, inner: outer * 0.8 - 4 - outer * 0.1, outer: outer * 0.8 - 4)
+                // With "now at top" the whole dial turns, so scrubbing spins the day under the sun.
+                let rotation = self.model.dialOrientation.rotation(nowAngle: model.nowAngle)
+                let sun = SkyRingRenderer.Ring(center: c, inner: outer * 0.8, outer: outer, rotation: rotation)
+                let moonRing = SkyRingRenderer.Ring(center: c, inner: outer * 0.8 - 4 - outer * 0.1, outer: outer * 0.8 - 4, rotation: rotation)
                 SkyRingRenderer.drawSky(in: &context, ring: sun, model: model, dark: true, monochrome: false)
                 let special = SpecialDayText.today(at: coordinate, on: moment)?.style
                 if special == .solstice {

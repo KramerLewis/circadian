@@ -29,6 +29,10 @@ export interface DialScene {
   solarEclipse?: { offset: number; moonScale: number };
   /** Clock text for an event marker. */
   label: (date: number) => string;
+  /** "noon": solar noon fixed at the top; "now": the dial turns so now is at the top. */
+  orientation: "noon" | "now";
+  /** Half the size of the center readout, to keep hour numbers out from under it. */
+  readout: { halfWidth: number; halfHeight: number };
 }
 
 interface Ring {
@@ -36,6 +40,8 @@ interface Ring {
   cy: number;
   inner: number;
   outer: number;
+  /** Degrees the whole dial is turned clockwise. */
+  rotation: number;
 }
 
 const dialFont = `ui-rounded, "SF Pro Rounded", system-ui, -apple-system, "Segoe UI", sans-serif`;
@@ -61,15 +67,16 @@ export function drawDial(canvas: HTMLCanvasElement, scene: DialScene): void {
   ctx.setTransform(scale, 0, 0, scale, 0, 0);
   ctx.clearRect(0, 0, side, side);
   const g = dialGeometry(side);
-  const sunRing: Ring = { cx: side / 2, cy: side / 2, inner: g.inner, outer: g.outer };
-  const moonRing: Ring = { cx: side / 2, cy: side / 2, inner: g.moonInner, outer: g.moonOuter };
+  const rotation = scene.orientation === "now" ? -scene.model.nowAngle : 0;
+  const sunRing: Ring = { cx: side / 2, cy: side / 2, inner: g.inner, outer: g.outer, rotation };
+  const moonRing: Ring = { cx: side / 2, cy: side / 2, inner: g.moonInner, outer: g.moonOuter, rotation };
 
   if (scene.special === "solstice") drawSolsticeHalo(ctx, sunRing);
   drawSky(ctx, sunRing, scene.model, scene.dark);
   drawMoonRing(ctx, moonRing, scene, scale);
   if (scene.special === "equinox") drawEquinox(ctx, sunRing);
   if (scene.special === "newMoon") drawStars(ctx, sunRing, g.moonInner, scene.dark);
-  drawHourTicks(ctx, sunRing, g.moonInner, scene.colors);
+  drawHourTicks(ctx, sunRing, g.moonInner, scene.colors, scene.readout);
   drawMarkers(ctx, sunRing, scene);
   drawHand(ctx, sunRing, scene, scale);
 }
@@ -77,7 +84,7 @@ export function drawDial(canvas: HTMLCanvasElement, scene: DialScene): void {
 // MARK: Rings
 
 function point(r: Ring, radius: number, degrees: number): [number, number] {
-  const t = (degrees * Math.PI) / 180;
+  const t = ((degrees + r.rotation) * Math.PI) / 180;
   return [r.cx + radius * Math.sin(t), r.cy - radius * Math.cos(t)];
 }
 
@@ -94,7 +101,7 @@ const css = (c: RGB, alpha = 1) =>
 
 /** A conic gradient sampled every degree, starting at the top like dial angles. */
 function conic(ctx: CanvasRenderingContext2D, r: Ring, color: (degree: number) => RGB): CanvasGradient {
-  const gradient = ctx.createConicGradient(-Math.PI / 2, r.cx, r.cy);
+  const gradient = ctx.createConicGradient(((r.rotation - 90) * Math.PI) / 180, r.cx, r.cy);
   for (let degree = 0; degree <= 360; degree += 2) gradient.addColorStop(degree / 360, css(color(degree)));
   return gradient;
 }
@@ -151,7 +158,9 @@ export function drawMoon(
 
 // MARK: Ticks, markers, hand
 
-function drawHourTicks(ctx: CanvasRenderingContext2D, r: Ring, base: number, colors: DialColors) {
+function drawHourTicks(
+  ctx: CanvasRenderingContext2D, r: Ring, base: number, colors: DialColors, readout: { halfWidth: number; halfHeight: number },
+) {
   ctx.strokeStyle = colors.secondary;
   ctx.fillStyle = colors.secondary;
   ctx.textAlign = "center";
@@ -164,9 +173,12 @@ function drawHourTicks(ctx: CanvasRenderingContext2D, r: Ring, base: number, col
     ctx.moveTo(...point(r, base - 2, angle));
     ctx.lineTo(...point(r, base - (major ? 9 : 5), angle));
     ctx.stroke();
-    if (hour % 3 === 0) {
+    // Skip a number that the turning dial would put under the center readout.
+    const [x, y] = point(r, base - 17, angle);
+    const underReadout = Math.abs(x - r.cx) < readout.halfWidth + 7 && Math.abs(y - r.cy) < readout.halfHeight + 6;
+    if (hour % 3 === 0 && !underReadout) {
       ctx.font = `${major ? 600 : 400} 11px ${dialFont}`;
-      ctx.fillText(String(hour), ...point(r, base - 17, angle));
+      ctx.fillText(String(hour), x, y);
     }
   }
 }
@@ -183,7 +195,7 @@ function drawMarkers(ctx: CanvasRenderingContext2D, r: Ring, scene: DialScene) {
       ctx.arc(x, y, 3, 0, Math.PI * 2);
       ctx.fill();
       // Anchor the label on its inner edge, so it grows away from the ring at any angle.
-      const side = Math.sin((marker.angle * Math.PI) / 180);
+      const side = Math.sin(((marker.angle + r.rotation) * Math.PI) / 180);
       ctx.textAlign = side > 0.35 ? "left" : side < -0.35 ? "right" : "center";
       ctx.fillStyle = scene.colors.secondary;
       ctx.fillText(scene.label(marker.date), ...point(r, r.outer + (Math.abs(side) > 0.35 ? 14 : 20), marker.angle));
@@ -259,7 +271,7 @@ function drawSun(
 /** A golden halo around the sun ring, strongest at the top (solar noon). */
 function drawSolsticeHalo(ctx: CanvasRenderingContext2D, r: Ring) {
   const thickness = r.outer - r.inner;
-  const gradient = ctx.createConicGradient(-Math.PI / 2, r.cx, r.cy);
+  const gradient = ctx.createConicGradient(((r.rotation - 90) * Math.PI) / 180, r.cx, r.cy);
   const stops: [number, number, number][] = [[0, 0.9, 0], [0.25, 0.35, 1], [0.5, 0.15, 0], [0.75, 0.35, 1], [1, 0.9, 0]];
   for (const [at, alpha, yellow] of stops) {
     gradient.addColorStop(at, yellow ? `rgba(255, 214, 10, ${alpha})` : `rgba(255, 149, 0, ${alpha})`);

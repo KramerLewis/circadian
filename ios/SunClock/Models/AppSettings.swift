@@ -18,6 +18,8 @@ final class AppSettings {
 
     /// What the dial's center shows; see `TimeDisplay`.
     var timeDisplayRaw: String = TimeDisplay.relative.rawValue
+    /// How the dial is turned; see `DialOrientation`.
+    var dialOrientationRaw: String = DialOrientation.noonAtTop.rawValue
 
     /// Last fix from CoreLocation, so the app (and later the alarm scheduler) has a
     /// location before the first fix after launch.
@@ -33,6 +35,14 @@ extension AppSettings {
         get { TimeDisplay(rawValue: timeDisplayRaw) ?? .relative }
         set {
             timeDisplayRaw = newValue.rawValue
+            updatedAt = .now
+        }
+    }
+
+    var dialOrientation: DialOrientation {
+        get { DialOrientation(rawValue: dialOrientationRaw) ?? .noonAtTop }
+        set {
+            dialOrientationRaw = newValue.rawValue
             updatedAt = .now
         }
     }

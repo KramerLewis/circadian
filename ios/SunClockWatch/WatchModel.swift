@@ -5,7 +5,7 @@ import SunCore
 import WatchConnectivity
 import WidgetKit
 
-/// The Watch app's data: the place and time display setting sent by the iPhone, or
+/// The Watch app's data: the place and display settings sent by the iPhone, or
 /// the Watch's own location when the phone hasn't sent one. Persisted in the App
 /// Group so the complications draw from the same values.
 @Observable
@@ -19,15 +19,21 @@ final class WatchModel: NSObject, WCSessionDelegate {
         if let demo = DemoConfig.current {
             context = WatchContext(
                 place: SharedStore.StoredPlace(name: demo.name, latitude: demo.coordinate.latitude, longitude: demo.coordinate.longitude),
-                timeDisplay: demo.timeDisplay ?? TimeDisplay.relative.rawValue
+                timeDisplay: demo.timeDisplay ?? TimeDisplay.relative.rawValue,
+                dialOrientation: demo.dialOrientation ?? DialOrientation.noonAtTop.rawValue
             )
         } else {
-            context = WatchContext(place: SharedStore.loadPlace(), timeDisplay: SharedStore.loadTimeDisplay() ?? TimeDisplay.relative.rawValue)
+            context = WatchContext(
+                place: SharedStore.loadPlace(),
+                timeDisplay: SharedStore.loadTimeDisplay() ?? TimeDisplay.relative.rawValue,
+                dialOrientation: SharedStore.loadDialOrientation() ?? DialOrientation.noonAtTop.rawValue
+            )
         }
         super.init()
     }
 
     var timeDisplay: TimeDisplay { TimeDisplay(rawValue: context.timeDisplay) ?? .relative }
+    var dialOrientation: DialOrientation { DialOrientation(rawValue: context.dialOrientation) ?? .noonAtTop }
 
     func start() {
         guard DemoConfig.current == nil, WCSession.isSupported() else { return }
@@ -72,6 +78,7 @@ final class WatchModel: NSObject, WCSessionDelegate {
         guard DemoConfig.current == nil else { return }
         SharedStore.savePlace(new.place)
         SharedStore.saveTimeDisplay(new.timeDisplay)
+        SharedStore.saveDialOrientation(new.dialOrientation)
         WidgetCenter.shared.reloadAllTimelines()
     }
 

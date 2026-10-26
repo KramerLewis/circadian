@@ -31,6 +31,7 @@ links and screenshots:
  &date=2026-03-03T03:30:00-08:00   freeze the clock
  &theme=dark                       system | light | dark
  &display=twelveHour               relative | twelveHour | twentyFourHour
+ &dial=now                         noon (solar noon at the top) | now (the dial turns)
  &scrub=90                         minutes from the pinned time
 ```
 

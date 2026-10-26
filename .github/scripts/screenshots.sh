@@ -81,6 +81,9 @@ shoot 21-blood-moon-dark             dark  America/Los_Angeles 2026-03-03T03:30:
 shoot 22-partial-solar-eclipse-light light America/Los_Angeles 2023-10-14T09:18:00-07:00 "${seattle[@]}"
 shoot 23-total-solar-eclipse-light   light America/Chicago     2024-04-08T13:41:00-05:00 "${dallas[@]}"
 shoot 24-eclipse-heads-up-dark       dark  America/Los_Angeles 2026-03-01T20:00:00-08:00 "${seattle[@]}"
+# The rotating dial: now at the top
+shoot 25-now-at-top-light            light America/Los_Angeles 2026-06-21T15:00:00-07:00 "${seattle[@]}" -demoDialOrientation nowAtTop
+shoot 26-now-at-top-night-dark       dark  America/Los_Angeles 2026-11-24T22:00:00-08:00 "${seattle[@]}" -demoDialOrientation nowAtTop
 # Largest accessibility text size, to check nothing truncates.
 xcrun simctl ui "$udid" content_size accessibility-extra-extra-extra-large
 shoot 14-accessibility-text-light    light America/Los_Angeles 2026-11-01T09:00:00-08:00 "${seattle[@]}" -demoScroll moon

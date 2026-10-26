@@ -18,6 +18,8 @@ const shots = [
   ["web-8-summer-solstice-light", "light", `${seattle}&date=2026-06-21T16:00:00-07:00`],
   ["web-9-new-moon-dark", "dark", `${seattle}&date=2026-12-08T23:00:00-08:00`],
   ["web-10-welcome-light", "light", ""],
+  ["web-11-now-at-top-light", "light", `${seattle}&date=2026-06-21T15:00:00-07:00&dial=now`],
+  ["web-12-now-at-top-night-dark", "dark", `${seattle}&date=2026-11-24T22:00:00-08:00&dial=now`],
 ];
 
 const browser = await chromium.launch();

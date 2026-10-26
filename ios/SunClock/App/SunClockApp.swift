@@ -71,7 +71,7 @@ struct RootView: View {
                     shareWithWidgets(place)
                     shareWithWatch(place, settings: settings)
                 }
-                .onChange(of: settings.timeDisplayRaw) {
+                .onChange(of: [settings.timeDisplayRaw, settings.dialOrientationRaw]) {
                     shareWithWatch(Place.resolve(settings: settings, live: locationService.location), settings: settings)
                 }
             } else {
@@ -121,12 +121,13 @@ struct RootView: View {
         }
     }
 
-    /// The Watch app uses the phone's place and time display setting.
+    /// The Watch app uses the phone's place and display settings.
     private func shareWithWatch(_ place: Place?, settings: AppSettings) {
         guard DemoConfig.current == nil else { return }
         let stored = place.map {
             SharedStore.StoredPlace(name: $0.name, latitude: $0.coordinate.latitude, longitude: $0.coordinate.longitude)
         }
-        WatchSync.shared.send(WatchContext(place: stored, timeDisplay: settings.timeDisplayRaw))
+        WatchSync.shared.send(WatchContext(place: stored, timeDisplay: settings.timeDisplayRaw,
+                                           dialOrientation: settings.dialOrientationRaw))
     }
 }

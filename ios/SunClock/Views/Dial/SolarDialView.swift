@@ -12,6 +12,7 @@ struct SolarDialView: View {
     let readout: SolarReadout
     let timeDisplay: TimeDisplay
     var special: SpecialDayText?
+    var orientation: DialOrientation = .noonAtTop
     /// Where the dial is drawn for; only needed to place the moon over the sun in a solar eclipse.
     var coordinate: Coordinate?
     /// Called when the center is tapped, to switch to the next display.
@@ -23,7 +24,7 @@ struct SolarDialView: View {
 
     var body: some View {
         Canvas { context, size in
-            let geometry = Geometry(size: size)
+            let geometry = Geometry(size: size, rotation: orientation.rotation(nowAngle: model.nowAngle))
             let dark = colorScheme == .dark
             if special?.style == .solstice {
                 SkyRingRenderer.drawSpecialDay(.solstice, in: &context, ring: geometry.ring, innerRadius: geometry.moonInner, dark: dark)
@@ -93,8 +94,11 @@ struct SolarDialView: View {
         let center: CGPoint
         let outer: CGFloat
         let inner: CGFloat
+        /// Degrees the dial is turned clockwise.
+        let rotation: Double
 
-        init(size: CGSize) {
+        init(size: CGSize, rotation: Double = 0) {
+            self.rotation = rotation
             let side = min(size.width, size.height)
             center = CGPoint(x: size.width / 2, y: size.height / 2)
             // Leave room outside the ring for event time labels.
@@ -110,17 +114,17 @@ struct SolarDialView: View {
         var tickBase: CGFloat { moonInner }
 
         var moonRing: SkyRingRenderer.Ring {
-            SkyRingRenderer.Ring(center: center, inner: moonInner, outer: moonOuter)
+            SkyRingRenderer.Ring(center: center, inner: moonInner, outer: moonOuter, rotation: rotation)
         }
 
         /// Point at `radius` and dial angle `degrees` (clockwise from the top).
         func point(_ radius: CGFloat, _ degrees: Double) -> CGPoint {
-            let t = degrees * .pi / 180
+            let t = (degrees + rotation) * .pi / 180
             return CGPoint(x: center.x + radius * sin(t), y: center.y - radius * cos(t))
         }
 
         var ring: SkyRingRenderer.Ring {
-            SkyRingRenderer.Ring(center: center, inner: inner, outer: outer)
+            SkyRingRenderer.Ring(center: center, inner: inner, outer: outer, rotation: rotation)
         }
     }
 
@@ -136,9 +140,12 @@ struct SolarDialView: View {
             tick.move(to: g.point(g.tickBase - 2, angle))
             tick.addLine(to: g.point(g.tickBase - (major ? 9 : 5), angle))
             context.stroke(tick, with: .style(.secondary), lineWidth: major ? 2 : 1)
-            if hour % 3 == 0 {
+            // Skip a number that the turning dial would put under the center readout.
+            let at = g.point(g.tickBase - 17, angle)
+            let underReadout = abs(at.x - g.center.x) < g.tickBase * 0.65 && abs(at.y - g.center.y) < g.tickBase * 0.32
+            if hour % 3 == 0, !underReadout {
                 let label = Text("\(hour)").font(.caption2.weight(major ? .semibold : .regular)).foregroundStyle(.secondary)
-                context.draw(label, at: g.point(g.tickBase - 17, angle))
+                context.draw(label, at: at)
             }
         }
     }
@@ -151,7 +158,11 @@ struct SolarDialView: View {
                 let label = Text(marker.date, format: .dateTime.hour().minute())
                     .font(.caption2.monospacedDigit())
                     .foregroundStyle(.secondary)
-                context.draw(label, at: g.point(g.outer + 24, marker.angle))
+                // Anchor the label on its inner edge, so it grows away from the ring at any
+                // angle (and as the dial turns).
+                let side = sin((marker.angle + g.rotation) * .pi / 180)
+                let anchor: UnitPoint = side > 0.35 ? .leading : side < -0.35 ? .trailing : .center
+                context.draw(label, at: g.point(g.outer + (abs(side) > 0.35 ? 12 : 20), marker.angle), anchor: anchor)
             } else {
                 var tick = Path()
                 tick.move(to: g.point(g.outer + 2, marker.angle))

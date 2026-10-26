@@ -9,7 +9,7 @@ import { duration, readout, solarClock } from "./core/readout";
 import { apparentSolarMinutes, eventNames, isInstant, solarDayContaining, solarEvents } from "./core/solar";
 import { type SpecialDay, type SpecialStyle, eclipseDate, fromEclipse, headsUp, nextEclipse, specialToday } from "./core/specialDay";
 import { browserTimeZone, startOfDay } from "./core/tz";
-import { drawDial, drawMoon } from "./render/dial";
+import { dialGeometry, drawDial, drawMoon } from "./render/dial";
 import { loadMoonTexture } from "./render/moon";
 
 // MARK: State
@@ -21,6 +21,7 @@ interface Place extends Coordinate {
 
 type TimeDisplay = "relative" | "twelveHour" | "twentyFourHour";
 type Theme = "system" | "light" | "dark";
+type Orientation = "noon" | "now";
 
 const displays: TimeDisplay[] = ["relative", "twelveHour", "twentyFourHour"];
 const displayTitles: Record<TimeDisplay, string> = {
@@ -62,9 +63,11 @@ const state = {
   place: paramPlace ?? storage.get<Place>("place"),
   display: (params.get("display") as TimeDisplay) ?? storage.get<TimeDisplay>("display") ?? "relative",
   theme: (params.get("theme") as Theme) ?? storage.get<Theme>("theme") ?? "system",
+  orientation: (params.get("dial") as Orientation) ?? storage.get<Orientation>("orientation") ?? "noon",
   scrubMinutes: Number(params.get("scrub") ?? 0),
 };
 if (!displays.includes(state.display)) state.display = "relative";
+if (state.orientation !== "now") state.orientation = "noon";
 
 function isValid(latitude: number, longitude: number): boolean {
   return Number.isFinite(latitude) && Number.isFinite(longitude) && Math.abs(latitude) <= 90 && Math.abs(longitude) <= 180;
@@ -169,6 +172,20 @@ function render() {
   const { special, headsUp: upcoming } = specialFor(place, now);
   const styles = getComputedStyle(document.documentElement);
 
+  // Size the readout to the space inside the hour labels, which turn with the dial.
+  const inner = dialGeometry(dial.clientWidth).moonInner;
+  const center = $("dial-center");
+  center.style.width = `${inner * 1.6}px`;
+  center.style.setProperty("--primary-size", `${Math.min(34, inner * 0.3)}px`);
+  center.style.setProperty("--secondary-size", `${Math.min(18, Math.max(11, inner * 0.15))}px`);
+  const [primary, secondary] = centerText(now, place, r);
+  $("center-primary").textContent = primary;
+  $("center-secondary").textContent = secondary;
+  const primaryBox = $("center-primary").getBoundingClientRect(), secondaryBox = $("center-secondary").getBoundingClientRect();
+  const readoutBox = {
+    halfWidth: Math.max(primaryBox.width, secondaryBox.width) / 2,
+    halfHeight: (primaryBox.height + secondaryBox.height) / 2,
+  };
   drawDial(dial, {
     model,
     moon,
@@ -178,11 +195,13 @@ function render() {
     eclipseShadow: special?.style === "lunarEclipse" ? umbralCoverage(now) : 0,
     solarEclipse: special?.style === "solarEclipse" ? solarCoverage(now, place) : undefined,
     label: (date) => clockTime(date, tz),
+    orientation: state.orientation,
+    readout: readoutBox,
   });
+  for (const button of document.querySelectorAll<HTMLButtonElement>("[data-dial-choice]")) {
+    button.setAttribute("aria-checked", String(button.dataset.dialChoice === state.orientation));
+  }
 
-  const [primary, secondary] = centerText(now, place, r);
-  $("center-primary").textContent = primary;
-  $("center-secondary").textContent = secondary;
   const sun = Math.round(dialAltitude(model, model.nowAngle));
   dial.setAttribute(
     "aria-label",
@@ -389,6 +408,13 @@ for (const button of document.querySelectorAll<HTMLButtonElement>("[data-theme-c
     state.theme = button.dataset.themeChoice as Theme;
     storage.set("theme", state.theme);
     applyTheme();
+    render();
+  });
+}
+for (const button of document.querySelectorAll<HTMLButtonElement>("[data-dial-choice]")) {
+  button.addEventListener("click", () => {
+    state.orientation = button.dataset.dialChoice as Orientation;
+    storage.set("orientation", state.orientation);
     render();
   });
 }

@@ -25,9 +25,12 @@ struct HomeView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Menu("Time Display", systemImage: "clock") {
+                    Menu("Display", systemImage: "clock") {
                         Picker("Time Display", selection: $settings.timeDisplay) {
                             ForEach(TimeDisplay.allCases) { Text($0.title).tag($0) }
+                        }
+                        Picker("Dial", selection: $settings.dialOrientation) {
+                            ForEach(DialOrientation.allCases) { Text($0.title).tag($0) }
                         }
                     }
                 }
@@ -64,6 +67,7 @@ struct HomeView: View {
                         readout: readout,
                         timeDisplay: settings.timeDisplay,
                         special: special,
+                        orientation: settings.dialOrientation,
                         coordinate: place.coordinate,
                         onCycleDisplay: {
                             withAnimation { settings.timeDisplay = settings.timeDisplay.next }
