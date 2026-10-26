@@ -114,7 +114,8 @@ export function drawOrbit(canvas: HTMLCanvasElement, scene: OrbitScene): void {
   const project = (p: Vec): [number, number, number] => [cx + dot(p, right) * s, cy - dot(p, up) * s, dot(p, toCamera)];
 
   drawStars(ctx, canvas.width, canvas.height, scene.dark);
-  drawSunMarker(ctx, project, sun, canvas.width, canvas.height, dpr);
+  // Drawn first: it's the farthest thing in the scene.
+  drawSun(ctx, sun, right, up, toCamera, cx, cy, Math.min(cx, cy) - 30 * dpr, dpr);
 
   // The orbit over the month around now, split so the far side passes behind Earth.
   const path: [number, number, number][] = [];
@@ -304,36 +305,34 @@ function drawPin(ctx: CanvasRenderingContext2D, project: (p: Vec) => [number, nu
   ctx.restore();
 }
 
-/** The sun is far off: a glow at the edge of the view in its direction, labeled. */
-function drawSunMarker(
-  ctx: CanvasRenderingContext2D, project: (p: Vec) => [number, number, number], sun: Vec, w: number, h: number, dpr: number,
+/**
+ * The sun, far beyond the moon. It's placed by its direction on a sphere that just fits
+ * the frame: look toward it and it slides to the middle, behind Earth (its glow rims the
+ * planet); turn away and it moves out to the edge and fades, since it's behind you.
+ */
+function drawSun(
+  ctx: CanvasRenderingContext2D, sun: Vec, right: Vec, up: Vec, toCamera: Vec, cx: number, cy: number, reach: number, dpr: number,
 ) {
-  const [ox, oy] = project([0, 0, 0]);
-  const [sx, sy] = project(sun);
-  let dx = sx - ox, dy = sy - oy;
-  const len = Math.hypot(dx, dy) || 1;
-  dx /= len;
-  dy /= len;
-  // Push it out to just inside the frame.
-  const margin = 26 * dpr;
-  const t = Math.min(
-    dx > 0 ? (w - margin - ox) / dx : dx < 0 ? (margin - ox) / dx : Infinity,
-    dy > 0 ? (h - margin - oy) / dy : dy < 0 ? (margin - oy) / dy : Infinity,
-  );
-  const x = ox + dx * t, y = oy + dy * t;
-  const glow = ctx.createRadialGradient(x, y, 0, x, y, 40 * dpr);
-  glow.addColorStop(0, "rgba(255, 236, 170, 1)");
-  glow.addColorStop(0.25, "rgba(255, 200, 90, 0.75)");
+  const x = cx + dot(sun, right) * reach, y = cy - dot(sun, up) * reach;
+  const behindViewer = dot(sun, toCamera) > 0;
+  ctx.save();
+  ctx.globalAlpha = behindViewer ? 0.45 : 1;
+  const r = 60 * dpr;
+  const glow = ctx.createRadialGradient(x, y, 0, x, y, r);
+  glow.addColorStop(0, "rgba(255, 246, 215, 1)");
+  glow.addColorStop(0.2, "rgba(255, 220, 130, 0.95)");
+  glow.addColorStop(0.45, "rgba(255, 190, 80, 0.4)");
   glow.addColorStop(1, "rgba(255, 170, 60, 0)");
   ctx.fillStyle = glow;
   ctx.beginPath();
-  ctx.arc(x, y, 40 * dpr, 0, Math.PI * 2);
+  ctx.arc(x, y, r, 0, Math.PI * 2);
   ctx.fill();
-  ctx.fillStyle = "rgba(120, 70, 0, 0.9)";
+  ctx.restore();
+  ctx.fillStyle = behindViewer ? "rgba(255, 220, 150, 0.8)" : "rgba(110, 60, 0, 0.9)";
   ctx.font = `600 ${11 * dpr}px system-ui, sans-serif`;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.fillText("Sun", x, y);
+  ctx.fillText(behindViewer ? "Sun (behind you)" : "Sun", x, behindViewer ? y : y + 1);
 }
 
 function drawStars(ctx: CanvasRenderingContext2D, w: number, h: number, dark: boolean) {
