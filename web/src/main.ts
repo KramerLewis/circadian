@@ -9,7 +9,7 @@ import { duration, readout, solarClock } from "./core/readout";
 import { apparentSolarMinutes, eventNames, isInstant, solarDayContaining, solarEvents } from "./core/solar";
 import { type SpecialDay, type SpecialStyle, eclipseDate, fromEclipse, headsUp, nextEclipse, specialToday } from "./core/specialDay";
 import { browserTimeZone, startOfDay } from "./core/tz";
-import { dialGeometry, drawDial, drawMoon } from "./render/dial";
+import { type HandColor, dialGeometry, drawDial, drawHand, drawMoon, handColors } from "./render/dial";
 import { loadMoonTexture } from "./render/moon";
 import { type OrbitCamera, drawOrbit, loadOrbitTextures } from "./render/orbit";
 
@@ -67,11 +67,13 @@ const state = {
   theme: (params.get("theme") as Theme) ?? storage.get<Theme>("theme") ?? "system",
   orientation: (params.get("dial") as Orientation) ?? storage.get<Orientation>("orientation") ?? "noon",
   moonMode: (params.get("moon") as MoonMode) ?? storage.get<MoonMode>("moonMode") ?? "clock",
+  handColor: (params.get("hand") as HandColor) ?? storage.get<HandColor>("handColor") ?? "royalBlue",
   scrubMinutes: Number(params.get("scrub") ?? 0),
 };
 if (!displays.includes(state.display)) state.display = "relative";
 if (state.orientation !== "now") state.orientation = "noon";
 if (state.moonMode !== "sky") state.moonMode = "clock";
+if (!handColors.some((c) => c.id === state.handColor)) state.handColor = "royalBlue";
 
 function isValid(latitude: number, longitude: number): boolean {
   return Number.isFinite(latitude) && Number.isFinite(longitude) && Math.abs(latitude) <= 90 && Math.abs(longitude) <= 180;
@@ -206,6 +208,8 @@ function render() {
   for (const button of document.querySelectorAll<HTMLButtonElement>("[data-dial-choice]")) {
     button.setAttribute("aria-checked", String(button.dataset.dialChoice === state.orientation));
   }
+  handScene = { model, orientation: state.orientation, dark: isDark() };
+  drawHand(handCanvas, handScene, state.handColor, shimmerPhase());
   for (const button of document.querySelectorAll<HTMLButtonElement>("[data-moon-choice]")) {
     button.setAttribute("aria-checked", String(button.dataset.moonChoice === state.moonMode));
   }
@@ -240,6 +244,41 @@ function render() {
   renderEvents(now, tz, day);
   renderMoon(now, place, day);
 }
+
+// MARK: Hand
+
+const handCanvas = $<HTMLCanvasElement>("hand");
+const handSelect = $<HTMLSelectElement>("hand-color");
+const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+let handScene: Parameters<typeof drawHand>[1] | undefined;
+let shimmerFrame = 0;
+
+/** Seconds for the gold shimmer, or undefined to hold it still. */
+const shimmerPhase = () => (state.handColor === "gold" && !reduceMotion.matches ? performance.now() / 1000 : undefined);
+
+/** Only a gold hand animates, and only it redraws every frame (the dial doesn't). */
+function shimmer() {
+  cancelAnimationFrame(shimmerFrame);
+  if (state.handColor !== "gold" || reduceMotion.matches) return;
+  const tick = () => {
+    if (handScene && document.visibilityState === "visible") drawHand(handCanvas, handScene, "gold", shimmerPhase());
+    shimmerFrame = requestAnimationFrame(tick);
+  };
+  shimmerFrame = requestAnimationFrame(tick);
+}
+
+handSelect.innerHTML = handColors.map((c) => `<option value="${c.id}">${c.title}</option>`).join("");
+handSelect.value = state.handColor;
+handSelect.addEventListener("change", () => {
+  state.handColor = handSelect.value as HandColor;
+  storage.set("handColor", state.handColor);
+  render();
+  shimmer();
+});
+reduceMotion.addEventListener("change", () => {
+  render();
+  shimmer();
+});
 
 // MARK: 3D view
 
@@ -518,3 +557,4 @@ loadMoonTexture(`${import.meta.env.BASE_URL}moon.png`).then(render, () => {});
 const asset = (name: string) => `${import.meta.env.BASE_URL}${name}`;
 loadOrbitTextures(asset("earth-day.jpg"), asset("earth-night.jpg"), asset("moon.png"), asset("starmap.jpg")).then(redrawOrbit, () => {});
 if (!Number.isFinite(frozenNow)) setInterval(render, 15_000);
+shimmer();

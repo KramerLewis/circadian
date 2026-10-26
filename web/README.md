@@ -36,6 +36,7 @@ links and screenshots:
  &theme=dark                       system | light | dark
  &display=twelveHour               relative | twelveHour | twentyFourHour
  &dial=now                         noon (solar noon at the top) | now (the dial turns)
+ &hand=gold                         royalBlue | red | cyan | green | kryptonPurple | auto | gold
  &moon=sky                         clock (moon on the sun's hours) | sky (moon at its angle from the sun)
  &scrub=90                         minutes from the pinned time
 ```

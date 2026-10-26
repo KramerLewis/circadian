@@ -43,6 +43,7 @@
       <section id="today" hidden>
         <p id="date-line" class="date-line"></p>
         <div class="dial-wrap">
+          <canvas id="hand" aria-hidden="true"></canvas>
           <canvas id="dial" role="img" aria-label="Solar dial"></canvas>
           <button id="dial-center" class="dial-center" type="button" title="Change the time display">
             <span id="center-primary" class="center-primary"></span>
@@ -56,6 +57,9 @@
             <button type="button" role="radio" data-dial-choice="noon" title="Solar noon fixed at the top; the sun travels round">Noon at top</button>
             <button type="button" role="radio" data-dial-choice="now" title="The dial turns so now is always at the top">Now at top</button>
           </div>
+          <label class="hand-picker">Hand
+            <select id="hand-color"></select>
+          </label>
           <div class="segmented" role="radiogroup" aria-label="Moon">
             <button type="button" role="radio" data-moon-choice="clock" title="The moon ring on the same hours as the sun: read moonrise and moonset against the clock">Moon on clock</button>
             <button type="button" role="radio" data-moon-choice="sky" title="The moon where it is in the sky: its angle from the sun shows the phase">Moon in sky</button>

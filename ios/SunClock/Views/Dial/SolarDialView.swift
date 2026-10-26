@@ -14,6 +14,7 @@ struct SolarDialView: View {
     var special: SpecialDayText?
     var orientation: DialOrientation = .noonAtTop
     var moonPlacement: MoonPlacement = .clock
+    var handColor: HandColor = .royalBlue
     /// Where the dial is drawn for; only needed to place the moon over the sun in a solar eclipse.
     var coordinate: Coordinate?
     /// Called when the center is tapped, to switch to the next display.
@@ -30,8 +31,6 @@ struct SolarDialView: View {
             if special?.style == .solstice {
                 SkyRingRenderer.drawSpecialDay(.solstice, in: &context, ring: geometry.ring, innerRadius: geometry.moonInner, dark: dark)
             }
-            // The hand runs beneath both rings, from inside the moon ring to past the sun ring.
-            drawHand(in: &context, geometry)
             drawRing(in: &context, geometry)
             SkyRingRenderer.drawMoonRing(in: &context, ring: geometry.moonRing, moon: moon, dark: dark, special: special?.style,
                                          eclipseShadow: special?.style == .lunarEclipse ? EclipseCalculator.umbralCoverage(at: now) : 0,
@@ -46,6 +45,11 @@ struct SolarDialView: View {
                                     eclipse: special?.style == .solarEclipse ? solarEclipseOverlay : nil)
         }
         .aspectRatio(1, contentMode: .fit)
+        // The hand runs beneath both rings, from inside the moon ring to past the sun ring.
+        // It's its own layer so a shimmering hand animates without redrawing the dial.
+        .background {
+            HandLayer(nowAngle: model.nowAngle, rotation: orientation.rotation(nowAngle: model.nowAngle), color: handColor)
+        }
         .overlay {
             GeometryReader { proxy in
                 // Keep the readout clear of the hour labels inside the ring.
@@ -179,16 +183,56 @@ struct SolarDialView: View {
         }
     }
 
-    /// The "now" hand: a vivid glowing blue line, drawn before (beneath) the rings.
-    private func drawHand(in context: inout GraphicsContext, _ g: Geometry) {
-        var hand = Path()
-        hand.move(to: g.point(g.moonInner - 14, model.nowAngle))
-        hand.addLine(to: g.point(g.outer + 8, model.nowAngle))
-        let blue = Color(red: 0.11, green: 0.54, blue: 1.0)
-        context.drawLayer { glow in
-            glow.addFilter(.blur(radius: 5))
-            glow.stroke(hand, with: .color(blue.opacity(0.9)), style: StrokeStyle(lineWidth: 6, lineCap: .round))
+    /// The "now" hand: a vivid glowing line in the chosen color.
+    private struct HandLayer: View {
+        let nowAngle: Double
+        let rotation: Double
+        let color: HandColor
+        @Environment(\.colorScheme) private var colorScheme
+        @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+        var body: some View {
+            if color.shimmers && !reduceMotion {
+                TimelineView(.animation(minimumInterval: 1 / 30)) { context in
+                    canvas(phase: context.date.timeIntervalSinceReferenceDate)
+                }
+            } else {
+                canvas(phase: nil)
+            }
         }
-        context.stroke(hand, with: .color(blue), style: StrokeStyle(lineWidth: 2.5, lineCap: .round))
+
+        private func canvas(phase: Double?) -> some View {
+            Canvas { context, size in
+                let g = Geometry(size: size, rotation: rotation)
+                let start = g.point(g.moonInner - 14, nowAngle), end = g.point(g.outer + 8, nowAngle)
+                var hand = Path()
+                hand.move(to: start)
+                hand.addLine(to: end)
+                let base = color.color(dark: colorScheme == .dark)
+                let fill: GraphicsContext.Shading
+                if color.shimmers {
+                    // A bright band sweeps outward along the hand every two seconds.
+                    let t = phase.map { ($0 / 2).truncatingRemainder(dividingBy: 1) } ?? 0.5
+                    let stops = [
+                        Gradient.Stop(color: HandColor.goldDeep, location: 0),
+                        Gradient.Stop(color: base, location: max(0, t - 0.2)),
+                        Gradient.Stop(color: HandColor.goldLight, location: t),
+                        Gradient.Stop(color: base, location: min(1, t + 0.2)),
+                        Gradient.Stop(color: HandColor.goldDeep, location: 1),
+                    ]
+                    fill = .linearGradient(Gradient(stops: stops), startPoint: start, endPoint: end)
+                } else {
+                    fill = .color(base)
+                }
+                context.drawLayer { glow in
+                    glow.addFilter(.blur(radius: 5))
+                    glow.stroke(hand, with: .color(base.opacity(color == .auto ? 0.5 : 0.9)),
+                                style: StrokeStyle(lineWidth: 6, lineCap: .round))
+                }
+                context.stroke(hand, with: fill, style: StrokeStyle(lineWidth: 2.5, lineCap: .round))
+            }
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
+        }
     }
 }

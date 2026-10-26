@@ -23,6 +23,8 @@ const shots = [
   ["web-13-moon-in-sky-first-quarter-light", "light", `${seattle}&date=2026-06-21T15:00:00-07:00&moon=sky`],
   ["web-14-moon-in-sky-full-dark", "dark", `${seattle}&date=2026-11-24T22:00:00-08:00&moon=sky&dial=now`],
   ["web-15-moon-in-sky-crescent-light", "light", `${seattle}&date=2026-06-17T19:00:00-07:00&moon=sky`],
+  ["web-19-hand-gold-dark", "dark", `${seattle}&date=2026-06-21T15:00:00-07:00&hand=gold`],
+  ["web-20-hand-cyan-light", "light", `${seattle}&date=2026-06-21T15:00:00-07:00&hand=cyan`],
   ["web-16-3d-first-quarter", "dark", `${seattle}&date=2026-06-21T15:00:00-07:00#orbit`],
   ["web-17-3d-full-moon", "light", `${seattle}&date=2026-11-24T22:00:00-08:00#orbit`],
   ["web-18-3d-blood-moon", "dark", `${seattle}&date=2026-03-03T03:30:00-08:00#orbit`],

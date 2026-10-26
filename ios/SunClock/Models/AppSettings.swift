@@ -20,6 +20,8 @@ final class AppSettings {
     var timeDisplayRaw: String = TimeDisplay.relative.rawValue
     /// How the dial is turned; see `DialOrientation`.
     var dialOrientationRaw: String = DialOrientation.noonAtTop.rawValue
+    /// The dial hand's color; see `HandColor`.
+    var handColorRaw: String = HandColor.royalBlue.rawValue
     /// Where the moon ring puts the moon; see `MoonPlacement`.
     var moonPlacementRaw: String = MoonPlacement.clock.rawValue
 
@@ -37,6 +39,14 @@ extension AppSettings {
         get { TimeDisplay(rawValue: timeDisplayRaw) ?? .relative }
         set {
             timeDisplayRaw = newValue.rawValue
+            updatedAt = .now
+        }
+    }
+
+    var handColor: HandColor {
+        get { HandColor(rawValue: handColorRaw) ?? .royalBlue }
+        set {
+            handColorRaw = newValue.rawValue
             updatedAt = .now
         }
     }

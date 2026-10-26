@@ -74,8 +74,6 @@ export function drawDial(canvas: HTMLCanvasElement, scene: DialScene): void {
   const moonRing: Ring = { cx: side / 2, cy: side / 2, inner: g.moonInner, outer: g.moonOuter, rotation };
 
   if (scene.special === "solstice") drawSolsticeHalo(ctx, sunRing);
-  // The hand runs beneath both rings, from inside the moon ring to past the sun ring.
-  drawHand(ctx, sunRing, g.moonInner - 14, scene);
   drawSky(ctx, sunRing, scene.model, scene.dark);
   drawMoonRing(ctx, moonRing, scene, scale);
   if (scene.special === "equinox") drawEquinox(ctx, sunRing);
@@ -224,32 +222,76 @@ function drawMarkers(ctx: CanvasRenderingContext2D, r: Ring, scene: DialScene) {
   }
 }
 
-/** The "now" hand: a vivid glowing blue line, drawn before (beneath) the rings. */
-function drawHand(ctx: CanvasRenderingContext2D, r: Ring, innerEnd: number, scene: DialScene) {
+export type HandColor = "royalBlue" | "red" | "cyan" | "green" | "kryptonPurple" | "auto" | "gold";
+
+export const handColors: { id: HandColor; title: string }[] = [
+  { id: "royalBlue", title: "Royal blue" },
+  { id: "red", title: "Red" },
+  { id: "cyan", title: "Cyan" },
+  { id: "green", title: "Green" },
+  { id: "kryptonPurple", title: "Krypton purple" },
+  { id: "auto", title: "White or black (auto)" },
+  { id: "gold", title: "Gold (shimmering)" },
+];
+
+const handRGB: Record<Exclude<HandColor, "auto">, RGB> = {
+  royalBlue: [0.11, 0.42, 1.0],
+  red: [1.0, 0.16, 0.2],
+  cyan: [0.0, 0.86, 1.0],
+  green: [0.12, 0.9, 0.35],
+  kryptonPurple: [0.68, 0.36, 1.0],
+  gold: [1.0, 0.78, 0.24],
+};
+
+/**
+ * The "now" hand: a vivid glowing line on its own canvas beneath the dial (so it shows
+ * from inside the moon ring to past the sun ring, under both), and so a shimmering gold
+ * hand can animate without redrawing the dial. `phase` is seconds, for the shimmer.
+ */
+export function drawHand(
+  canvas: HTMLCanvasElement, scene: { model: DialModel; orientation: "noon" | "now"; dark: boolean },
+  color: HandColor, phase?: number,
+) {
+  const side = canvas.clientWidth;
+  const scale = window.devicePixelRatio || 1;
+  if (canvas.width !== Math.round(side * scale)) canvas.width = canvas.height = Math.round(side * scale);
+  const ctx = canvas.getContext("2d")!;
+  ctx.setTransform(scale, 0, 0, scale, 0, 0);
+  ctx.clearRect(0, 0, side, side);
+  const g = dialGeometry(side);
+  const rotation = scene.orientation === "now" ? -scene.model.nowAngle : 0;
+  const r: Ring = { cx: side / 2, cy: side / 2, inner: g.inner, outer: g.outer, rotation };
   const angle = scene.model.nowAngle;
-  const from = point(r, innerEnd, angle), to = point(r, r.outer + 8, angle);
-  ctx.save();
+  const from = point(r, g.moonInner - 14, angle), to = point(r, r.outer + 8, angle);
+  const base: RGB = color === "auto" ? (scene.dark ? [1, 1, 1] : [0, 0, 0]) : handRGB[color];
+  let core: string | CanvasGradient = css(base);
+  if (color === "gold") {
+    // A bright band sweeps outward along the hand every two seconds.
+    const t = phase === undefined ? 0.5 : (phase / 2) % 1;
+    const gradient = ctx.createLinearGradient(...from, ...to);
+    gradient.addColorStop(0, "rgb(199, 133, 20)");
+    gradient.addColorStop(Math.max(0, t - 0.2), css(base));
+    gradient.addColorStop(t, "rgb(255, 245, 190)");
+    gradient.addColorStop(Math.min(1, t + 0.2), css(base));
+    gradient.addColorStop(1, "rgb(199, 133, 20)");
+    core = gradient;
+  }
   ctx.lineCap = "round";
-  // Glow: a soft wide stroke, then the bright core with a blur shadow.
-  ctx.strokeStyle = handGlow;
+  ctx.strokeStyle = css(base, color === "auto" ? 0.15 : 0.28);
   ctx.lineWidth = 9;
   ctx.beginPath();
   ctx.moveTo(...from);
   ctx.lineTo(...to);
   ctx.stroke();
-  ctx.shadowColor = handColor;
+  ctx.shadowColor = css(base, color === "auto" ? 0.5 : 1);
   ctx.shadowBlur = 12;
-  ctx.strokeStyle = handColor;
+  ctx.strokeStyle = core;
   ctx.lineWidth = 2.5;
   ctx.beginPath();
   ctx.moveTo(...from);
   ctx.lineTo(...to);
   ctx.stroke();
-  ctx.restore();
 }
-
-const handColor = "rgb(28, 138, 255)";
-const handGlow = "rgba(28, 138, 255, 0.28)";
 
 /** The sun inside a two-layer corona tinted for its altitude, clipped to the ring. */
 function drawSun(

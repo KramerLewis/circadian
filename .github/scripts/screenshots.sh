@@ -91,6 +91,8 @@ shoot 26-now-at-top-night-dark       dark  America/Los_Angeles 2026-11-24T22:00:
 # The moon where it is in the sky (its angle from the sun shows the phase)
 shoot 27-moon-in-sky-light           light America/Los_Angeles 2026-06-21T15:00:00-07:00 "${seattle[@]}" -demoMoonPlacement sky
 shoot 28-moon-in-sky-full-dark       dark  America/Los_Angeles 2026-11-24T22:00:00-08:00 "${seattle[@]}" -demoMoonPlacement sky -demoDialOrientation nowAtTop
+shoot 29-hand-gold-dark              dark  America/Los_Angeles 2026-11-01T15:00:00-08:00 "${seattle[@]}" -demoHandColor gold
+shoot 30-hand-cyan-light             light America/Los_Angeles 2026-11-01T15:00:00-08:00 "${seattle[@]}" -demoHandColor cyan
 # Largest accessibility text size, to check nothing truncates.
 xcrun simctl ui "$udid" content_size accessibility-extra-extra-extra-large
 shoot 14-accessibility-text-light    light America/Los_Angeles 2026-11-01T09:00:00-08:00 "${seattle[@]}" -demoScroll moon

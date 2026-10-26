@@ -35,6 +35,10 @@ struct HomeView: View {
                         Picker("Moon", selection: $settings.moonPlacement) {
                             ForEach(MoonPlacement.allCases) { Text($0.title).tag($0) }
                         }
+                        Picker("Hand Color", selection: $settings.handColor) {
+                            ForEach(HandColor.allCases) { Text($0.title).tag($0) }
+                        }
+                        .pickerStyle(.menu)
                     }
                 }
                 ToolbarItem(placement: .topBarTrailing) {
@@ -82,6 +86,7 @@ struct HomeView: View {
                         special: special,
                         orientation: settings.dialOrientation,
                         moonPlacement: settings.moonPlacement,
+                        handColor: settings.handColor,
                         coordinate: place.coordinate,
                         onCycleDisplay: {
                             withAnimation { settings.timeDisplay = settings.timeDisplay.next }
