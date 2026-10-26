@@ -17,7 +17,12 @@ and a richer Watch face all build on), and the open-ended items last.
 | 7 | **Eclipses**: built (computed on device, no bundled data; fixtures cross-checked with PyEphem) | L | - |
 | 8 | **More widgets** (Lock Screen rectangular/inline, readout variants, moon ring/phase in widgets, CarPlay, see details) | S | - |
 | 8b | **Sun over time**: how sunrise, sunset, twilight and day length change across weeks to a year, with special days and eclipses on the same timeline (see details) | M | - |
+| 8c | **Saved places**: keep several places and switch the clock, 3D view and widgets between them (see details) | S | - |
+| 8d | **3D view on iPhone** (RealityKit), with NASA Blue Marble imagery | M | NASA images uploaded |
 | 9 | **Tides** | L | Data source decision (bundle vs. API) |
+| 11 | **Effective sunrise/sunset from terrain**: when the sun actually clears or drops behind the hills, slope and valley where you are, plus simulated light (see details) | L | Elevation data source; weather (13) for clouds |
+| 12 | **View as a friend's place** and friends on the 3D view (see details: Find My has no API for apps) | M-L | Sync backend (P2) for in-app sharing |
+| 13 | **Weather**: satellite cloud imagery over the 3D Earth with cloud heights, and forecast skies, clouds and waves simulated from forecast data (see details) | XL | Data sources and API keys; network access |
 | 10 | **Native macOS app + widget** | M | - (for now, iPhone widgets on the Mac desktop) |
 
 ### Rest of the system (after the iOS app ships)
@@ -76,6 +81,59 @@ See how the sun's events shift over a chosen span (a month, a season, a year):
   eclipse search, fast enough to compute when opened. Swift Charts draws it.
 - Needs a design pass: where it lives (a tab or from the event list), default span,
   and how polar days (no sunrise or sunset) look on the chart.
+
+### Saved places
+A list of places (home, family, a trip) to view the dial, 3D view, events and special
+days for, alongside the current location. The model already has a place; this makes it
+a list (SwiftData, sync-ready like the rest), with a switcher in the title bar and a
+widget setting to pick which place a widget shows. Each place keeps its own time zone
+(needed for anywhere other than here; the web app already stores one). Alarms stay tied
+to where you are, unless an alarm is explicitly pinned to a saved place.
+
+### Effective sunrise and sunset from terrain
+The astronomical sunrise assumes a flat horizon. In a valley or behind a ridge the sun
+appears later and disappears earlier; on a west-facing slope evening light lasts longer.
+- Build a horizon profile for the place: for each compass direction, the highest angle
+  of the terrain around it out to ~50 km, by marching along the ground in an elevation
+  model (Copernicus GLO-30 or SRTM, 30 m; tiles could come from an API like
+  Open-Meteo's elevation endpoint, or be bundled per region). Include Earth's curvature
+  and refraction. Compute once per place and cache.
+- Effective events: when the sun's disc clears and drops below that profile, and how
+  long a spot is in direct sun each day ("direct sun 7:52 AM-4:18 PM"). Show both on
+  the dial (the effective arc inside the astronomical one) and in the event list.
+- Simulated light: how bright and warm the light is through the day, from the sun's
+  altitude, the terrain shadow, and (with weather) cloud cover. Could also drive alarms
+  ("when the sun clears the ridge").
+- With weather (13): mark when cloud is forecast to hide the sun at those times.
+- Decisions: elevation source (API vs bundled), how far to look, and whether to use
+  the phone's exact location (needed here: terrain changes over a few hundred meters,
+  so reduced accuracy isn't enough; ask for precise location just for this feature).
+
+### View as a friend's place, and friends on the 3D view
+Apple doesn't let third-party apps read Find My locations (there is no public API for
+friends' locations), so this can't come from Find My directly. Options:
+- **Manual**: add a friend's city as a saved place (8c) and "view as" it. Works now.
+- **In-app sharing**: friends who use SunClock share their approximate location with
+  each other through the sync backend (P2), opt-in, revocable, and coarse (city level).
+  Then a toggle shows them as pins on the 3D Earth; tap one to view their clock,
+  daylight and special days ("it's 2h after sunset for Sam").
+- Contacts can give an address for a friend, which is another manual route.
+- Privacy first: off by default, no precise locations, and clear in the privacy policy.
+
+### Weather
+Real weather over the 3D Earth and on the dial:
+- **Now**: satellite cloud imagery mapped onto the globe (NASA GIBS serves global
+  imagery tiles freely; geostationary satellites such as GOES and Himawari update every
+  10-15 minutes), with clouds lifted to their heights from cloud-top products, so the
+  terminator and moonlight fall across real cloud.
+- **Forecast**: generate the sky from forecast data instead (cloud cover and heights by
+  layer, precipitation, wind; e.g. NOAA GFS or Open-Meteo), drawn as simulated clouds,
+  and waves on the sea from wave forecasts (NOAA WAVEWATCH III: height, period,
+  direction).
+- Ties in with effective sunrise (11): "sunrise hidden by low cloud tomorrow".
+- Big and network-dependent: needs data sources and licensing checked, likely a backend
+  to cache and tile data, and a rendering approach (RealityKit on iPhone, WebGL on the
+  web). A first step could be just the current satellite cloud layer on the 3D Earth.
 
 ### Tides in the center
 Show the tide for the current location inside both rings (rising/falling, next
