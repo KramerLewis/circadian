@@ -64,7 +64,8 @@ jobs:
     runs-on: macos-26
     permissions:
       contents: write
-    timeout-minutes: 45
+    # Three simulators (iPhone, 6.9" iPhone, Watch) and ~40 shots.
+    timeout-minutes: 75
     steps:
       - uses: actions/checkout@v5
       - name: Select Xcode 26
