@@ -515,5 +515,6 @@ setUpPlaceDialog();
 applyTheme();
 render();
 loadMoonTexture(`${import.meta.env.BASE_URL}moon.png`).then(render, () => {});
-loadOrbitTextures(`${import.meta.env.BASE_URL}earth.png`, `${import.meta.env.BASE_URL}moon.png`).then(redrawOrbit, () => {});
+const asset = (name: string) => `${import.meta.env.BASE_URL}${name}`;
+loadOrbitTextures(asset("earth-day.jpg"), asset("earth-night.jpg"), asset("moon.png")).then(redrawOrbit, () => {});
 if (!Number.isFinite(frozenNow)) setInterval(render, 15_000);

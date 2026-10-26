@@ -32,9 +32,10 @@ interface Texture {
   pixels: Uint8ClampedArray;
 }
 
-const textures: { earth?: Texture; moon?: Texture } = {};
+const textures: { earth?: Texture; night?: Texture; moon?: Texture } = {};
 
-export async function loadOrbitTextures(earthUrl: string, moonUrl: string): Promise<void> {
+/** NASA's Blue Marble (day) and Black Marble (night lights), and the moon. */
+export async function loadOrbitTextures(earthUrl: string, nightUrl: string, moonUrl: string): Promise<void> {
   const load = async (url: string): Promise<Texture> => {
     const image = new Image();
     image.src = url;
@@ -46,7 +47,7 @@ export async function loadOrbitTextures(earthUrl: string, moonUrl: string): Prom
     ctx.drawImage(image, 0, 0);
     return { width: image.width, height: image.height, pixels: ctx.getImageData(0, 0, image.width, image.height).data };
   };
-  [textures.earth, textures.moon] = await Promise.all([load(earthUrl), load(moonUrl)]);
+  [textures.earth, textures.night, textures.moon] = await Promise.all([load(earthUrl), load(nightUrl), load(moonUrl)]);
 }
 
 function sample(t: Texture | undefined, u: number, v: number, fallback: Vec): Vec {
@@ -173,17 +174,20 @@ function drawEarth(
       const lat = Math.asin(Math.max(-1, Math.min(1, n[2])));
       let lon = Math.atan2(n[1], n[0]) - turn;
       lon = ((((lon + Math.PI) % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI)) - Math.PI;
-      const color = sample(textures.earth, (lon + Math.PI) / (2 * Math.PI), (Math.PI / 2 - lat) / Math.PI, [0.2, 0.4, 0.7]);
-      // Daylight with a soft twilight band; the night side keeps a faint blue.
+      const u = (lon + Math.PI) / (2 * Math.PI), v = (Math.PI / 2 - lat) / Math.PI;
+      const color = sample(textures.earth, u, v, [0.2, 0.4, 0.7]);
+      const lights = sample(textures.night, u, v, [0.02, 0.02, 0.05]);
+      // Daylight with a soft twilight band; city lights come on as it gets dark.
       const light = dot(n, sun);
       const day = Math.min(1, Math.max(0, (light + 0.1) / 0.25));
-      const k = 0.1 + 0.95 * day * (0.35 + 0.65 * Math.max(light, 0));
+      const k = 0.04 + 0.95 * day * (0.35 + 0.65 * Math.max(light, 0));
+      const dark = (1 - day) * 1.15;
       // A thin bright rim: the atmosphere.
       const rim = Math.pow(1 - z, 3) * 0.6 * (0.3 + 0.7 * day);
       const i = (py * size + px) * 4;
-      out[i] = Math.min(255, (color[0] * k + rim * 0.5) * 255);
-      out[i + 1] = Math.min(255, (color[1] * k + rim * 0.7) * 255);
-      out[i + 2] = Math.min(255, (color[2] * k + 0.03 * (1 - day) + rim) * 255);
+      out[i] = Math.min(255, (color[0] * k + lights[0] * dark + rim * 0.5) * 255);
+      out[i + 1] = Math.min(255, (color[1] * k + lights[1] * dark + rim * 0.7) * 255);
+      out[i + 2] = Math.min(255, (color[2] * k + lights[2] * dark + rim) * 255);
       out[i + 3] = Math.min(1, (1 - Math.sqrt(d2)) * s) * 255;
     }
   }

@@ -19,8 +19,9 @@ CI runs per platform, only when that platform's paths change (`.github/workflows
 Moon imagery: NASA's Scientific Visualization Studio, [CGI Moon Kit](https://svs.gsfc.nasa.gov/4720),
 from Lunar Reconnaissance Orbiter data (`ios/tools/lroc_color_2k.jpg`).
 
-Earth map (web 3D view): drawn from [Natural Earth](https://www.naturalearthdata.com/) land polygons (public domain) via the
-[world-atlas](https://github.com/topojson/world-atlas) package, by `shared/tools/make_earth_texture.py`.
+Earth imagery (3D view): NASA Earth Observatory, [Blue Marble Next Generation](https://visibleearth.nasa.gov/collection/1484/blue-marble)
+(June 2004, topography and bathymetry) and [Black Marble 2016](https://earthobservatory.nasa.gov/features/NightLights)
+night lights (`shared/assets/nasa/`, resized by `shared/tools/make_earth_textures.py`).
 
 ## License
 

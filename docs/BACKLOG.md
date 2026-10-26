@@ -20,6 +20,7 @@ and a richer Watch face all build on), and the open-ended items last.
 | 8c | **Saved places**: keep several places and switch the clock, 3D view and widgets between them (see details) | S | - |
 | 8d | **3D view on iPhone** (RealityKit), with NASA Blue Marble imagery | M | NASA images uploaded |
 | 9 | **Tides** | L | Data source decision (bundle vs. API) |
+| 8e | **Seasonal and live NASA Earth imagery**: all 12 Blue Marble months so snow and vegetation change with the date; pull the latest NASA imagery automatically (see details) | M | 8d for iPhone |
 | 11 | **Effective sunrise/sunset from terrain**: when the sun actually clears or drops behind the hills, slope and valley where you are, plus simulated light (see details) | L | Elevation data source; weather (13) for clouds |
 | 12 | **View as a friend's place** and friends on the 3D view (see details: Find My has no API for apps) | M-L | Sync backend (P2) for in-app sharing |
 | 13 | **Weather**: satellite cloud imagery over the 3D Earth with cloud heights, and forecast skies, clouds and waves simulated from forecast data (see details) | XL | Data sources and API keys; network access |
@@ -81,6 +82,26 @@ See how the sun's events shift over a chosen span (a month, a season, a year):
   eclipse search, fast enough to compute when opened. Swift Charts draws it.
 - Needs a design pass: where it lives (a tab or from the event list), default span,
   and how polar days (no sunrise or sunset) look on the chart.
+
+### Seasonal and live NASA Earth imagery
+The 3D view uses NASA's Blue Marble for June 2004 and the Black Marble 2016 night lights
+(`shared/assets/nasa/`). Next steps:
+- **Seasons**: Blue Marble Next Generation comes in 12 monthly versions (snow cover,
+  sea ice and vegetation change through the year). Use the month of the date being
+  shown, blending between neighboring months, so scrubbing into winter whitens the north.
+  Twelve 2048 x 1024 JPEGs are about 4 MB, fine for the web (loaded on demand) and for
+  an app bundle.
+- **Automatic updates**: a scheduled GitHub Actions job (CI runners can reach NASA,
+  which this cloud session can't) fetches NASA imagery, resizes it with
+  `shared/tools/make_earth_textures.py`, and commits or publishes it with the web app:
+  - Blue Marble months: fetched once (they don't change).
+  - Night lights: NASA's Black Marble products are updated yearly; re-fetch when a new
+    composite appears.
+  - Near real time: NASA GIBS serves daily true-color mosaics (VIIRS / MODIS, with that
+    day's clouds) and nightly lights as tiles. That's a step toward Weather (13): the
+    globe as it looked yesterday.
+- Record the source, date and URL of each image next to it, and keep the credits in the
+  README and the app's about screen current.
 
 ### Saved places
 A list of places (home, family, a trip) to view the dial, 3D view, events and special
