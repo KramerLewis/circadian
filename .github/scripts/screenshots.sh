@@ -10,13 +10,17 @@ mode=${3:-all}
 bundle=com.kray.circadian
 mkdir -p "$out"
 
+# One simulator at a time: with several booted, xcodebuild sometimes can't find the new
+# one. The build is for a generic simulator (no device lookup) and is reused by later
+# runs of this script.
+xcrun simctl shutdown all 2>/dev/null || true
 xcrun simctl boot "$udid" 2>/dev/null || true
 xcrun simctl bootstatus "$udid" -b >/dev/null
 
 xcodebuild build -quiet \
   -workspace ios/SunClock.xcworkspace -scheme SunClock \
-  -destination "id=$udid" -derivedDataPath build/screenshots \
-  CODE_SIGNING_ALLOWED=NO
+  -destination 'generic/platform=iOS Simulator' -derivedDataPath build/screenshots \
+  ARCHS=arm64 CODE_SIGNING_ALLOWED=NO
 xcrun simctl install "$udid" build/screenshots/Build/Products/Debug-iphonesimulator/SunClock.app
 
 # shoot <name> <light|dark> <time zone> <ISO date> <app args...>

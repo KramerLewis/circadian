@@ -7,13 +7,15 @@ out=$2
 bundle=com.kray.circadian.watchkitapp
 mkdir -p "$out"
 
+# One simulator at a time, and a generic build (see screenshots.sh).
+xcrun simctl shutdown all 2>/dev/null || true
 xcrun simctl boot "$udid" 2>/dev/null || true
 xcrun simctl bootstatus "$udid" -b >/dev/null
 
 xcodebuild build -quiet \
   -workspace ios/SunClock.xcworkspace -scheme SunClockWatch \
-  -destination "id=$udid" -derivedDataPath build/watch \
-  CODE_SIGNING_ALLOWED=NO
+  -destination 'generic/platform=watchOS Simulator' -derivedDataPath build/watch \
+  ARCHS=arm64 CODE_SIGNING_ALLOWED=NO
 xcrun simctl install "$udid" build/watch/Build/Products/Debug-watchsimulator/SunClockWatch.app
 
 failures=0
