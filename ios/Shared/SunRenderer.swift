@@ -1,12 +1,61 @@
 import CoreGraphics
 import Foundation
+import ImageIO
 import SunCore
 
 /// Renders the sun's disc for its altitude: colored by `SkyGradient.sunColor`, with
 /// limb darkening (stronger in blue, so the edge is warmer), a faint granulation, and a
 /// center that stays brighter than any sky until the sun has set. The corona glow is
 /// drawn separately by `SkyRingRenderer`. Cached per half degree and size.
+///
+/// The disc also carries real sunspots from NASA SDO's flattened HMI intensitygram
+/// (SunSpots.jpg, from shared/tools/nasa_sources.json). It's bundled, so it updates only
+/// with an app release, which is fine: it's texture, not data the app relies on.
 enum SunRenderer {
+    /// Brightness relative to the quiet sun, the disc filling the square.
+    private struct Spots {
+        let size: Int
+        let values: [Float]
+    }
+
+    private static let spots: Spots? = loadSpots()
+
+    private static func loadSpots() -> Spots? {
+        guard
+            let url = Bundle.main.url(forResource: "SunSpots", withExtension: "jpg"),
+            let source = CGImageSourceCreateWithURL(url as CFURL, nil),
+            let image = CGImageSourceCreateImageAtIndex(source, 0, nil)
+        else { return nil }
+        let size = min(image.width, image.height)
+        var gray = [UInt8](repeating: 0, count: size * size)
+        let drawn = gray.withUnsafeMutableBytes { buffer -> Bool in
+            guard let context = CGContext(
+                data: buffer.baseAddress, width: size, height: size, bitsPerComponent: 8, bytesPerRow: size,
+                space: CGColorSpaceCreateDeviceGray(), bitmapInfo: CGImageAlphaInfo.none.rawValue
+            ) else { return false }
+            context.draw(image, in: CGRect(x: 0, y: 0, width: size, height: size))
+            return true
+        }
+        guard drawn else { return nil }
+        // Normalize to the median inside the disc, so the quiet sun is 1 and spots are below.
+        var inside: [UInt8] = []
+        for (i, v) in gray.enumerated() where i % 7 == 0 {
+            let x = Double(i % size) / Double(size) - 0.5, y = Double(i / size) / Double(size) - 0.5
+            if x * x + y * y < 0.16 { inside.append(v) }
+        }
+        inside.sort()
+        let median = Float(max(inside.isEmpty ? 1 : inside[inside.count / 2], 1))
+        return Spots(size: size, values: gray.map { min(1.05, Float($0) / median) })
+    }
+
+    /// At disc coordinates (-1...1, y up).
+    private static func spot(_ x: Double, _ y: Double) -> Double {
+        guard let spots else { return 1 }
+        let px = min(spots.size - 1, max(0, Int((x + 1) / 2 * Double(spots.size))))
+        let py = min(spots.size - 1, max(0, Int((1 - y) / 2 * Double(spots.size))))
+        return max(0.25, Double(spots.values[py * spots.size + px]))
+    }
+
     private struct Key: Hashable {
         let halfDegrees: Int
         let pixels: Int
@@ -45,7 +94,8 @@ enum SunRenderer {
                 let mu = max(1 - d * d, 0).squareRoot()
 
                 let hot = pow(min(mu * 1.2, 1), 1.5) * wash
-                let texture = 1 + 0.025 * granulation(x, y) * mu
+                // Real sunspots where the map has them, plus a faint granulation.
+                let texture = (1 + 0.025 * granulation(x, y) * mu) * (d < 0.97 ? spot(x, y) : 1)
                 func channel(_ base: Double, _ hotValue: Double, _ u: Double) -> Double {
                     let color = base * (1 - hot) + hotValue * hot
                     return min(color * (1 - u * (1 - mu)) * texture * 1.18, 1) * strength

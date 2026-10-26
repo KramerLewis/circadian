@@ -33,6 +33,15 @@ interface Texture {
 }
 
 const textures: { earth?: Texture; night?: Texture; moon?: Texture; sky?: Texture } = {};
+/** NASA SDO's HMI intensitygram: the real sun, disc filling the square. */
+let sunImage: HTMLImageElement | undefined;
+
+export async function loadSunImage(url: string): Promise<void> {
+  const image = new Image();
+  image.src = url;
+  await image.decode();
+  sunImage = image;
+}
 
 /** NASA's Blue Marble (day), Black Marble (night lights), the moon, and the Deep Star Map sky. */
 export async function loadOrbitTextures(earthUrl: string, nightUrl: string, moonUrl: string, skyUrl: string): Promise<void> {
@@ -401,6 +410,22 @@ function drawSun(ctx: CanvasRenderingContext2D, sun: Vec, v: SkyView, w: number,
   ctx.arc(x, y, r, 0, Math.PI * 2);
   ctx.fill();
   ctx.restore();
+  if (!behindViewer && sunImage) {
+    // The real sun from NASA SDO, with that day's sunspots, in the middle of its glow.
+    const sr = 17 * dpr;
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(x, y, sr, 0, Math.PI * 2);
+    ctx.clip();
+    ctx.drawImage(sunImage, x - sr, y - sr, sr * 2, sr * 2);
+    ctx.restore();
+    ctx.fillStyle = "rgba(255, 230, 180, 0.9)";
+    ctx.font = `600 ${11 * dpr}px system-ui, sans-serif`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "top";
+    ctx.fillText("Sun", x, y + sr + 6 * dpr);
+    return;
+  }
   ctx.fillStyle = behindViewer ? "rgba(255, 220, 150, 0.8)" : "rgba(110, 60, 0, 0.9)";
   ctx.font = `600 ${11 * dpr}px system-ui, sans-serif`;
   ctx.textAlign = "center";

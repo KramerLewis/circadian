@@ -11,7 +11,8 @@ import { type SpecialDay, type SpecialStyle, eclipseDate, fromEclipse, headsUp, 
 import { browserTimeZone, startOfDay } from "./core/tz";
 import { type HandColor, dialGeometry, drawDial, drawHand, drawMoon, handColors } from "./render/dial";
 import { loadMoonTexture } from "./render/moon";
-import { type OrbitCamera, drawOrbit, loadOrbitTextures } from "./render/orbit";
+import { type OrbitCamera, drawOrbit, loadOrbitTextures, loadSunImage } from "./render/orbit";
+import { loadSunSpots } from "./render/sun";
 
 // MARK: State
 
@@ -556,5 +557,7 @@ render();
 loadMoonTexture(`${import.meta.env.BASE_URL}moon.png`).then(render, () => {});
 const asset = (name: string) => `${import.meta.env.BASE_URL}${name}`;
 loadOrbitTextures(asset("earth-day.jpg"), asset("earth-night.jpg"), asset("moon.png"), asset("starmap.jpg")).then(redrawOrbit, () => {});
+loadSunImage(asset("sun.jpg")).then(redrawOrbit, () => {});
+loadSunSpots(asset("sun-flat.jpg")).then(render, () => {});
 if (!Number.isFinite(frozenNow)) setInterval(render, 15_000);
 shimmer();

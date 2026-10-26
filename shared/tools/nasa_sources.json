@@ -1,5 +1,5 @@
 {
-  "description": "NASA imagery fetched by .github/workflows/nasa-assets.yml (shared/tools/fetch_nasa_assets.py). Check each credit against its page before release (docs/app-store/README.md).",
+  "description": "NASA imagery fetched by .github/workflows/nasa-assets.yml (shared/tools/fetch_nasa_assets.py). 'refresh': 'once' sources are fetched only when an output is missing; 'monthly' ones on every run. Check each credit against its page before release (docs/app-store/README.md).",
   "sources": [
     {
       "name": "Deep Star Maps 2020, 4k, celestial coordinates",
@@ -8,8 +8,62 @@
       "url": "https://svs.gsfc.nasa.gov/vis/a000000/a004800/a004851/starmap_2020_4k.exr",
       "convert": "exr-to-jpeg",
       "outputs": [
-        { "path": "shared/assets/nasa/starmap_2020_4k.jpg", "width": 4096, "quality": 92 },
-        { "path": "web/public/starmap.jpg", "width": 3072, "quality": 82 }
+        {
+          "path": "shared/assets/nasa/starmap_2020_4k.jpg",
+          "width": 4096,
+          "quality": 92
+        },
+        {
+          "path": "web/public/starmap.jpg",
+          "width": 3072,
+          "quality": 82
+        }
+      ],
+      "refresh": "once"
+    },
+    {
+      "name": "SDO/HMI Intensitygram, colored (visible light, with that day's sunspots)",
+      "page": "https://sdo.gsfc.nasa.gov/data/",
+      "credit": "Courtesy of NASA/SDO and the AIA, EVE, and HMI science teams",
+      "url": "https://sdo.gsfc.nasa.gov/assets/img/browse/{yyyy}/{mm}/{dd}/{yyyy}{mm}{dd}_000000_2048_HMIIC.jpg",
+      "refresh": "monthly",
+      "convert": "crop-disc",
+      "outputs": [
+        {
+          "path": "shared/assets/nasa/sun_hmi_intensitygram.jpg",
+          "width": 1024,
+          "quality": 90
+        },
+        {
+          "path": "web/public/sun.jpg",
+          "width": 512,
+          "quality": 85
+        }
+      ]
+    },
+    {
+      "name": "SDO/HMI Intensitygram, flattened (sunspots without limb darkening)",
+      "page": "https://sdo.gsfc.nasa.gov/data/",
+      "credit": "Courtesy of NASA/SDO and the AIA, EVE, and HMI science teams",
+      "url": "https://sdo.gsfc.nasa.gov/assets/img/browse/{yyyy}/{mm}/{dd}/{yyyy}{mm}{dd}_000000_2048_HMIIF.jpg",
+      "refresh": "monthly",
+      "convert": "crop-disc-gray",
+      "outputs": [
+        {
+          "path": "shared/assets/nasa/sun_hmi_flat.jpg",
+          "width": 512,
+          "quality": 90
+        },
+        {
+          "path": "web/public/sun-flat.jpg",
+          "width": 256,
+          "quality": 85
+        },
+        {
+          "path": "ios/Shared/SunSpots.jpg",
+          "width": 256,
+          "quality": 85
+        }
       ]
     }
   ]

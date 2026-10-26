@@ -26,6 +26,9 @@ night lights (`shared/assets/nasa/`, resized by `shared/tools/make_earth_texture
 Sky (3D view): NASA/Goddard Space Flight Center Scientific Visualization Studio, [Deep Star Maps 2020](https://svs.gsfc.nasa.gov/4851)
 (`shared/assets/nasa/starmap_2020_4k.jpg`, fetched and tone-mapped from `starmap_2020_4k.exr` by the NASA assets workflow). Credit lines are to be checked against each source page before release (`docs/app-store/README.md`).
 
+Sun (dial sunspots and the 3D sun): courtesy of NASA/SDO and the AIA, EVE, and HMI science teams (HMI intensitygrams,
+refreshed monthly for the web by `.github/workflows/nasa-assets.yml`; the iPhone app bundles a copy).
+
 ## License
 
 [MIT](LICENSE) © 2026 Kramer Lewis

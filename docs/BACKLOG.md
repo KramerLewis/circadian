@@ -103,6 +103,11 @@ The 3D view uses NASA's Blue Marble for June 2004 and the Black Marble 2016 nigh
   - Near real time: NASA GIBS serves daily true-color mosaics (VIIRS / MODIS, with that
     day's clouds) and nightly lights as tiles. That's a step toward Weather (13): the
     globe as it looked yesterday.
+- **Sun**: NASA SDO HMI intensitygrams, refreshed monthly for the web by the NASA assets
+  workflow; the iPhone app bundles a copy that changes only with regular releases (no
+  release just for images). Later: the web app loads SDO's latest image live (SDO
+  updates every 15 minutes), and the iPhone app could download and cache it itself
+  (no release needed; note the request to NASA in the privacy policy).
 - Record the source, date and URL of each image next to it, and keep the credits in the
   README and the app's about screen current.
 

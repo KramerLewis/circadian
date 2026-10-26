@@ -15,6 +15,14 @@ on:
       - "shared/fixtures/**"
       - ".github/workflows/web.yml"
   workflow_dispatch:
+  # Called by the NASA assets workflow after it commits new images, to deploy them
+  # (commits made with the workflow token don't start other workflows by themselves).
+  workflow_call:
+    inputs:
+      ref:
+        description: "Commit to build and deploy"
+        type: string
+        required: false
 
 concurrency:
   group: web-${{ github.ref }}
@@ -31,6 +39,8 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.ref || github.sha }}
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -55,6 +65,8 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.ref || github.sha }}
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -98,6 +110,8 @@ jobs:
         working-directory: .
     steps:
       - uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.ref || github.sha }}
       - uses: actions/configure-pages@v5
       - uses: actions/jekyll-build-pages@v1
         with:

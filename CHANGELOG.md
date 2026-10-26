@@ -18,6 +18,7 @@ All notable changes to SunClock. Versions follow the app's marketing version.
   sun, event markers, and relative readouts ("2h 14m after sunrise").
 - Center readout setting: relative to the nearest solar anchor, 12-hour, or 24-hour.
 - Moon setting: on the clock (moonrise and moonset against the hours) or in the sky (the moon at its real angle from the sun, which shows the phase), with the next moonrise and moonset under the dial.
+- Real sunspots on the dial's sun and a real sun in the 3D view, from NASA SDO's HMI intensitygrams (monthly on the web; bundled in the app).
 - Hand color setting: royal blue, red, cyan, green, krypton purple, white/black (follows light and dark), or shimmering gold (still with Reduce Motion).
 - The "now" hand is a glowing blue line beneath both rings, from inside the moon ring to past the sun ring; the sun on the ring is larger.
 - Dial setting: noon at top (fixed dial, the sun travels round) or now at top (the dial turns under the sun), on iPhone, Watch and web.
