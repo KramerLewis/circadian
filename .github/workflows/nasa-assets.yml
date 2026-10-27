@@ -51,7 +51,13 @@ jobs:
             echo "no changes"
           else
             git commit -m "NASA assets: fetched and converted by CI" -m "From shared/tools/nasa_sources.json."
-            git push origin "HEAD:${GITHUB_REF_NAME}"
+            # Retry: GitHub occasionally rejects a push with a server error, and the
+            # branch may have moved on while the images were being fetched.
+            for attempt in 1 2 3 4; do
+              git pull --rebase -q origin "${GITHUB_REF_NAME}" && git push origin "HEAD:${GITHUB_REF_NAME}" && break
+              [ "$attempt" = 4 ] && exit 1
+              sleep $((attempt * 5))
+            done
             echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
           fi
 
