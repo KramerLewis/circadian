@@ -20,6 +20,7 @@ and a richer Watch face all build on), and the open-ended items last.
 | 8c | **Saved places**: keep several places and switch the clock, 3D view and widgets between them (see details) | S | - |
 | 8d | **3D view on iPhone** (RealityKit), with NASA Blue Marble imagery | M | NASA images uploaded |
 | 8f | **Sun periods and wadokei**: built on the web (scale -R R R+ 0 … with ±15 min milestones, moon option; Edo temporal hours with ember kanji). Zodiac animals in the wadokei center; ported to iPhone and Watch (the Watch shows the animal in the middle, without the outer kanji ring) | M | |
+| 8g | **More historical clocks** in the Historical Clocks group (Roman hours done; see details): canonical hours, Hindu prahar/muhurta, Egyptian decan hours, Chinese shichen; prayer times and zmanim considered and skipped | S each | |
 | 9 | **Tides** | L | Data source decision (bundle vs. API) |
 | 8e | **Seasonal and live NASA Earth imagery**: all 12 Blue Marble months so snow and vegetation change with the date; pull the latest NASA imagery automatically (see details) | M | 8d for iPhone |
 | 11 | **Effective sunrise/sunset from terrain**: when the sun actually clears or drops behind the hills, slope and valley where you are, plus simulated light (see details) | L | Elevation data source; weather (13) for clouds |
@@ -115,6 +116,24 @@ The 3D view uses NASA's Blue Marble for June 2004 and the Black Marble 2016 nigh
 Done on the web: twelve line drawings (Recraft, in `shared/assets/zodiac/`, all facing
 left), baked to masks in `web/public/zodiac/` by `web/scripts/zodiac-masks.mjs` and lit in
 the kanji style. The same script writes them to `ios/Shared/Wadokei/` for iPhone and Watch.
+
+### Historical clocks
+Time displays from older systems live in their own group (Display → Time Display →
+Historical Clocks; tapping the dial cycles within the group), so the everyday cycle stays
+short. Roman hours are done (12 from sunrise to sunset, 4 night watches, on web, iPhone
+and Watch); the wadokei is in the group too. Candidates, all built like the wadokei and
+Roman hours (split day and night into stretching parts):
+- **Canonical hours**: Lauds, Prime, Terce, Sext, None, Vespers, Compline on the Roman
+  hours (noon comes from None, the ninth hour).
+- **Hindu prahar** (four watches of day, four of night) with **muhurta** (30 a day; the
+  15 of daylight stretch) and **ghati** (60 a day).
+- **Egyptian hours**: 12 of night by the rising decan stars (needs star data and
+  research), 12 of day.
+- **Chinese shichen**: 12 equal double hours with the same zodiac animals (the wadokei art
+  carries over), and ke (1/100 day). Not sun-relative, so lower priority.
+Considered and skipped: Islamic prayer times and Jewish zmanim (several competing
+calculation methods; dedicated apps do them well and people rely on them), French decimal
+time (not sun-based).
 
 ### Relative-time clock
 12-hour and 24-hour are clock times; "relative" deserves its own clock rather than a line

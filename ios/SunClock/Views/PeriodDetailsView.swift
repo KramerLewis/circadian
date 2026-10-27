@@ -26,6 +26,7 @@ struct PeriodDetailsView: View {
         switch display {
         case .periods: periodLines
         case .wadokei: wadokeiLines
+        case .roman: romanLines
         default: []
         }
     }
@@ -43,6 +44,22 @@ struct PeriodDetailsView: View {
         }
         if let m = SunPeriods.moon(at: now, coordinate: coordinate) {
             lines.append("Moon \(m.code) · \(SunPeriods.phrase(m))")
+        }
+        return lines
+    }
+
+    private var romanLines: [String] {
+        let hours = RomanHours.hours(around: now, at: coordinate)
+        guard let i = hours.firstIndex(where: { $0.start <= now && now < $0.end }) else { return [] }
+        let h = hours[i]
+        let nightHour = h.kind == .vigilia ? " · night hour \(RomanHours.numeral(h.nightHour(at: now))) of XII" : ""
+        let equal = h.kind == .hora ? "an equal hour is 1h 0m" : "an equal watch is 3h 0m"
+        var lines = [
+            "\(h.title) · the \(h.phrase)\(nightHour)",
+            "\(time(h.start)) – \(time(h.end)) · \(duration(h.start, h.end)) long today (\(equal))",
+        ]
+        if hours.indices.contains(i + 1) {
+            lines.append("Next: \(hours[i + 1].title) at \(time(hours[i + 1].start))")
         }
         return lines
     }

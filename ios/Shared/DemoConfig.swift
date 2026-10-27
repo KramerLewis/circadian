@@ -5,7 +5,7 @@ import SunCore
 ///
 ///     -demoLatitude 47.61 -demoLongitude -122.33 -demoName Seattle
 ///     -demoDate 2026-06-21T15:00:00-07:00 [-demoTab alarms] [-demoSheet location|alarm|widgets]
-///     [-demoTimeDisplay relative|twelveHour|twentyFourHour|periods|wadokei] [-demoDialOrientation noonAtTop|nowAtTop]
+///     [-demoTimeDisplay relative|twelveHour|twentyFourHour|periods|wadokei|roman] [-demoDialOrientation noonAtTop|nowAtTop]
 ///     [-demoMoonPlacement clock|sky] [-demoHandColor royalBlue|red|cyan|green|kryptonPurple|auto|gold]
 ///     [-demoKanjiStyle molten|plain|silver|gold] [-demoScroll moon] [-demoScrub minutes]
 ///

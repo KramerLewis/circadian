@@ -27,7 +27,10 @@ struct HomeView: View {
                 ToolbarItem(placement: .topBarLeading) {
                     Menu("Display", systemImage: "clock") {
                         Picker("Time Display", selection: $settings.timeDisplay) {
-                            ForEach(TimeDisplay.allCases) { Text($0.title).tag($0) }
+                            ForEach(TimeDisplay.everyday) { Text($0.title).tag($0) }
+                            Section("Historical Clocks") {
+                                ForEach(TimeDisplay.historical) { Text($0.title).tag($0) }
+                            }
                         }
                         Picker("Dial", selection: $settings.dialOrientation) {
                             ForEach(DialOrientation.allCases) { Text($0.title).tag($0) }

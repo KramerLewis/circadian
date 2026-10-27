@@ -102,3 +102,42 @@ struct WadokeiTests {
         #expect(Wadokei.hour(at: now, coordinate: tromso) != nil)
     }
 }
+
+struct RomanHoursTests {
+    let seattle = Coordinate(latitude: 47.61, longitude: -122.33)
+
+    @Test func twelveHoursFromSunriseToSunset() throws {
+        let noon = try #require(ReferenceFixture.parseInstant("2026-06-21T12:00:00-07:00"))
+        let day = SolarCalculator.solarDay(containing: noon, at: seattle)
+        let hours = RomanHours.hours(around: noon, at: seattle)
+            .filter { $0.kind == .hora && $0.start >= day.solarMidnight && $0.end <= day.nextSolarMidnight }
+        #expect(hours.map(\.number) == Array(1...12))
+        #expect(hours.first?.start == day[.sunrise].date)
+        #expect(hours.last?.end == day[.sunset].date)
+        // Sixteen hours of daylight in June: each hour is 80 minutes.
+        #expect((hours[0].end.timeIntervalSince(hours[0].start) / 60).rounded() == 80)
+        #expect(abs(hours[5].end.timeIntervalSince(day.solarNoon)) / 60 < 3)
+        let afternoon = try #require(ReferenceFixture.parseInstant("2026-06-21T15:00:00-07:00"))
+        let hour = try #require(RomanHours.hour(at: afternoon, coordinate: seattle))
+        #expect(hour.title == "Hora VIII")
+        #expect(hour.phrase == "eighth hour of the day")
+    }
+
+    @Test func fourWatchesFromSunsetToSunrise() throws {
+        let night = try #require(ReferenceFixture.parseInstant("2026-12-21T23:30:00-08:00"))
+        let watch = try #require(RomanHours.hour(at: night, coordinate: seattle))
+        #expect(watch.kind == .vigilia)
+        #expect(watch.title == "Vigilia II")
+        // A 16-hour December night: watches of 4 hours.
+        #expect((watch.end.timeIntervalSince(watch.start) / 3600).rounded() == 4)
+        #expect((4...6).contains(watch.nightHour(at: night)))
+    }
+
+    @Test func polarDaysFallBackToEqualHours() throws {
+        let tromso = Coordinate(latitude: 69.65, longitude: 18.96)
+        let now = try #require(ReferenceFixture.parseInstant("2026-06-21T12:00:00+02:00"))
+        let hour = try #require(RomanHours.hour(at: now, coordinate: tromso))
+        #expect(hour.kind == .hora)
+        #expect((hour.end.timeIntervalSince(hour.start) / 60).rounded() == 60)
+    }
+}

@@ -171,3 +171,57 @@ export function wadokeiHours(now: number, coordinate: Coordinate): Toki[] {
 export function tokiAt(now: number, coordinate: Coordinate): Toki | undefined {
   return wadokeiHours(now, coordinate).find((h) => h.start <= now && now < h.end);
 }
+
+// MARK: Roman hours
+//
+// The Roman day (like the Babylonian, Greek and medieval European ones) ran from sunrise
+// to sunset in twelve equal hours, so an hour stretched to about 80 minutes in summer and
+// shrank to 40 in winter; hora sexta ended at midday. The night was kept in four watches
+// (vigiliae) from sunset to sunrise, each three night hours long.
+
+export interface RomanHour {
+  kind: "hora" | "vigilia";
+  /** 1…12 for hours of the day, 1…4 for watches of the night. */
+  number: number;
+  start: number;
+  end: number;
+}
+
+/**
+ * The Roman hours and watches around `now` (the solar days either side of it too).
+ * Without a sunrise or sunset (polar days and nights), the day falls back to the
+ * equinox's: six equal hours either side of solar noon.
+ */
+export function romanHours(now: number, coordinate: Coordinate): RomanHour[] {
+  const today = solarDayContaining(now, coordinate);
+  const days = [-1, 0, 1].map((k) => (k === 0 ? today : solarDayNearestNoon(today.solarNoon + k * 86_400_000, coordinate)));
+  const horizon = days.map((d) => ({ rise: d.events.sunrise, set: d.events.sunset, noon: d.solarNoon }));
+  const real = horizon.every((h) => isInstant(h.rise) && isInstant(h.set));
+  const bounds = horizon.map((h) =>
+    real ? { rise: h.rise as number, set: h.set as number } : { rise: h.noon - 6 * 3_600_000, set: h.noon + 6 * 3_600_000 },
+  );
+  const hours: RomanHour[] = [];
+  const split = (kind: RomanHour["kind"], start: number, end: number, count: number) => {
+    for (let k = 0; k < count; k++) {
+      hours.push({ kind, number: k + 1, start: start + ((end - start) * k) / count, end: start + ((end - start) * (k + 1)) / count });
+    }
+  };
+  bounds.forEach((b, k) => {
+    if (k > 0) split("vigilia", bounds[k - 1].set, b.rise, 4);
+    split("hora", b.rise, b.set, 12);
+  });
+  return hours;
+}
+
+export function romanAt(now: number, coordinate: Coordinate): RomanHour | undefined {
+  return romanHours(now, coordinate).find((h) => h.start <= now && now < h.end);
+}
+
+/** Which of the twelve night hours `now` falls in, during a watch. */
+export function romanNightHour(watch: RomanHour, now: number): number {
+  return Math.min(12, (watch.number - 1) * 3 + Math.floor(((now - watch.start) / (watch.end - watch.start)) * 3) + 1);
+}
+
+export function romanNumeral(n: number): string {
+  return ["", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"][n] ?? String(n);
+}

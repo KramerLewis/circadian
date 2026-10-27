@@ -12,6 +12,8 @@ enum TimeDisplay: String, CaseIterable, Identifiable {
     /// Edo-period temporal hours, with the zodiac kanji around the dial and the hour's
     /// animal in the middle (see `Wadokei`).
     case wadokei
+    /// Twelve hours from sunrise to sunset and four watches of the night (see `RomanHours`).
+    case roman
 
     var id: Self { self }
 
@@ -22,15 +24,22 @@ enum TimeDisplay: String, CaseIterable, Identifiable {
         case .twentyFourHour: "24-Hour Clock"
         case .periods: "Sun Periods"
         case .wadokei: "Wadokei (Edo Hours)"
+        case .roman: "Roman Hours"
         }
     }
 
-    /// Whether the dial's 24 hour ticks give way to the display's own sections.
-    var hasSections: Bool { self == .periods || self == .wadokei }
+    /// The historical clocks, kept in a group of their own.
+    var isHistorical: Bool { self == .wadokei || self == .roman }
+    static let everyday = allCases.filter { !$0.isHistorical }
+    static let historical = allCases.filter(\.isHistorical)
 
+    /// Whether the dial's 24 hour ticks give way to the display's own sections.
+    var hasSections: Bool { self == .periods || isHistorical }
+
+    /// The next display in this one's group (tapping the dial cycles within it).
     var next: TimeDisplay {
-        let all = Self.allCases
-        return all[(all.firstIndex(of: self)! + 1) % all.count]
+        let group = isHistorical ? Self.historical : Self.everyday
+        return group[((group.firstIndex(of: self) ?? -1) + 1) % group.count]
     }
 }
 
@@ -55,6 +64,9 @@ enum DialCenterText {
             // The animal and kanji are drawn in the middle instead; this is for VoiceOver.
             guard let coordinate, let hour = Wadokei.hour(at: now, coordinate: coordinate) else { return (solar, "") }
             return ("", "\(hour.animal) hour")
+        case .roman:
+            guard let coordinate, let hour = RomanHours.hour(at: now, coordinate: coordinate) else { return (solar, "") }
+            return (hour.title, hour.phrase)
         }
     }
 

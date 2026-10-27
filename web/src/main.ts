@@ -9,7 +9,7 @@ import { duration, readout, solarClock } from "./core/readout";
 import { apparentSolarMinutes, eventNames, isInstant, solarDayContaining, solarEvents, solarHourAngle } from "./core/solar";
 import { type SpecialDay, type SpecialStyle, eclipseDate, fromEclipse, headsUp, nextEclipse, specialToday } from "./core/specialDay";
 import { browserTimeZone, startOfDay } from "./core/tz";
-import { type Period, moonPeriod, sunPeriod, wadokeiHours } from "./core/periods";
+import { type Period, type RomanHour, moonPeriod, romanAt, romanHours, romanNightHour, romanNumeral, sunPeriod, wadokeiHours } from "./core/periods";
 import { type KanjiStyle, type WadokeiScene, clearWadokeiCache, drawWadokei, kanjiStyles, onZodiacArtLoad } from "./render/wadokei";
 import { zodiacNames } from "./render/zodiac";
 import { type HandColor, dialGeometry, drawDial, drawHand, drawMoon, handColors } from "./render/dial";
@@ -27,19 +27,26 @@ interface Place extends Coordinate {
   timeZone: string;
 }
 
-type TimeDisplay = "relative" | "twelveHour" | "twentyFourHour" | "periods" | "wadokei";
+type TimeDisplay = "relative" | "twelveHour" | "twentyFourHour" | "periods" | "wadokei" | "roman";
 type Theme = "system" | "light" | "dark";
 type Orientation = "noon" | "now";
 type MoonMode = "clock" | "sky";
 
-const displays: TimeDisplay[] = ["relative", "twelveHour", "twentyFourHour", "periods", "wadokei"];
+/** Everyday displays, and the historical clocks (kept in a group of their own). */
+const everydayDisplays: TimeDisplay[] = ["relative", "twelveHour", "twentyFourHour", "periods"];
+const historicalDisplays: TimeDisplay[] = ["wadokei", "roman"];
+const displays: TimeDisplay[] = [...everydayDisplays, ...historicalDisplays];
 const displayTitles: Record<TimeDisplay, string> = {
   relative: "Relative to the sun",
   twelveHour: "12-hour clock",
   twentyFourHour: "24-hour clock",
   periods: "Sun periods",
   wadokei: "Wadokei (Edo temporal hours)",
+  roman: "Roman hours",
 };
+
+/** Displays with their own sections in place of the 24 hour ticks. */
+const sectioned = (d: TimeDisplay) => d === "periods" || d === "wadokei" || d === "roman";
 
 /** Browser storage can be unavailable (private windows, blocked site data). */
 const storage = {
@@ -178,6 +185,10 @@ function centerText(now: number, place: Place, r: ReturnType<typeof readout>): [
     case "wadokei":
       // The kanji and animal are drawn on the wadokei layer instead.
       return ["", ""];
+    case "roman": {
+      const h = romanAt(now, place);
+      return h ? [romanTitle(h), romanPhrase(h)] : [solar, ""];
+    }
   }
 }
 
@@ -221,7 +232,7 @@ function render() {
     solarEclipse: special?.style === "solarEclipse" ? solarCoverage(now, place) : undefined,
     label: (date) => clockTime(date, tz),
     eventLabels: state.display !== "wadokei",
-    hourTicks: state.display !== "periods" && state.display !== "wadokei",
+    hourTicks: !sectioned(state.display),
     sectionTicks: sectionTicks(now, place),
     orientation: state.orientation,
     moonMode: state.moonMode,
@@ -299,9 +310,22 @@ function periodPhrase(p: Period): string {
   return `around ${milestoneNames[letter]}`;
 }
 
+const ordinals = ["", "first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth", "ninth", "tenth", "eleventh", "twelfth"];
+
+/** "Hora VII", "Vigilia II" */
+function romanTitle(h: RomanHour): string {
+  return `${h.kind === "hora" ? "Hora" : "Vigilia"} ${romanNumeral(h.number)}`;
+}
+
+/** "seventh hour of the day", "second watch of the night" */
+function romanPhrase(h: RomanHour): string {
+  return `${ordinals[h.number]} ${h.kind === "hora" ? "hour of the day" : "watch of the night"}`;
+}
+
 function sectionTicks(now: number, place: Place): number[] | undefined {
   const angle = (t: number) => solarHourAngle(t, place.longitude);
   if (state.display === "wadokei") return wadokeiHours(now, place).map((h) => angle(h.start));
+  if (state.display === "roman") return romanHours(now, place).map((h) => angle(h.start));
   if (state.display !== "periods") return undefined;
   const day = solarDayContaining(now, place);
   const ticks: number[] = [];
@@ -355,6 +379,22 @@ function renderPeriodDetails(now: number, place: Place) {
           `Moon <strong>${m.code}</strong> · ${periodPhrase(m)} · ${duration(now - m.from.date)} after ${milestoneNames[m.from.letter]}, ` +
             `${duration(m.to.date - now)} before ${milestoneNames[m.to.letter]}`,
         );
+      }
+    }
+  } else if (state.display === "roman") {
+    const hours = romanHours(now, place);
+    const i = hours.findIndex((h) => h.start <= now && now < h.end);
+    const h = hours[i], next = hours[i + 1];
+    if (h) {
+      const equal = h.kind === "hora" ? "an equal hour would be 1h 0m" : "an equal watch would be 3h 0m";
+      const nightHour = h.kind === "vigilia" ? ` · night hour ${romanNumeral(romanNightHour(h, now))} of XII` : "";
+      lines.push(`<strong>${romanTitle(h)}</strong> · the ${romanPhrase(h)}${nightHour}`);
+      lines.push(`${clockTime(h.start, tz)} – ${clockTime(h.end, tz)} · ${duration(h.end - h.start)} long today (${equal})`);
+      if (next) lines.push(`Next: ${romanTitle(next)} at ${clockTime(next.start, tz)}`);
+      const first = hours.find((t) => t.kind === "hora" && t.number === 1 && t.end > now - 86_400_000);
+      const sixth = hours.find((t) => t.kind === "hora" && t.number === 6 && t.start > (first?.start ?? 0));
+      if (first && sixth) {
+        lines.push(`Hora I begins at sunrise (${clockTime(first.start, tz)}); hora VI ends at midday (${clockTime(sixth.end, tz)})`);
       }
     }
   } else if (state.display === "wadokei") {
@@ -456,7 +496,9 @@ kanjiSelect.addEventListener("change", () => {
 });
 
 const displaySelect = $<HTMLSelectElement>("display-select");
-displaySelect.innerHTML = displays.map((d) => `<option value="${d}">${displayTitles[d]}</option>`).join("");
+const option = (d: TimeDisplay) => `<option value="${d}">${displayTitles[d]}</option>`;
+displaySelect.innerHTML =
+  everydayDisplays.map(option).join("") + `<optgroup label="Historical clocks">${historicalDisplays.map(option).join("")}</optgroup>`;
 displaySelect.value = state.display;
 displaySelect.addEventListener("change", () => {
   state.display = displaySelect.value as TimeDisplay;
@@ -802,7 +844,9 @@ document.addEventListener("click", (event) => {
 });
 $("place-button").addEventListener("click", openPlaceDialog);
 $("dial-center").addEventListener("click", () => {
-  state.display = displays[(displays.indexOf(state.display) + 1) % displays.length];
+  // Cycle within the group: the everyday displays, or the historical clocks.
+  const group = historicalDisplays.includes(state.display) ? historicalDisplays : everydayDisplays;
+  state.display = group[(group.indexOf(state.display) + 1) % group.length];
   displaySelect.value = state.display;
   embers();
   storage.set("display", state.display);

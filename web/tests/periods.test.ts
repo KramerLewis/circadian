@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { type Anchor, milestoneGrace, moonPeriod, periodAt, sunPeriod, tokiAt, wadokeiHours } from "../src/core/periods";
+import { type Anchor, milestoneGrace, moonPeriod, periodAt, romanAt, romanHours, romanNightHour, sunPeriod, tokiAt, wadokeiHours } from "../src/core/periods";
 import { solarDayContaining } from "../src/core/solar";
 import { instant } from "./fixtures";
 
@@ -62,5 +62,38 @@ describe("wadokei", () => {
     const rat = hours.find((t) => t.kanji === "子")!;
     expect((horse.end - horse.start) / 60_000).toBeGreaterThan(150);
     expect((rat.end - rat.start) / 60_000).toBeLessThan(80);
+  });
+});
+
+describe("roman hours", () => {
+  test("twelve hours from sunrise to sunset, hora VI ending at midday", () => {
+    const noon = instant("2026-06-21T12:00:00-07:00");
+    const day = solarDayContaining(noon, seattle);
+    const hours = romanHours(noon, seattle).filter((h) => h.kind === "hora" && h.start >= day.solarMidnight && h.end <= day.nextSolarMidnight);
+    expect(hours.map((h) => h.number)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]);
+    expect(hours[0].start).toBe(day.events.sunrise);
+    expect(hours[11].end).toBe(day.events.sunset);
+    // Sixteen hours of daylight in June: each hour is 80 minutes.
+    expect(Math.round((hours[0].end - hours[0].start) / 60_000)).toBe(80);
+    expect(Math.abs(hours[5].end - day.solarNoon) / 60_000).toBeLessThan(3);
+    expect(romanAt(instant("2026-06-21T15:00:00-07:00"), seattle)).toMatchObject({ kind: "hora", number: 8 });
+  });
+
+  test("four watches from sunset to sunrise", () => {
+    const night = instant("2026-12-21T23:30:00-08:00");
+    const watch = romanAt(night, seattle)!;
+    expect(watch.kind).toBe("vigilia");
+    expect(watch.number).toBe(2);
+    // A 16-hour December night: watches of 4 hours.
+    expect(Math.round((watch.end - watch.start) / 3_600_000)).toBe(4);
+    expect(romanNightHour(watch, night)).toBeGreaterThanOrEqual(4);
+    expect(romanNightHour(watch, night)).toBeLessThanOrEqual(6);
+  });
+
+  test("polar days fall back to equal hours around noon", () => {
+    const tromso = { latitude: 69.65, longitude: 18.96 };
+    const h = romanAt(instant("2026-06-21T12:00:00+02:00"), tromso)!;
+    expect(h.kind).toBe("hora");
+    expect(Math.round((h.end - h.start) / 60_000)).toBe(60);
   });
 });

@@ -185,9 +185,11 @@ struct SolarDialView: View {
     /// in place of the hour ticks.
     private func drawSectionTicks(in context: inout GraphicsContext, _ g: Geometry) {
         guard let coordinate else { return }
-        let dates = timeDisplay == .wadokei
-            ? Wadokei.hours(around: now, at: coordinate).map(\.start)
-            : SunPeriods.boundaries(inDayContaining: now, at: coordinate)
+        let dates = switch timeDisplay {
+        case .wadokei: Wadokei.hours(around: now, at: coordinate).map(\.start)
+        case .roman: RomanHours.hours(around: now, at: coordinate).map(\.start)
+        default: SunPeriods.boundaries(inDayContaining: now, at: coordinate)
+        }
         for date in dates {
             let angle = DialModel.angle(for: date, longitude: coordinate.longitude)
             var tick = Path()

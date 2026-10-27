@@ -256,3 +256,73 @@ public enum Wadokei {
         return order.compactMap { nearest[$0]?.hour }
     }
 }
+
+// MARK: - Roman hours
+
+/// The Roman day (like the Babylonian, Greek and medieval European ones) ran from sunrise
+/// to sunset in twelve equal hours, so an hour stretched to about 80 minutes in summer and
+/// shrank to 40 in winter; hora sexta ended at midday. The night was kept in four watches
+/// (vigiliae) from sunset to sunrise, each three night hours long.
+public enum RomanHours {
+    public struct Hour: Hashable, Sendable {
+        public enum Kind: Hashable, Sendable { case hora, vigilia }
+
+        public let kind: Kind
+        /// 1…12 for hours of the day, 1…4 for watches of the night.
+        public let number: Int
+        public let start: Date
+        public let end: Date
+
+        /// "Hora VII", "Vigilia II"
+        public var title: String { "\(kind == .hora ? "Hora" : "Vigilia") \(RomanHours.numeral(number))" }
+
+        /// "seventh hour of the day", "second watch of the night"
+        public var phrase: String {
+            "\(RomanHours.ordinals[number]) \(kind == .hora ? "hour of the day" : "watch of the night")"
+        }
+
+        /// Which of the twelve night hours `now` falls in, during a watch.
+        public func nightHour(at now: Date) -> Int {
+            let fraction = now.timeIntervalSince(start) / end.timeIntervalSince(start)
+            return min(12, (number - 1) * 3 + Int(fraction * 3) + 1)
+        }
+    }
+
+    static let ordinals = ["", "first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth", "ninth", "tenth", "eleventh", "twelfth"]
+
+    public static func numeral(_ n: Int) -> String {
+        let numerals = ["", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"]
+        return numerals.indices.contains(n) ? numerals[n] : String(n)
+    }
+
+    /// The Roman hours and watches around `now` (the solar days either side of it too).
+    /// Without a sunrise or sunset (polar days and nights), the day falls back to the
+    /// equinox's: six equal hours either side of solar noon.
+    public static func hours(around now: Date, at coordinate: Coordinate) -> [Hour] {
+        let today = SolarCalculator.solarDay(containing: now, at: coordinate)
+        let days = [-1, 0, 1].map { k in
+            k == 0 ? today : SolarCalculator.solarDay(nearestNoonTo: today.solarNoon.addingTimeInterval(Double(k) * 86_400), at: coordinate)
+        }
+        let horizons = days.compactMap { d in d[.sunrise].date.flatMap { rise in d[.sunset].date.map { (rise, $0) } } }
+        let bounds = horizons.count == days.count
+            ? horizons
+            : days.map { ($0.solarNoon.addingTimeInterval(-6 * 3600), $0.solarNoon.addingTimeInterval(6 * 3600)) }
+        var hours: [Hour] = []
+        func split(_ kind: Hour.Kind, _ start: Date, _ end: Date, _ count: Int) {
+            let step = end.timeIntervalSince(start) / Double(count)
+            for k in 0..<count {
+                hours.append(Hour(kind: kind, number: k + 1, start: start.addingTimeInterval(step * Double(k)),
+                                  end: start.addingTimeInterval(step * Double(k + 1))))
+            }
+        }
+        for (k, b) in bounds.enumerated() {
+            if k > 0 { split(.vigilia, bounds[k - 1].1, b.0, 4) }
+            split(.hora, b.0, b.1, 12)
+        }
+        return hours
+    }
+
+    public static func hour(at now: Date, coordinate: Coordinate) -> Hour? {
+        hours(around: now, at: coordinate).first { $0.start <= now && now < $0.end }
+    }
+}

@@ -5,6 +5,7 @@ All notable changes to SunClock. Versions follow the app's marketing version.
 ## [Unreleased]
 
 ### Added
+- Roman hours (web, iPhone, Watch): twelve hours from sunrise to sunset and four watches of the night, in a new Historical Clocks group with the wadokei; tapping the dial cycles within the group.
 - iPhone and Watch: the Sun Periods and Wadokei time displays, with section ticks in place of the hour ticks, a details line under the dial, and the four kanji styles (Display menu → Kanji). The Watch shows the hour's animal and kanji in the middle.
 - Wadokei center: the current hour's zodiac animal, lit in the kanji style (molten, plain, silver or gold), with its kanji beneath.
 - Web 3D view: Earth lit by the sun, with NASA's Blue Marble by day and Black Marble city lights at night, against NASA's Deep Star Map sky (stars and the Milky Way where they really are), a pin at your place turning with Earth, Earth's axis, and the moon on its orbit with its phase and eclipse shadow; drag to look around. Follows the time scrubber.

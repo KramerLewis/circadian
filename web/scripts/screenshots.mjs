@@ -33,6 +33,8 @@ const shots = [
   ["web-27-wadokei-silver-light", "light", `${seattle}&date=2026-03-20T09:00:00-07:00&display=wadokei&kanji=silver`],
   ["web-29-wadokei-gold-light", "light", `${seattle}&date=2026-03-20T09:00:00-07:00&display=wadokei&kanji=gold`],
   ["web-28-wadokei-plain-dark", "dark", `${seattle}&date=2026-12-21T23:30:00-08:00&display=wadokei&kanji=plain`],
+  ["web-30-roman-light", "light", `${seattle}&date=2026-06-21T15:00:00-07:00&display=roman`],
+  ["web-31-roman-night-dark", "dark", `${seattle}&date=2026-12-21T23:30:00-08:00&display=roman`],
   ["web-25-wadokei-light", "light", `${seattle}&date=2026-03-20T09:00:00-07:00&display=wadokei`],
   ["web-16-3d-first-quarter", "dark", `${seattle}&date=2026-06-21T15:00:00-07:00#orbit`],
   ["web-17-3d-full-moon", "light", `${seattle}&date=2026-11-24T22:00:00-08:00#orbit`],
