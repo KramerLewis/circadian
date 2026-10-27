@@ -114,7 +114,11 @@ const ink = { text: "rgba(235, 236, 245, 0.85)", faint: "rgba(200, 205, 230, 0.4
 const orbitRadius = 3.4;
 const moonRadius = 0.42;
 
-export function drawOrbit(canvas: HTMLCanvasElement, scene: OrbitScene): void {
+/**
+ * Draws the view. Returns where Earth's north pole points on screen (radians clockwise
+ * from straight up), or null when looking right along the axis, for the compass.
+ */
+export function drawOrbit(canvas: HTMLCanvasElement, scene: OrbitScene): number | null {
   const width = canvas.clientWidth, height = canvas.clientHeight;
   const dpr = window.devicePixelRatio || 1;
   if (canvas.width !== Math.round(width * dpr) || canvas.height !== Math.round(height * dpr)) {
@@ -195,7 +199,21 @@ export function drawOrbit(canvas: HTMLCanvasElement, scene: OrbitScene): void {
   ctx.font = `${11 * dpr}px system-ui, sans-serif`;
   ctx.textAlign = "left";
   ctx.textBaseline = "bottom";
-  ctx.fillText("Not to scale · drag to turn", 8 * dpr, canvas.height - 6 * dpr);
+  ctx.fillText("Not to scale · drag to turn, twist to roll", 8 * dpr, canvas.height - 6 * dpr);
+  return northOnScreen(north, right, up);
+}
+
+function northOnScreen(north: Vec, right: Vec, up: Vec): number | null {
+  const x = dot(north, right), y = dot(north, up);
+  return Math.hypot(x, y) < 0.05 ? null : Math.atan2(x, y);
+}
+
+/** Roll the camera about the way it's looking by `degrees` (positive turns the image clockwise). */
+export function rollOrbitCamera(camera: OrbitCamera, degrees: number): void {
+  const c = rad(degrees);
+  const right = add(scale(camera.right, Math.cos(c)), scale(camera.up, Math.sin(c)));
+  const up = add(scale(camera.up, Math.cos(c)), scale(camera.right, -Math.sin(c)));
+  Object.assign(camera, { right: unit(right), up: unit(up) });
 }
 
 function drawEarth(

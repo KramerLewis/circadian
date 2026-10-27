@@ -90,10 +90,23 @@
 
         <h2 class="section">In 3D</h2>
         <div class="card orbit-card">
-          <canvas id="orbit" role="img" aria-label="Earth, sun and moon in 3D"></canvas>
+          <div class="orbit-wrap">
+            <canvas id="orbit" role="img" aria-label="Earth, sun and moon in 3D"></canvas>
+            <button id="orbit-north" class="orbit-north" type="button" title="Turn north up" aria-label="Turn the view so north is up">
+              <svg viewBox="0 0 32 32" width="32" height="32" aria-hidden="true">
+                <circle cx="16" cy="16" r="15" fill="rgba(10, 12, 24, 0.7)" stroke="rgba(235, 236, 245, 0.5)" />
+                <g id="orbit-north-needle">
+                  <path d="M16 4 L20 16 L12 16 Z" fill="#ff5a3c" />
+                  <path d="M16 28 L20 16 L12 16 Z" fill="rgba(235, 236, 245, 0.75)" />
+                  <text x="16" y="13.5" text-anchor="middle" font-size="6.5" font-weight="700" fill="white">N</text>
+                </g>
+              </svg>
+            </button>
+          </div>
           <p class="muted orbit-caption">
             Sunlight comes from the sun's direction; the moon's lit side is its phase. Your place turns with Earth.
-            Drag to look around (toward the sun to see the night side), double-click to reset.
+            Drag to look around (toward the sun to see the night side), twist two fingers to roll, tap the compass
+            to put north back up, double-click to reset.
           </p>
         </div>
 

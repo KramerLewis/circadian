@@ -11,7 +11,7 @@ import { type SpecialDay, type SpecialStyle, eclipseDate, fromEclipse, headsUp, 
 import { browserTimeZone, startOfDay } from "./core/tz";
 import { type HandColor, dialGeometry, drawDial, drawHand, drawMoon, handColors } from "./render/dial";
 import { loadMoonTexture } from "./render/moon";
-import { defaultOrbitCamera, drawOrbit, loadOrbitTextures, loadSunImage, turnOrbitCamera } from "./render/orbit";
+import { defaultOrbitCamera, drawOrbit, loadOrbitTextures, loadSunImage, rollOrbitCamera, turnOrbitCamera } from "./render/orbit";
 import { loadSunSpots } from "./render/sun";
 
 // MARK: State
@@ -288,15 +288,20 @@ const orbitCamera = defaultOrbitCamera();
 let orbitVisible = false;
 let lastOrbit: { now: number; place: Place } | undefined;
 
+const needle = document.getElementById("orbit-north-needle")!;
+let northAngle: number | null = 0;
+
 function renderOrbit(now: number, place: Place) {
   lastOrbit = { now, place };
-  // Drawn per pixel, so only while it's on screen.
-  if (!orbitVisible) return;
-  drawOrbit(orbitCanvas, { now, place, dark: isDark(), camera: orbitCamera });
+  redrawOrbit();
 }
 
 const redrawOrbit = () => {
-  if (lastOrbit && orbitVisible) drawOrbit(orbitCanvas, { ...lastOrbit, dark: isDark(), camera: orbitCamera });
+  // Drawn per pixel, so only while it's on screen.
+  if (!lastOrbit || !orbitVisible) return;
+  northAngle = drawOrbit(orbitCanvas, { ...lastOrbit, dark: isDark(), camera: orbitCamera });
+  // The compass needle points where Earth's north pole points on screen.
+  needle.setAttribute("transform", `rotate(${((northAngle ?? 0) * 180) / Math.PI} 16 16)`);
 };
 
 new IntersectionObserver((entries) => {
@@ -305,23 +310,60 @@ new IntersectionObserver((entries) => {
 }).observe(orbitCanvas);
 
 {
-  // A trackball: each move turns the camera about its own axes, with no stop at the poles.
-  let drag: { x: number; y: number } | undefined;
+  // A trackball: one finger (or the mouse) turns the camera about its own axes, with no
+  // stop at the poles; two fingers twisting roll it about the way it's looking.
+  const pointers = new Map<number, { x: number; y: number }>();
   let pending = 0;
-  orbitCanvas.addEventListener("pointerdown", (e) => {
-    drag = { x: e.clientX, y: e.clientY };
-    orbitCanvas.setPointerCapture(e.pointerId);
-  });
-  orbitCanvas.addEventListener("pointermove", (e) => {
-    if (!drag) return;
-    turnOrbitCamera(orbitCamera, -(e.clientX - drag.x) * 0.5, (e.clientY - drag.y) * 0.4);
-    drag = { x: e.clientX, y: e.clientY };
+  const redraw = () => {
     cancelAnimationFrame(pending);
     pending = requestAnimationFrame(redrawOrbit);
+  };
+  const twist = () => {
+    const [a, b] = [...pointers.values()];
+    return Math.atan2(b.y - a.y, b.x - a.x);
+  };
+  orbitCanvas.addEventListener("pointerdown", (e) => {
+    pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    try {
+      orbitCanvas.setPointerCapture(e.pointerId);
+    } catch {
+      /* the pointer is already gone; the drag still works without capture */
+    }
   });
-  const end = () => (drag = undefined);
+  orbitCanvas.addEventListener("pointermove", (e) => {
+    const previous = pointers.get(e.pointerId);
+    if (!previous) return;
+    if (pointers.size === 1) {
+      turnOrbitCamera(orbitCamera, -(e.clientX - previous.x) * 0.5, (e.clientY - previous.y) * 0.4);
+      pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    } else if (pointers.size === 2) {
+      const before = twist();
+      pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      let delta = twist() - before;
+      if (delta > Math.PI) delta -= 2 * Math.PI;
+      if (delta < -Math.PI) delta += 2 * Math.PI;
+      rollOrbitCamera(orbitCamera, (delta * 180) / Math.PI);
+    }
+    redraw();
+  });
+  const end = (e: PointerEvent) => pointers.delete(e.pointerId);
   orbitCanvas.addEventListener("pointerup", end);
   orbitCanvas.addEventListener("pointercancel", end);
+
+  // The compass: roll smoothly until north is up (keeping where the view looks from).
+  let northAnimation = 0;
+  document.getElementById("orbit-north")!.addEventListener("click", () => {
+    cancelAnimationFrame(northAnimation);
+    const step = () => {
+      if (northAngle === null || Math.abs(northAngle) < 0.002) return;
+      const turn = Math.abs(northAngle) < 0.02 ? northAngle : northAngle * 0.25;
+      // Rolling the image counter-clockwise by the needle's angle brings north to the top.
+      rollOrbitCamera(orbitCamera, (-turn * 180) / Math.PI);
+      redrawOrbit();
+      northAnimation = requestAnimationFrame(step);
+    };
+    step();
+  });
   orbitCanvas.addEventListener("dblclick", () => {
     Object.assign(orbitCamera, defaultOrbitCamera());
     redrawOrbit();
