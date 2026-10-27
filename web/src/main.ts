@@ -10,7 +10,7 @@ import { apparentSolarMinutes, eventNames, isInstant, solarDayContaining, solarE
 import { type SpecialDay, type SpecialStyle, eclipseDate, fromEclipse, headsUp, nextEclipse, specialToday } from "./core/specialDay";
 import { browserTimeZone, startOfDay } from "./core/tz";
 import { type Period, moonPeriod, sunPeriod, wadokeiHours } from "./core/periods";
-import { type WadokeiScene, clearWadokeiCache, drawWadokei } from "./render/wadokei";
+import { type KanjiStyle, type WadokeiScene, clearWadokeiCache, drawWadokei, kanjiStyles } from "./render/wadokei";
 import { zodiacNames } from "./render/zodiac";
 import { type HandColor, dialGeometry, drawDial, drawHand, drawMoon, handColors } from "./render/dial";
 import { loadMoonTexture } from "./render/moon";
@@ -77,12 +77,14 @@ const state = {
   orientation: (params.get("dial") as Orientation) ?? storage.get<Orientation>("orientation") ?? "noon",
   moonMode: (params.get("moon") as MoonMode) ?? storage.get<MoonMode>("moonMode") ?? "clock",
   handColor: (params.get("hand") as HandColor) ?? storage.get<HandColor>("handColor") ?? "royalBlue",
+  kanjiStyle: (params.get("kanji") as KanjiStyle) ?? storage.get<KanjiStyle>("kanjiStyle") ?? "molten",
   moonPeriods: params.has("moonp") ? params.get("moonp") === "1" : (storage.get<boolean>("moonPeriods") ?? false),
   scrubMinutes: Number(params.get("scrub") ?? 0),
 };
 if (!displays.includes(state.display)) state.display = "relative";
 if (state.orientation !== "now") state.orientation = "noon";
 if (state.moonMode !== "sky") state.moonMode = "clock";
+if (!kanjiStyles.some((k) => k.id === state.kanjiStyle)) state.kanjiStyle = "molten";
 if (!handColors.some((c) => c.id === state.handColor)) state.handColor = "royalBlue";
 
 function isValid(latitude: number, longitude: number): boolean {
@@ -262,9 +264,10 @@ function render() {
   renderPeriodDetails(now, place);
   wadokeiScene =
     state.display === "wadokei"
-      ? { hours: wadokeiRing(now, place), rotation: state.orientation === "now" ? -model.nowAngle : 0, dark: isDark() }
+      ? { hours: wadokeiRing(now, place), rotation: state.orientation === "now" ? -model.nowAngle : 0, dark: isDark(), style: state.kanjiStyle }
       : undefined;
   drawWadokeiLayer();
+  $("kanji-picker").hidden = state.display !== "wadokei";
   renderSpecial(special, upcoming);
   renderReadouts(now, place, r, day);
   renderEvents(now, tz, day);
@@ -388,12 +391,12 @@ function drawWadokeiLayer() {
   drawWadokei(wadokeiCanvas, wadokeiScene, reduceMotion.matches ? undefined : performance.now() / 1000);
 }
 
-/** The embers flicker only in wadokei mode, and only this layer redraws (about 30 fps). */
+/** Molten and metal kanji move only in wadokei mode, and only this layer redraws (about 30 fps). */
 function embers() {
   cancelAnimationFrame(emberFrame);
   let last = 0;
   const tick = (t: number) => {
-    if (state.display === "wadokei" && !reduceMotion.matches) {
+    if (state.display === "wadokei" && state.kanjiStyle !== "plain" && !reduceMotion.matches) {
       if (t - last > 33 && document.visibilityState === "visible") {
         last = t;
         drawWadokeiLayer();
@@ -440,6 +443,16 @@ function shimmer() {
   };
   shimmerFrame = requestAnimationFrame(tick);
 }
+
+const kanjiSelect = $<HTMLSelectElement>("kanji-style");
+kanjiSelect.innerHTML = kanjiStyles.map((k) => `<option value="${k.id}">${k.title}</option>`).join("");
+kanjiSelect.value = state.kanjiStyle;
+kanjiSelect.addEventListener("change", () => {
+  state.kanjiStyle = kanjiSelect.value as KanjiStyle;
+  storage.set("kanjiStyle", state.kanjiStyle);
+  render();
+  embers();
+});
 
 const displaySelect = $<HTMLSelectElement>("display-select");
 displaySelect.innerHTML = displays.map((d) => `<option value="${d}">${displayTitles[d]}</option>`).join("");

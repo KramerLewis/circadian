@@ -10,7 +10,17 @@ import { dialGeometry } from "./dial";
 
 export const wadokeiFont = `"SunClock Wadokei", "Hiragino Mincho ProN", "Yu Mincho", serif`;
 
+export type KanjiStyle = "molten" | "plain" | "silver" | "gold";
+
+export const kanjiStyles: { id: KanjiStyle; title: string }[] = [
+  { id: "molten", title: "Molten" },
+  { id: "plain", title: "Plain (black or white)" },
+  { id: "silver", title: "Silver" },
+  { id: "gold", title: "Gold" },
+];
+
 export interface WadokeiScene {
+  style: KanjiStyle;
   hours: { kanji: string; angle: number; active: boolean }[];
   /** Degrees the dial is turned (now at top). */
   rotation: number;
@@ -31,11 +41,75 @@ export function drawWadokei(canvas: HTMLCanvasElement, scene: WadokeiScene, time
   for (const hour of scene.hours) {
     const t = ((hour.angle + scene.rotation) * Math.PI) / 180;
     const x = cx + radius * Math.sin(t), y = cy - radius * Math.cos(t);
-    if (hour.active) hole(ctx, hour.kanji, x, y, size * 1.25, time, scale, true, scene.dark);
+    if (scene.style !== "molten") flat(ctx, hour.kanji, x, y, hour.active ? size * 1.25 : size, scene.style, hour.active, time, scene.dark);
+    else if (hour.active) hole(ctx, hour.kanji, x, y, size * 1.25, time, scale, true, scene.dark);
     else idleHole(ctx, hour.kanji, x, y, size, scale, scene.dark);
   }
   const active = scene.hours.find((h) => h.active);
-  if (active) hole(ctx, active.kanji, cx, cy - g.moonInner * 0.12, g.moonInner * 0.95, time, scale, true, scene.dark);
+  if (!active) return;
+  const [ax, ay, as] = [cx, cy - g.moonInner * 0.12, g.moonInner * 0.95];
+  if (scene.style === "molten") hole(ctx, active.kanji, ax, ay, as, time, scale, true, scene.dark);
+  else flat(ctx, active.kanji, ax, ay, as, scene.style, true, time, scene.dark);
+}
+
+/**
+ * Plain, silver and gold kanji: printed on the dial rather than cut through it. Idle
+ * ones are quiet; the active one is emboldened (a stroke of its own color) and glows,
+ * and silver and gold catch a slow highlight that sweeps across them.
+ */
+function flat(
+  ctx: CanvasRenderingContext2D, text: string, x: number, y: number, size: number,
+  style: Exclude<KanjiStyle, "molten">, active: boolean, time: number | undefined, dark: boolean,
+) {
+  ctx.save();
+  ctx.font = `${size}px ${wadokeiFont}`;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.lineJoin = "round";
+  let fill: string | CanvasGradient;
+  let glow: string;
+  if (style === "plain") {
+    fill = dark ? "rgb(245, 245, 248)" : "rgb(18, 18, 22)";
+    glow = dark ? "rgba(255, 255, 255, 0.75)" : "rgba(0, 0, 0, 0.35)";
+  } else {
+    // A metal: dark, bright and dark again from top to bottom, with a highlight band
+    // that sweeps across (every four seconds) when active.
+    // Deeper tones on light backgrounds, so the metal still reads.
+    const tones = style === "gold"
+      ? dark
+        ? ["rgb(140, 92, 20)", "rgb(255, 226, 140)", "rgb(196, 140, 40)", "rgb(255, 246, 200)"]
+        : ["rgb(110, 70, 8)", "rgb(206, 150, 40)", "rgb(140, 92, 16)", "rgb(255, 232, 150)"]
+      : dark
+        ? ["rgb(110, 114, 124)", "rgb(238, 240, 246)", "rgb(150, 154, 164)", "rgb(255, 255, 255)"]
+        : ["rgb(62, 66, 76)", "rgb(150, 156, 170)", "rgb(88, 92, 104)", "rgb(230, 236, 248)"];
+    const g = ctx.createLinearGradient(x - size / 2, y - size / 2, x + size / 2, y + size / 2);
+    g.addColorStop(0, tones[0]);
+    g.addColorStop(0.45, tones[1]);
+    g.addColorStop(1, tones[2]);
+    if (active && time !== undefined) {
+      const t = (time / 4) % 1;
+      const at = (k: number) => Math.min(1, Math.max(0, k));
+      g.addColorStop(at(t - 0.08), tones[1]);
+      g.addColorStop(at(t), tones[3]);
+      g.addColorStop(at(t + 0.08), tones[1]);
+    }
+    fill = g;
+    glow = style === "gold"
+      ? dark ? "rgba(255, 200, 80, 0.8)" : "rgba(200, 140, 20, 0.55)"
+      : dark ? "rgba(220, 232, 255, 0.8)" : "rgba(70, 90, 130, 0.45)";
+  }
+  ctx.globalAlpha = active ? 1 : style === "plain" ? 0.45 : 0.6;
+  if (active) {
+    ctx.shadowColor = glow;
+    ctx.shadowBlur = size * 0.35;
+    // Embolden: stroke the glyph in its own fill.
+    ctx.strokeStyle = fill;
+    ctx.lineWidth = Math.max(1, size * 0.045);
+    ctx.strokeText(text, x, y);
+  }
+  ctx.fillStyle = fill;
+  ctx.fillText(text, x, y);
+  ctx.restore();
 }
 
 /**
@@ -117,9 +191,9 @@ function hole(
   if (molten) {
     // Heat glowing out of the opening, flickering.
     const s = time ?? 0;
-    const flicker = 1 + 0.16 * Math.sin(s * 7.3) * Math.sin(s * 3.1 + 1);
-    ctx.shadowColor = `rgba(255, 106, 28, ${0.7 * flicker})`;
-    ctx.shadowBlur = size * 0.4 * flicker;
+    const flicker = 1 + 0.05 * Math.sin(s * 2.3) * Math.sin(s * 1.3 + 1);
+    ctx.shadowColor = `rgba(255, 130, 40, ${Math.min(1, 0.95 * flicker)})`;
+    ctx.shadowBlur = size * 0.55 * flicker;
   }
   ctx.drawImage(hollow, left, top, box, box);
   ctx.restore();
@@ -136,7 +210,7 @@ function paintMolten(c: CanvasRenderingContext2D, px: number, s: number) {
   for (let k = 0; k < 7; k++) {
     const cx = px * (0.5 + 0.38 * Math.sin(s * (0.11 + k * 0.023) + k * 2.1));
     const cy = px * (0.5 + 0.38 * Math.cos(s * (0.09 + k * 0.019) + k * 1.3));
-    const r = px * (0.12 + 0.04 * Math.sin(s * 0.7 + k));
+    const r = px * (0.12 + 0.015 * Math.sin(s * 0.4 + k));
     const crust = c.createRadialGradient(cx, cy, 0, cx, cy, r);
     crust.addColorStop(0, "rgba(70, 14, 4, 0.75)");
     crust.addColorStop(0.7, "rgba(110, 24, 6, 0.4)");
@@ -147,9 +221,9 @@ function paintMolten(c: CanvasRenderingContext2D, px: number, s: number) {
   for (let k = 0; k < 5; k++) {
     const cx = px * (0.5 + 0.34 * Math.sin(s * (0.37 + k * 0.05) + k * 0.9));
     const cy = px * (0.5 + 0.34 * Math.cos(s * (0.31 + k * 0.04) + k * 2.6));
-    const r = px * (0.08 + 0.03 * Math.sin(s * 2.3 + k));
+    const r = px * (0.09 + 0.01 * Math.sin(s * 0.8 + k));
     const vent = c.createRadialGradient(cx, cy, 0, cx, cy, r);
-    vent.addColorStop(0, `rgba(255, 252, 220, ${0.55 + 0.3 * Math.sin(s * 3.7 + k)})`);
+    vent.addColorStop(0, `rgba(255, 252, 220, ${0.65 + 0.1 * Math.sin(s * 1.2 + k)})`);
     vent.addColorStop(1, "rgba(255, 220, 140, 0)");
     c.fillStyle = vent;
     c.fillRect(0, 0, px, px);
