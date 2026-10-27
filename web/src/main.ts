@@ -11,7 +11,10 @@ import { type SpecialDay, type SpecialStyle, eclipseDate, fromEclipse, headsUp, 
 import { browserTimeZone, startOfDay } from "./core/tz";
 import { type HandColor, dialGeometry, drawDial, drawHand, drawMoon, handColors } from "./render/dial";
 import { loadMoonTexture } from "./render/moon";
-import { defaultOrbitCamera, drawOrbit, loadOrbitTextures, loadSunImage, rollOrbitCamera, turnOrbitCamera } from "./render/orbit";
+import {
+  defaultOrbitCamera, drawOrbit, loadOrbitTextures, loadSunImage, rollOrbitCamera, setNorthUp, turnOrbitCamera,
+  turnOrbitCameraNorthUp,
+} from "./render/orbit";
 import { loadSunSpots } from "./render/sun";
 
 // MARK: State
@@ -289,6 +292,7 @@ let orbitVisible = false;
 let lastOrbit: { now: number; place: Place } | undefined;
 
 const needle = document.getElementById("orbit-north-needle")!;
+let northLocked = false;
 let northAngle: number | null = 0;
 
 function renderOrbit(now: number, place: Place) {
@@ -334,9 +338,11 @@ new IntersectionObserver((entries) => {
     const previous = pointers.get(e.pointerId);
     if (!previous) return;
     if (pointers.size === 1) {
-      turnOrbitCamera(orbitCamera, -(e.clientX - previous.x) * 0.5, (e.clientY - previous.y) * 0.4);
+      const across = -(e.clientX - previous.x) * 0.5, along = (e.clientY - previous.y) * 0.4;
+      if (northLocked) turnOrbitCameraNorthUp(orbitCamera, across, along);
+      else turnOrbitCamera(orbitCamera, across, along);
       pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
-    } else if (pointers.size === 2) {
+    } else if (pointers.size === 2 && !northLocked) {
       const before = twist();
       pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
       let delta = twist() - before;
@@ -351,9 +357,30 @@ new IntersectionObserver((entries) => {
   orbitCanvas.addEventListener("pointercancel", end);
 
   // The compass: roll smoothly until north is up (keeping where the view looks from).
+  // Tapped again with north already up, it locks north up (the globe-on-a-stand turning
+  // from before: no rolling, and it stops short of the poles); tapped once more, unlocks.
   let northAnimation = 0;
-  document.getElementById("orbit-north")!.addEventListener("click", () => {
+  const compass = document.getElementById("orbit-north")!;
+  const showLock = () => {
+    compass.classList.toggle("locked", northLocked);
+    compass.setAttribute("aria-pressed", String(northLocked));
+    compass.title = northLocked ? "North locked up (tap to unlock)" : "Turn north up (tap again to lock)";
+  };
+  showLock();
+  compass.addEventListener("click", () => {
     cancelAnimationFrame(northAnimation);
+    if (northLocked) {
+      northLocked = false;
+      showLock();
+      return;
+    }
+    if (northAngle !== null && Math.abs(northAngle) < 0.01) {
+      setNorthUp(orbitCamera);
+      northLocked = true;
+      showLock();
+      redrawOrbit();
+      return;
+    }
     const step = () => {
       if (northAngle === null || Math.abs(northAngle) < 0.002) return;
       const turn = Math.abs(northAngle) < 0.02 ? northAngle : northAngle * 0.25;
@@ -366,6 +393,8 @@ new IntersectionObserver((entries) => {
   });
   orbitCanvas.addEventListener("dblclick", () => {
     Object.assign(orbitCamera, defaultOrbitCamera());
+    northLocked = false;
+    showLock();
     redrawOrbit();
   });
 }

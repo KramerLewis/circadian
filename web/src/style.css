@@ -414,6 +414,19 @@ a:focus-visible {
   line-height: 0;
 }
 
+.orbit-north .orbit-lock {
+  display: none;
+}
+
+.orbit-north.locked .orbit-lock {
+  display: inline;
+}
+
+.orbit-north.locked circle {
+  stroke: #ffd36b;
+  stroke-width: 1.6;
+}
+
 .orbit-caption {
   margin: 0;
   padding: 10px 14px 12px;

@@ -100,6 +100,40 @@ export function turnOrbitCamera(camera: OrbitCamera, across: number, along: numb
   Object.assign(camera, { right, up, back });
 }
 
+// North-locked turning. The default view looks down at 35 degrees with north up, so in
+// its axes Earth's north is always this direction, whatever the date.
+const northInDefault: Vec = [0, Math.cos(rad(35)), Math.sin(rad(35))];
+const eastInDefault: Vec = [1, 0, 0];
+const thirdInDefault = cross(northInDefault, eastInDefault);
+
+/** Square the camera up around where it looks from, with north straight up. */
+function uprightFrom(camera: OrbitCamera, back: Vec): void {
+  const right = unit(cross(scale(back, -1), northInDefault));
+  Object.assign(camera, { back, right, up: cross(right, scale(back, -1)) });
+}
+
+/** Turn north up exactly (no roll left), keeping the viewpoint. */
+export function setNorthUp(camera: OrbitCamera): void {
+  uprightFrom(camera, camera.back);
+}
+
+/**
+ * Turn with north locked up, like a globe on a stand: `across` swings round the poles'
+ * axis, `along` tilts toward a pole, stopping short of it.
+ */
+export function turnOrbitCameraNorthUp(camera: OrbitCamera, across: number, along: number): void {
+  const b = camera.back;
+  const elevation = Math.asin(Math.max(-1, Math.min(1, dot(b, northInDefault))));
+  const azimuth = Math.atan2(dot(b, thirdInDefault), dot(b, eastInDefault));
+  const el = Math.max(rad(-85), Math.min(rad(85), elevation + rad(along)));
+  const az = azimuth + rad(across);
+  const back = add(
+    scale(add(scale(eastInDefault, Math.cos(az)), scale(thirdInDefault, Math.sin(az))), Math.cos(el)),
+    scale(northInDefault, Math.sin(el)),
+  );
+  uprightFrom(camera, unit(back));
+}
+
 export interface OrbitScene {
   now: number;
   place: Coordinate & { name: string };
