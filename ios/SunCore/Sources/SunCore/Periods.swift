@@ -276,9 +276,9 @@ public enum RomanHours {
         /// "Hora VII", "Vigilia II"
         public var title: String { "\(kind == .hora ? "Hora" : "Vigilia") \(RomanHours.numeral(number))" }
 
-        /// "seventh hour of the day", "second watch of the night"
+        /// "seventh hour of the day", "second night watch" (short enough for the dial's center)
         public var phrase: String {
-            "\(RomanHours.ordinals[number]) \(kind == .hora ? "hour of the day" : "watch of the night")"
+            "\(RomanHours.ordinals[number]) \(kind == .hora ? "hour of the day" : "night watch")"
         }
 
         /// Which of the twelve night hours `now` falls in, during a watch.

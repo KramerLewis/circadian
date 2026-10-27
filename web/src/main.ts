@@ -320,9 +320,9 @@ function romanTitle(h: RomanHour): string {
   return `${h.kind === "hora" ? "Hora" : "Vigilia"} ${romanNumeral(h.number)}`;
 }
 
-/** "seventh hour of the day", "second watch of the night" */
+/** "seventh hour of the day", "second night watch" (short enough for the dial's center) */
 function romanPhrase(h: RomanHour): string {
-  return `${ordinals[h.number]} ${h.kind === "hora" ? "hour of the day" : "watch of the night"}`;
+  return `${ordinals[h.number]} ${h.kind === "hora" ? "hour of the day" : "night watch"}`;
 }
 
 function sectionTicks(now: number, place: Place): number[] | undefined {
