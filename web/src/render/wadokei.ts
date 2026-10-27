@@ -2,9 +2,9 @@
 // at the middle of its temporal hour (so they bunch up in short hours and spread out in
 // long ones, as on an Edo clock), and the current hour's kanji large in the middle.
 //
-// Inactive kanji look cut into the dial; the active one glows as if lit by embers from
-// inside: a hot core shading to deep red at the edges, slowly shifting hot spots, and a
-// soft flickering glow. Its own canvas, so the flicker animates without the dial.
+// Each kanji is a hole cut through the dial: idle ones shallow and dark, the active one
+// deep, with molten rock inside lighting its walls and glowing out of the opening. Its own
+// canvas, so the molten surface can move without redrawing the dial.
 
 import { dialGeometry } from "./dial";
 
@@ -31,85 +31,163 @@ export function drawWadokei(canvas: HTMLCanvasElement, scene: WadokeiScene, time
   for (const hour of scene.hours) {
     const t = ((hour.angle + scene.rotation) * Math.PI) / 180;
     const x = cx + radius * Math.sin(t), y = cy - radius * Math.cos(t);
-    if (hour.active) ember(ctx, hour.kanji, x, y, size * 1.25, time, scale);
-    else engraved(ctx, hour.kanji, x, y, size, scene.dark);
+    if (hour.active) hole(ctx, hour.kanji, x, y, size * 1.25, time, scale, true, scene.dark);
+    else idleHole(ctx, hour.kanji, x, y, size, scale, scene.dark);
   }
   const active = scene.hours.find((h) => h.active);
-  if (active) ember(ctx, active.kanji, cx, cy - g.moonInner * 0.12, g.moonInner * 0.95, time, scale);
-}
-
-/** Cut into the dial: a dark recess with a faint lit lower edge. */
-function engraved(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, size: number, dark: boolean) {
-  ctx.save();
-  ctx.font = `${size}px ${wadokeiFont}`;
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  // A shadow above and a lit lip below make it read as carved in.
-  ctx.fillStyle = dark ? "rgba(0, 0, 0, 0.8)" : "rgba(40, 30, 24, 0.35)";
-  ctx.fillText(text, x, y - 0.8);
-  ctx.fillStyle = dark ? "rgba(255, 238, 220, 0.22)" : "rgba(255, 255, 255, 0.85)";
-  ctx.fillText(text, x, y + 0.8);
-  ctx.fillStyle = dark ? "rgba(200, 186, 172, 0.55)" : "rgba(70, 56, 46, 0.6)";
-  ctx.fillText(text, x, y);
-  ctx.restore();
+  if (active) hole(ctx, active.kanji, cx, cy - g.moonInner * 0.12, g.moonInner * 0.95, time, scale, true, scene.dark);
 }
 
 /**
- * The kanji filled with ember light: rendered into a small offscreen canvas as a mask,
- * painted with a hot gradient and moving hot spots, then drawn with a flickering glow
- * and a dark rim, so it reads as a cutout with fire behind it.
+ * Each kanji is a hole cut through the dial. Looking in, you see its inner walls (the
+ * band left where the floor, set back by `depth`, no longer covers the opening), the floor,
+ * an inner shadow where walls meet floor, a dark lip along the top edge and a lit lip
+ * along the bottom. Idle holes are shallow and dark; the active one is deep, with molten
+ * rock on the floor lighting the walls and glowing out of the opening.
  */
-function ember(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, size: number, time: number | undefined, scale: number) {
+function hole(
+  ctx: CanvasRenderingContext2D, text: string, x: number, y: number, size: number,
+  time: number | undefined, scale: number, molten: boolean, dark: boolean,
+) {
   const box = Math.ceil(size * 1.4);
   const px = Math.ceil(box * scale);
-  const off = document.createElement("canvas");
-  off.width = off.height = px;
-  const o = off.getContext("2d")!;
-  o.scale(scale, scale);
-  o.font = `${size}px ${wadokeiFont}`;
-  o.textAlign = "center";
-  o.textBaseline = "middle";
-  o.fillStyle = "white";
-  o.fillText(text, box / 2, box / 2);
-  // Paint the glyph: a hot core, deepening toward the edges.
-  o.globalCompositeOperation = "source-in";
-  const s = time ?? 0;
-  const core = o.createRadialGradient(box / 2, box * 0.55, 0, box / 2, box / 2, box * 0.62);
-  core.addColorStop(0, "rgb(255, 244, 196)");
-  core.addColorStop(0.35, "rgb(255, 176, 64)");
-  core.addColorStop(0.7, "rgb(232, 84, 24)");
-  core.addColorStop(1, "rgb(120, 22, 6)");
-  o.fillStyle = core;
-  o.fillRect(0, 0, box, box);
-  // Hot spots that drift and pulse, like coals.
-  o.globalCompositeOperation = "source-atop";
-  for (let k = 0; k < 5; k++) {
-    const hx = box * (0.5 + 0.32 * Math.sin(s * (0.31 + k * 0.07) + k * 1.7));
-    const hy = box * (0.5 + 0.32 * Math.cos(s * (0.27 + k * 0.05) + k * 2.3));
-    const r = box * (0.16 + 0.06 * Math.sin(s * 1.3 + k));
-    const spot = o.createRadialGradient(hx, hy, 0, hx, hy, r);
-    const a = 0.35 + 0.25 * Math.sin(s * 2.1 + k * 1.1);
-    spot.addColorStop(0, `rgba(255, 250, 220, ${a})`);
-    spot.addColorStop(1, "rgba(255, 200, 120, 0)");
-    o.fillStyle = spot;
-    o.fillRect(0, 0, box, box);
+  const depth = Math.max(1.2, size * (molten ? 0.045 : 0.035)) * scale;
+  const canvas = () => {
+    const c = document.createElement("canvas");
+    c.width = c.height = px;
+    return [c, c.getContext("2d")!] as const;
+  };
+  // The opening, as a mask.
+  const [mask, m] = canvas();
+  m.font = `${size * scale}px ${wadokeiFont}`;
+  m.textAlign = "center";
+  m.textBaseline = "middle";
+  m.fillStyle = "white";
+  m.fillText(text, px / 2, px / 2);
+  // The floor: the opening moved back by the depth, seen through the opening.
+  const [floorMask, f] = canvas();
+  f.drawImage(mask, 0, depth);
+  f.globalCompositeOperation = "destination-in";
+  f.drawImage(mask, 0, 0);
+
+  const [hollow, h] = canvas();
+  // Walls: dark at the surface; in a molten hole, lit orange near the floor.
+  const wall = h.createLinearGradient(0, 0, 0, px);
+  if (molten) {
+    wall.addColorStop(0, "rgb(70, 18, 6)");
+    wall.addColorStop(1, "rgb(230, 96, 30)");
+  } else {
+    wall.addColorStop(0, dark ? "rgb(22, 20, 19)" : "rgb(40, 32, 28)");
+    wall.addColorStop(1, dark ? "rgb(58, 52, 48)" : "rgb(90, 76, 66)");
   }
-  const flicker = 1 + 0.18 * Math.sin(s * 7.3) * Math.sin(s * 3.1 + 1);
+  h.drawImage(mask, 0, 0);
+  h.globalCompositeOperation = "source-in";
+  h.fillStyle = wall;
+  h.fillRect(0, 0, px, px);
+  // The floor on top of the walls.
+  const [floor, fl] = canvas();
+  if (molten) paintMolten(fl, px, time ?? 0);
+  else {
+    fl.fillStyle = dark ? "rgb(40, 36, 33)" : "rgb(62, 52, 46)";
+    fl.fillRect(0, 0, px, px);
+  }
+  fl.globalCompositeOperation = "destination-in";
+  fl.drawImage(floorMask, 0, 0);
+  h.globalCompositeOperation = "source-over";
+  h.drawImage(floor, 0, 0);
+  // Inner shadow where walls meet the floor: the shadow of everything outside the
+  // floor, kept inside the hole (drawn far off-canvas so only its shadow lands).
+  const [outside, o] = canvas();
+  o.fillRect(0, 0, px, px);
+  o.globalCompositeOperation = "destination-out";
+  o.drawImage(floorMask, 0, 0);
+  h.globalCompositeOperation = "source-atop";
+  h.shadowColor = molten ? "rgba(60, 10, 0, 0.6)" : "rgba(0, 0, 0, 0.7)";
+  h.shadowBlur = size * scale * (molten ? 0.05 : 0.04);
+  h.shadowOffsetX = 4 * px;
+  h.drawImage(outside, -4 * px, 0);
+
+  const left = x - box / 2, top = y - box / 2;
   ctx.save();
-  // A dark rim first: the edge of the cutout.
-  ctx.font = `${size}px ${wadokeiFont}`;
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.lineJoin = "round";
-  ctx.lineWidth = Math.max(1.5, size * 0.05);
-  ctx.strokeStyle = "rgba(30, 8, 2, 0.85)";
-  ctx.strokeText(text, x, y);
-  // Then the lit glyph with its glow.
-  ctx.shadowColor = `rgba(255, 110, 30, ${0.85 * flicker})`;
-  ctx.shadowBlur = size * 0.35 * flicker;
-  ctx.drawImage(off, x - box / 2, y - box / 2, box, box);
-  ctx.shadowBlur = size * 0.12;
-  ctx.shadowColor = "rgba(255, 200, 90, 0.9)";
-  ctx.drawImage(off, x - box / 2, y - box / 2, box, box);
+  // A dark lip along the top edges and a lit lip along the bottom edges of the opening.
+  ctx.globalAlpha = dark ? 0.9 : 0.5;
+  tinted(ctx, mask, left, top - 1, box, "rgb(0, 0, 0)");
+  ctx.globalAlpha = 1;
+  tinted(ctx, mask, left, top + 1, box, molten ? "rgba(255, 196, 120, 0.75)" : dark ? "rgba(255, 240, 225, 0.45)" : "rgba(255, 255, 255, 0.9)");
+  if (molten) {
+    // Heat glowing out of the opening, flickering.
+    const s = time ?? 0;
+    const flicker = 1 + 0.16 * Math.sin(s * 7.3) * Math.sin(s * 3.1 + 1);
+    ctx.shadowColor = `rgba(255, 106, 28, ${0.7 * flicker})`;
+    ctx.shadowBlur = size * 0.4 * flicker;
+  }
+  ctx.drawImage(hollow, left, top, box, box);
   ctx.restore();
+}
+
+/** Molten rock: a hot core, drifting dark crust, and bright cracks between. */
+function paintMolten(c: CanvasRenderingContext2D, px: number, s: number) {
+  const core = c.createRadialGradient(px / 2, px * 0.55, 0, px / 2, px / 2, px * 0.6);
+  core.addColorStop(0, "rgb(255, 238, 170)");
+  core.addColorStop(0.4, "rgb(255, 150, 40)");
+  core.addColorStop(1, "rgb(196, 54, 12)");
+  c.fillStyle = core;
+  c.fillRect(0, 0, px, px);
+  for (let k = 0; k < 7; k++) {
+    const cx = px * (0.5 + 0.38 * Math.sin(s * (0.11 + k * 0.023) + k * 2.1));
+    const cy = px * (0.5 + 0.38 * Math.cos(s * (0.09 + k * 0.019) + k * 1.3));
+    const r = px * (0.12 + 0.04 * Math.sin(s * 0.7 + k));
+    const crust = c.createRadialGradient(cx, cy, 0, cx, cy, r);
+    crust.addColorStop(0, "rgba(70, 14, 4, 0.75)");
+    crust.addColorStop(0.7, "rgba(110, 24, 6, 0.4)");
+    crust.addColorStop(1, "rgba(110, 24, 6, 0)");
+    c.fillStyle = crust;
+    c.fillRect(0, 0, px, px);
+  }
+  for (let k = 0; k < 5; k++) {
+    const cx = px * (0.5 + 0.34 * Math.sin(s * (0.37 + k * 0.05) + k * 0.9));
+    const cy = px * (0.5 + 0.34 * Math.cos(s * (0.31 + k * 0.04) + k * 2.6));
+    const r = px * (0.08 + 0.03 * Math.sin(s * 2.3 + k));
+    const vent = c.createRadialGradient(cx, cy, 0, cx, cy, r);
+    vent.addColorStop(0, `rgba(255, 252, 220, ${0.55 + 0.3 * Math.sin(s * 3.7 + k)})`);
+    vent.addColorStop(1, "rgba(255, 220, 140, 0)");
+    c.fillStyle = vent;
+    c.fillRect(0, 0, px, px);
+  }
+}
+
+/** Draw a mask filled with one color. */
+function tinted(ctx: CanvasRenderingContext2D, mask: HTMLCanvasElement, x: number, y: number, box: number, color: string) {
+  const c = document.createElement("canvas");
+  c.width = mask.width;
+  c.height = mask.height;
+  const t = c.getContext("2d")!;
+  t.drawImage(mask, 0, 0);
+  t.globalCompositeOperation = "source-in";
+  t.fillStyle = color;
+  t.fillRect(0, 0, c.width, c.height);
+  ctx.drawImage(c, x, y, box, box);
+}
+
+/** Idle holes don't change, so each is rendered once (cleared when the font arrives). */
+const idleCache = new Map<string, HTMLCanvasElement>();
+
+export function clearWadokeiCache() {
+  idleCache.clear();
+}
+
+function idleHole(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, size: number, scale: number, dark: boolean) {
+  const box = Math.ceil(size * 1.6);
+  const key = `${text}|${size.toFixed(1)}|${scale}|${dark}`;
+  let c = idleCache.get(key);
+  if (!c) {
+    c = document.createElement("canvas");
+    c.width = c.height = Math.ceil(box * scale);
+    const k = c.getContext("2d")!;
+    k.scale(scale, scale);
+    hole(k, text, box / 2, box / 2, size, undefined, scale, false, dark);
+    if (idleCache.size > 64) idleCache.clear();
+    idleCache.set(key, c);
+  }
+  ctx.drawImage(c, x - box / 2, y - box / 2, box, box);
 }

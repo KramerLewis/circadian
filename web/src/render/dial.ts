@@ -33,6 +33,8 @@ export interface DialScene {
   orientation: "noon" | "now";
   /** "clock": the moon ring on the sun's timeline; "sky": the moon where it is in the sky. */
   moonMode: "clock" | "sky";
+  /** The 24-hour ticks and numbers inside the moon ring (off for sun periods and wadokei). */
+  hourTicks?: boolean;
   /** Clock times beside the event dots outside the ring (off when wadokei kanji sit there). */
   eventLabels?: boolean;
   /** Dial angles of section boundaries (sun periods or wadokei hours), ticked outside the ring. */
@@ -82,7 +84,7 @@ export function drawDial(canvas: HTMLCanvasElement, scene: DialScene): void {
   drawMoonRing(ctx, moonRing, scene, scale);
   if (scene.special === "equinox") drawEquinox(ctx, sunRing);
   if (scene.special === "newMoon") drawStars(ctx, sunRing, g.moonInner, scene.dark);
-  drawHourTicks(ctx, sunRing, g.moonInner, scene.colors, scene.readout);
+  if (scene.hourTicks !== false) drawHourTicks(ctx, sunRing, g.moonInner, scene.colors, scene.readout);
   drawMarkers(ctx, sunRing, scene);
   if (scene.sectionTicks) drawSectionTicks(ctx, sunRing, scene.sectionTicks, scene.colors);
   const angle = scene.model.nowAngle;

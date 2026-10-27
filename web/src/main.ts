@@ -10,7 +10,7 @@ import { apparentSolarMinutes, eventNames, isInstant, solarDayContaining, solarE
 import { type SpecialDay, type SpecialStyle, eclipseDate, fromEclipse, headsUp, nextEclipse, specialToday } from "./core/specialDay";
 import { browserTimeZone, startOfDay } from "./core/tz";
 import { type Period, moonPeriod, sunPeriod, wadokeiHours } from "./core/periods";
-import { type WadokeiScene, drawWadokei } from "./render/wadokei";
+import { type WadokeiScene, clearWadokeiCache, drawWadokei } from "./render/wadokei";
 import { zodiacNames } from "./render/zodiac";
 import { type HandColor, dialGeometry, drawDial, drawHand, drawMoon, handColors } from "./render/dial";
 import { loadMoonTexture } from "./render/moon";
@@ -219,6 +219,7 @@ function render() {
     solarEclipse: special?.style === "solarEclipse" ? solarCoverage(now, place) : undefined,
     label: (date) => clockTime(date, tz),
     eventLabels: state.display !== "wadokei",
+    hourTicks: state.display !== "periods" && state.display !== "wadokei",
     sectionTicks: sectionTicks(now, place),
     orientation: state.orientation,
     moonMode: state.moonMode,
@@ -414,6 +415,7 @@ new FontFace("SunClock Wadokei", `url(${import.meta.env.BASE_URL}fonts/wadokei.w
   .load()
   .then((face) => {
     document.fonts.add(face);
+    clearWadokeiCache();
     render();
   }, () => {});
 
