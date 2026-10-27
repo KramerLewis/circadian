@@ -386,20 +386,13 @@ function drawSky(ctx: CanvasRenderingContext2D, v: SkyView, w: number, h: number
 }
 
 /**
- * The sun, on the same sky as the stars: look toward it and it comes to the middle,
- * behind Earth. When it's behind you it sits at the edge, faded, so you know which way
- * the light comes from.
+ * The sun, on the same sky as the stars. It moves freely, sliding off the frame like
+ * anything else; once it's out of view, a small marker at the edge points to it.
  */
 function drawSun(ctx: CanvasRenderingContext2D, sun: Vec, v: SkyView, w: number, h: number, dpr: number) {
-  let { x, y, angle } = skyPoint(sun, v);
-  const behindViewer = angle > 90;
-  // Keep the glow and its label inside the frame.
-  const mx = (behindViewer ? 58 : 34) * dpr, my = 34 * dpr;
-  x = Math.max(mx, Math.min(w - mx, x));
-  y = Math.max(my, Math.min(h - my, y));
-  ctx.save();
-  ctx.globalAlpha = behindViewer ? 0.45 : 1;
+  const { x, y } = skyPoint(sun, v);
   const r = 60 * dpr;
+  // Drawn where it is, even partly off the frame: the canvas clips it.
   const glow = ctx.createRadialGradient(x, y, 0, x, y, r);
   glow.addColorStop(0, "rgba(255, 246, 215, 1)");
   glow.addColorStop(0.2, "rgba(255, 220, 130, 0.95)");
@@ -409,26 +402,47 @@ function drawSun(ctx: CanvasRenderingContext2D, sun: Vec, v: SkyView, w: number,
   ctx.beginPath();
   ctx.arc(x, y, r, 0, Math.PI * 2);
   ctx.fill();
-  ctx.restore();
-  if (!behindViewer && sunImage) {
+  const sr = 17 * dpr;
+  if (sunImage) {
     // The real sun from NASA SDO, with that day's sunspots, in the middle of its glow.
-    const sr = 17 * dpr;
     ctx.save();
     ctx.beginPath();
     ctx.arc(x, y, sr, 0, Math.PI * 2);
     ctx.clip();
     ctx.drawImage(sunImage, x - sr, y - sr, sr * 2, sr * 2);
     ctx.restore();
-    ctx.fillStyle = "rgba(255, 230, 180, 0.9)";
-    ctx.font = `600 ${11 * dpr}px system-ui, sans-serif`;
-    ctx.textAlign = "center";
-    ctx.textBaseline = "top";
-    ctx.fillText("Sun", x, y + sr + 6 * dpr);
-    return;
   }
-  ctx.fillStyle = behindViewer ? "rgba(255, 220, 150, 0.8)" : "rgba(110, 60, 0, 0.9)";
   ctx.font = `600 ${11 * dpr}px system-ui, sans-serif`;
   ctx.textAlign = "center";
+  ctx.textBaseline = "top";
+  ctx.fillStyle = "rgba(255, 230, 180, 0.9)";
+  ctx.fillText("Sun", x, y + sr + 6 * dpr);
+
+  // How far the sun's disc is outside the frame; the edge marker fades in over that.
+  const outside = Math.max(x - w, -x, y - h, -y) - sr;
+  const fade = Math.min(1, Math.max(0, outside / (30 * dpr)));
+  if (fade <= 0) return;
+  const m = 18 * dpr;
+  const ex = Math.max(m, Math.min(w - m, x)), ey = Math.max(m, Math.min(h - m, y));
+  const dir = Math.atan2(y - ey, x - ex);
+  ctx.save();
+  ctx.globalAlpha = fade;
+  ctx.translate(ex, ey);
+  // An arrowhead pointing off the frame toward the sun.
+  ctx.save();
+  ctx.rotate(dir);
+  ctx.fillStyle = "rgba(255, 205, 110, 0.95)";
+  ctx.beginPath();
+  ctx.moveTo(9 * dpr, 0);
+  ctx.lineTo(-3 * dpr, -6 * dpr);
+  ctx.lineTo(-3 * dpr, 6 * dpr);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+  // The label sits on the inward side of the arrow.
+  ctx.fillStyle = "rgba(255, 230, 180, 0.95)";
   ctx.textBaseline = "middle";
-  ctx.fillText(behindViewer ? "Sun (behind you)" : "Sun", x, y);
+  const lx = -Math.cos(dir) * 26 * dpr, ly = -Math.sin(dir) * 16 * dpr;
+  ctx.fillText("Sun", lx, ly);
+  ctx.restore();
 }
