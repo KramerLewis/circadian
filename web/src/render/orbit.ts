@@ -70,10 +70,34 @@ function sample(t: Texture | undefined, u: number, v: number, fallback: Vec): Ve
   return [t.pixels[i] / 255, t.pixels[i + 1] / 255, t.pixels[i + 2] / 255];
 }
 
-/** Where the viewer looks from, relative to the default view (which follows the sun). */
+/**
+ * Where the viewer looks from, as a turn of the default view (which follows the sun):
+ * the camera's right, up and back axes written in the default view's axes. Drags turn
+ * it about its own axes (a trackball), so it can roll over the poles and keep going.
+ */
 export interface OrbitCamera {
-  yaw: number;
-  pitch: number;
+  right: Vec;
+  up: Vec;
+  back: Vec;
+}
+
+export function defaultOrbitCamera(): OrbitCamera {
+  return { right: [1, 0, 0], up: [0, 1, 0], back: [0, 0, 1] };
+}
+
+/** Turn the camera by a drag: `across` degrees about its up axis, `along` about its right axis. */
+export function turnOrbitCamera(camera: OrbitCamera, across: number, along: number): void {
+  const a = rad(across), b = rad(along);
+  let { right, up, back } = camera;
+  // About the camera's up axis: right and back swing round.
+  [right, back] = [add(scale(right, Math.cos(a)), scale(back, -Math.sin(a))), add(scale(back, Math.cos(a)), scale(right, Math.sin(a)))];
+  // About its right axis: up and back tilt.
+  [up, back] = [add(scale(up, Math.cos(b)), scale(back, -Math.sin(b))), add(scale(back, Math.cos(b)), scale(up, Math.sin(b)))];
+  // Keep the axes square as the small errors of many drags add up.
+  back = unit(back);
+  right = unit(cross(up, back));
+  up = cross(back, right);
+  Object.assign(camera, { right, up, back });
 }
 
 export interface OrbitScene {
@@ -112,12 +136,17 @@ export function drawOrbit(canvas: HTMLCanvasElement, scene: OrbitScene): void {
   // most of the day side shows along with the terminator, and the moon's phase reads
   // as it would from Earth.
   const sunAzimuth = Math.atan2(sun[1], sun[0]);
-  const azimuth = sunAzimuth - Math.PI / 2 + rad(scene.camera.yaw) + rad(30);
-  const elevation = rad(Math.max(-85, Math.min(85, 35 + scene.camera.pitch)));
-  const toCamera: Vec = [Math.cos(elevation) * Math.cos(azimuth), Math.cos(elevation) * Math.sin(azimuth), Math.sin(elevation)];
+  const azimuth = sunAzimuth - Math.PI / 2 + rad(30);
+  const elevation = rad(35);
+  const back0: Vec = [Math.cos(elevation) * Math.cos(azimuth), Math.cos(elevation) * Math.sin(azimuth), Math.sin(elevation)];
+  const right0 = unit(cross(scale(back0, -1), north));
+  const up0 = cross(right0, scale(back0, -1));
+  // The camera's axes: the default view's, turned by the drags so far.
+  const inDefault = (v: Vec): Vec => add(add(scale(right0, v[0]), scale(up0, v[1])), scale(back0, v[2]));
+  const toCamera = inDefault(scene.camera.back);
   const forward = scale(toCamera, -1);
-  const right = unit(cross(forward, north));
-  const up = cross(right, forward);
+  const right = inDefault(scene.camera.right);
+  const up = inDefault(scene.camera.up);
 
   // Orthographic projection; px per Earth radius chosen to fit the moon's orbit.
   const s = (Math.min(width, height) / 2 / (orbitRadius + moonRadius + 0.5)) * dpr;

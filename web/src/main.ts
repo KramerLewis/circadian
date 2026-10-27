@@ -11,7 +11,7 @@ import { type SpecialDay, type SpecialStyle, eclipseDate, fromEclipse, headsUp, 
 import { browserTimeZone, startOfDay } from "./core/tz";
 import { type HandColor, dialGeometry, drawDial, drawHand, drawMoon, handColors } from "./render/dial";
 import { loadMoonTexture } from "./render/moon";
-import { type OrbitCamera, drawOrbit, loadOrbitTextures, loadSunImage } from "./render/orbit";
+import { defaultOrbitCamera, drawOrbit, loadOrbitTextures, loadSunImage, turnOrbitCamera } from "./render/orbit";
 import { loadSunSpots } from "./render/sun";
 
 // MARK: State
@@ -284,7 +284,7 @@ reduceMotion.addEventListener("change", () => {
 // MARK: 3D view
 
 const orbitCanvas = $<HTMLCanvasElement>("orbit");
-const orbitCamera: OrbitCamera = { yaw: 0, pitch: 0 };
+const orbitCamera = defaultOrbitCamera();
 let orbitVisible = false;
 let lastOrbit: { now: number; place: Place } | undefined;
 
@@ -305,16 +305,17 @@ new IntersectionObserver((entries) => {
 }).observe(orbitCanvas);
 
 {
-  let drag: { x: number; y: number; yaw: number; pitch: number } | undefined;
+  // A trackball: each move turns the camera about its own axes, with no stop at the poles.
+  let drag: { x: number; y: number } | undefined;
   let pending = 0;
   orbitCanvas.addEventListener("pointerdown", (e) => {
-    drag = { x: e.clientX, y: e.clientY, yaw: orbitCamera.yaw, pitch: orbitCamera.pitch };
+    drag = { x: e.clientX, y: e.clientY };
     orbitCanvas.setPointerCapture(e.pointerId);
   });
   orbitCanvas.addEventListener("pointermove", (e) => {
     if (!drag) return;
-    orbitCamera.yaw = drag.yaw - (e.clientX - drag.x) * 0.5;
-    orbitCamera.pitch = Math.max(-100, Math.min(60, drag.pitch + (e.clientY - drag.y) * 0.4));
+    turnOrbitCamera(orbitCamera, -(e.clientX - drag.x) * 0.5, (e.clientY - drag.y) * 0.4);
+    drag = { x: e.clientX, y: e.clientY };
     cancelAnimationFrame(pending);
     pending = requestAnimationFrame(redrawOrbit);
   });
@@ -322,7 +323,7 @@ new IntersectionObserver((entries) => {
   orbitCanvas.addEventListener("pointerup", end);
   orbitCanvas.addEventListener("pointercancel", end);
   orbitCanvas.addEventListener("dblclick", () => {
-    orbitCamera.yaw = orbitCamera.pitch = 0;
+    Object.assign(orbitCamera, defaultOrbitCamera());
     redrawOrbit();
   });
 }
