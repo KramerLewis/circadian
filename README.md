@@ -36,3 +36,6 @@ refreshed monthly for the web by `.github/workflows/nasa-assets.yml`; the iPhone
 Wadokei kanji: [Yuji Syuku](https://github.com/Kinutafontfactory/Yuji) by the Yuji Project Authors (SIL Open Font
 License 1.1), subset and renamed "SunClock Wadokei" by `shared/tools/make_wadokei_font.py`
 (`web/public/fonts/`, license alongside).
+
+Wadokei zodiac animals: line art generated with [Recraft](https://www.recraft.ai) for SunClock
+(`shared/assets/zodiac/`), baked into masks by `web/scripts/zodiac-masks.mjs`.

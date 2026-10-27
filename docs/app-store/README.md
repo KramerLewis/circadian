@@ -31,6 +31,8 @@ About or Credits screen, and the App Store description if it mentions the imager
 | Sun (sunspots, 3D sun) | `shared/assets/nasa/sun_hmi_*.jpg`, `ios/Shared/SunSpots.jpg` | NASA SDO, sdo.gsfc.nasa.gov (data and image use policy) |
 | Stars and Milky Way | `shared/assets/nasa/starmap_2020_4k.jpg` | NASA SVS, Deep Star Maps 2020 (svs.gsfc.nasa.gov/4851) |
 
+| Zodiac animals (wadokei) | `shared/assets/zodiac/*.svg` | Recraft terms: commercial use and ownership of generated images on the plan they were made with (the files carry a "Created by Recraft AI" content credential) |
+
 Also confirm there's no non-NASA content mixed in (some SVS pages credit partner
 missions or data, such as ESA's Gaia for the star maps), and record the date checked
 here. Any image added later (seasonal Blue Marble months, GIBS tiles) joins this table.

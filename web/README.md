@@ -52,3 +52,6 @@ captures screenshots in Chromium (light and dark, phone and desktop) to the
 
 Alarms: a web page can't ring reliably when it isn't open, so alarms stay on the phone.
 With the sync backend (backlog P1-P3) the web app could edit them.
+
+The wadokei animals come from `shared/assets/zodiac/*.svg`; after changing one, run
+`node scripts/zodiac-masks.mjs` to rebake `public/zodiac/*.png`.

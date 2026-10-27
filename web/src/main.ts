@@ -10,7 +10,7 @@ import { apparentSolarMinutes, eventNames, isInstant, solarDayContaining, solarE
 import { type SpecialDay, type SpecialStyle, eclipseDate, fromEclipse, headsUp, nextEclipse, specialToday } from "./core/specialDay";
 import { browserTimeZone, startOfDay } from "./core/tz";
 import { type Period, moonPeriod, sunPeriod, wadokeiHours } from "./core/periods";
-import { type KanjiStyle, type WadokeiScene, clearWadokeiCache, drawWadokei, kanjiStyles } from "./render/wadokei";
+import { type KanjiStyle, type WadokeiScene, clearWadokeiCache, drawWadokei, kanjiStyles, onZodiacArtLoad } from "./render/wadokei";
 import { zodiacNames } from "./render/zodiac";
 import { type HandColor, dialGeometry, drawDial, drawHand, drawMoon, handColors } from "./render/dial";
 import { loadMoonTexture } from "./render/moon";
@@ -383,6 +383,7 @@ function renderPeriodDetails(now: number, place: Place) {
 
 const wadokeiCanvas = $<HTMLCanvasElement>("wadokei");
 let wadokeiScene: WadokeiScene | undefined;
+onZodiacArtLoad(() => drawWadokeiLayer());
 let emberFrame = 0;
 
 function drawWadokeiLayer() {

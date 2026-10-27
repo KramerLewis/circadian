@@ -4,9 +4,11 @@
 //
 // Each kanji is a hole cut through the dial: idle ones shallow and dark, the active one
 // deep, with molten rock inside lighting its walls and glowing out of the opening. Its own
-// canvas, so the molten surface can move without redrawing the dial.
+// canvas, so the molten surface can move without redrawing the dial. The middle shows the
+// hour's animal, lit the same way, with its kanji beneath.
 
 import { dialGeometry } from "./dial";
+import { zodiacNames } from "./zodiac";
 
 export const wadokeiFont = `"SunClock Wadokei", "Hiragino Mincho ProN", "Yu Mincho", serif`;
 
@@ -47,9 +49,59 @@ export function drawWadokei(canvas: HTMLCanvasElement, scene: WadokeiScene, time
   }
   const active = scene.hours.find((h) => h.active);
   if (!active) return;
-  const [ax, ay, as] = [cx, cy - g.moonInner * 0.12, g.moonInner * 0.95];
-  if (scene.style === "molten") hole(ctx, active.kanji, ax, ay, as, time, scale, true, scene.dark);
-  else flat(ctx, active.kanji, ax, ay, as, scene.style, true, time, scene.dark);
+  const r = g.moonInner;
+  const art = zodiacArt(active.kanji);
+  // The animal, with the kanji small beneath it; until the art loads, the kanji alone.
+  const center: [Ink, number, number, number][] = art
+    ? [[art, cx, cy - r * 0.12, r * 1.2], [active.kanji, cx, cy + r * 0.66, r * 0.3]]
+    : [[active.kanji, cx, cy - r * 0.12, r * 0.95]];
+  for (const [ink, x, y, s] of center) {
+    if (scene.style === "molten") hole(ctx, ink, x, y, s, time, scale, true, scene.dark);
+    else flat(ctx, ink, x, y, s, scene.style, true, time, scene.dark);
+  }
+}
+
+/** What a hole or print is made of: a kanji, or an animal's mask (white ink on clear). */
+type Ink = string | HTMLImageElement;
+
+const art = new Map<string, HTMLImageElement>();
+let artLoaded: () => void = () => {};
+
+/** Called when an animal's art finishes loading, so the layer can redraw with it. */
+export function onZodiacArtLoad(callback: () => void) {
+  artLoaded = callback;
+}
+
+/** The animal for a kanji, once loaded (from public/zodiac, baked by scripts/zodiac-masks.mjs). */
+function zodiacArt(kanji: string): HTMLImageElement | undefined {
+  const name = zodiacNames[kanji];
+  if (!name) return undefined;
+  let img = art.get(kanji);
+  if (!img) {
+    img = new Image();
+    img.onload = () => artLoaded();
+    img.src = `${import.meta.env.BASE_URL}zodiac/${name.toLowerCase()}.png`;
+    art.set(kanji, img);
+  }
+  return img.complete && img.naturalWidth > 0 ? img : undefined;
+}
+
+/** The ink as a white mask on a `px` square canvas, `size * scale` across in the middle. */
+function inkMask(ink: Ink, px: number, size: number, scale: number) {
+  const c = document.createElement("canvas");
+  c.width = c.height = px;
+  const m = c.getContext("2d")!;
+  if (typeof ink === "string") {
+    m.font = `${size * scale}px ${wadokeiFont}`;
+    m.textAlign = "center";
+    m.textBaseline = "middle";
+    m.fillStyle = "white";
+    m.fillText(ink, px / 2, px / 2);
+  } else {
+    const s = size * scale;
+    m.drawImage(ink, (px - s) / 2, (px - s) / 2, s, s);
+  }
+  return c;
 }
 
 /**
@@ -58,7 +110,7 @@ export function drawWadokei(canvas: HTMLCanvasElement, scene: WadokeiScene, time
  * and silver and gold catch a slow highlight that sweeps across them.
  */
 function flat(
-  ctx: CanvasRenderingContext2D, text: string, x: number, y: number, size: number,
+  ctx: CanvasRenderingContext2D, ink: Ink, x: number, y: number, size: number,
   style: Exclude<KanjiStyle, "molten">, active: boolean, time: number | undefined, dark: boolean,
 ) {
   ctx.save();
@@ -99,6 +151,24 @@ function flat(
       : dark ? "rgba(220, 232, 255, 0.8)" : "rgba(70, 90, 130, 0.45)";
   }
   ctx.globalAlpha = active ? 1 : style === "plain" ? 0.45 : 0.6;
+  if (typeof ink !== "string") {
+    // Art: the mask filled with the same color or metal, glowing.
+    const scale = window.devicePixelRatio || 1;
+    const box = Math.ceil(size * 1.1);
+    const px = Math.ceil(box * scale);
+    const c = inkMask(ink, px, size, scale);
+    const t = c.getContext("2d")!;
+    t.globalCompositeOperation = "source-in";
+    t.setTransform(scale, 0, 0, scale, -(x - box / 2) * scale, -(y - box / 2) * scale);
+    t.fillStyle = fill;
+    t.fillRect(x - box / 2, y - box / 2, box, box);
+    ctx.shadowColor = glow;
+    ctx.shadowBlur = size * 0.08;
+    ctx.drawImage(c, x - box / 2, y - box / 2, box, box);
+    ctx.restore();
+    return;
+  }
+  const text = ink;
   if (active) {
     ctx.shadowColor = glow;
     ctx.shadowBlur = size * 0.35;
@@ -120,24 +190,21 @@ function flat(
  * rock on the floor lighting the walls and glowing out of the opening.
  */
 function hole(
-  ctx: CanvasRenderingContext2D, text: string, x: number, y: number, size: number,
+  ctx: CanvasRenderingContext2D, ink: Ink, x: number, y: number, size: number,
   time: number | undefined, scale: number, molten: boolean, dark: boolean,
 ) {
-  const box = Math.ceil(size * 1.4);
+  const text = typeof ink === "string";
+  const box = Math.ceil(size * (text ? 1.4 : 1.1));
   const px = Math.ceil(box * scale);
-  const depth = Math.max(1.2, size * (molten ? 0.045 : 0.035)) * scale;
+  // Art's lines are finer than a kanji's strokes at the same size, so its hole is shallower.
+  const depth = Math.max(1.2, size * (text ? (molten ? 0.045 : 0.035) : 0.012)) * scale;
   const canvas = () => {
     const c = document.createElement("canvas");
     c.width = c.height = px;
     return [c, c.getContext("2d")!] as const;
   };
   // The opening, as a mask.
-  const [mask, m] = canvas();
-  m.font = `${size * scale}px ${wadokeiFont}`;
-  m.textAlign = "center";
-  m.textBaseline = "middle";
-  m.fillStyle = "white";
-  m.fillText(text, px / 2, px / 2);
+  const mask = inkMask(ink, px, size, scale);
   // The floor: the opening moved back by the depth, seen through the opening.
   const [floorMask, f] = canvas();
   f.drawImage(mask, 0, depth);
@@ -193,7 +260,7 @@ function hole(
     const s = time ?? 0;
     const flicker = 1 + 0.05 * Math.sin(s * 2.3) * Math.sin(s * 1.3 + 1);
     ctx.shadowColor = `rgba(255, 130, 40, ${Math.min(1, 0.95 * flicker)})`;
-    ctx.shadowBlur = size * 0.55 * flicker;
+    ctx.shadowBlur = size * (text ? 0.55 : 0.12) * flicker;
   }
   ctx.drawImage(hollow, left, top, box, box);
   ctx.restore();
