@@ -33,6 +33,10 @@ export interface DialScene {
   orientation: "noon" | "now";
   /** "clock": the moon ring on the sun's timeline; "sky": the moon where it is in the sky. */
   moonMode: "clock" | "sky";
+  /** Clock times beside the event dots outside the ring (off when wadokei kanji sit there). */
+  eventLabels?: boolean;
+  /** Dial angles of section boundaries (sun periods or wadokei hours), ticked outside the ring. */
+  sectionTicks?: number[];
   /** Half the size of the center readout, to keep hour numbers out from under it. */
   readout: { halfWidth: number; halfHeight: number };
 }
@@ -80,6 +84,7 @@ export function drawDial(canvas: HTMLCanvasElement, scene: DialScene): void {
   if (scene.special === "newMoon") drawStars(ctx, sunRing, g.moonInner, scene.dark);
   drawHourTicks(ctx, sunRing, g.moonInner, scene.colors, scene.readout);
   drawMarkers(ctx, sunRing, scene);
+  if (scene.sectionTicks) drawSectionTicks(ctx, sunRing, scene.sectionTicks, scene.colors);
   const angle = scene.model.nowAngle;
   drawSun(ctx, sunRing, angle, dialAltitude(scene.model, angle), scale, scene.solarEclipse);
 }
@@ -195,11 +200,27 @@ function drawHourTicks(
   }
 }
 
+/** Fine ticks across the ring's outer edge where one section gives way to the next. */
+function drawSectionTicks(ctx: CanvasRenderingContext2D, r: Ring, angles: number[], colors: DialColors) {
+  ctx.save();
+  ctx.strokeStyle = colors.secondary;
+  ctx.globalAlpha = 0.8;
+  ctx.lineWidth = 1;
+  for (const angle of angles) {
+    ctx.beginPath();
+    ctx.moveTo(...point(r, r.outer - 5, angle));
+    ctx.lineTo(...point(r, r.outer + 1, angle));
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
 function drawMarkers(ctx: CanvasRenderingContext2D, r: Ring, scene: DialScene) {
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.font = `11px ${dialFont}`;
   for (const marker of scene.model.markers) {
+    if (scene.eventLabels === false && !labeledEvents.has(marker.event)) continue;
     if (labeledEvents.has(marker.event)) {
       const [x, y] = point(r, r.outer + 6, marker.angle);
       ctx.fillStyle = scene.colors.primary;
@@ -210,7 +231,9 @@ function drawMarkers(ctx: CanvasRenderingContext2D, r: Ring, scene: DialScene) {
       const side = Math.sin(((marker.angle + r.rotation) * Math.PI) / 180);
       ctx.textAlign = side > 0.35 ? "left" : side < -0.35 ? "right" : "center";
       ctx.fillStyle = scene.colors.secondary;
-      ctx.fillText(scene.label(marker.date), ...point(r, r.outer + (Math.abs(side) > 0.35 ? 14 : 20), marker.angle));
+      if (scene.eventLabels !== false) {
+        ctx.fillText(scene.label(marker.date), ...point(r, r.outer + (Math.abs(side) > 0.35 ? 14 : 20), marker.angle));
+      }
     } else {
       ctx.strokeStyle = scene.colors.secondary;
       ctx.lineWidth = 1;

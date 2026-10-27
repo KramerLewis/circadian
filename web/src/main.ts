@@ -6,9 +6,12 @@ import { clockTime, longDate, shortDate } from "./core/format";
 import { lunarEventNames, lunarEvents, phaseName } from "./core/lunar";
 import type { Coordinate } from "./core/math";
 import { duration, readout, solarClock } from "./core/readout";
-import { apparentSolarMinutes, eventNames, isInstant, solarDayContaining, solarEvents } from "./core/solar";
+import { apparentSolarMinutes, eventNames, isInstant, solarDayContaining, solarEvents, solarHourAngle } from "./core/solar";
 import { type SpecialDay, type SpecialStyle, eclipseDate, fromEclipse, headsUp, nextEclipse, specialToday } from "./core/specialDay";
 import { browserTimeZone, startOfDay } from "./core/tz";
+import { type Period, moonPeriod, sunPeriod, wadokeiHours } from "./core/periods";
+import { type WadokeiScene, drawWadokei } from "./render/wadokei";
+import { zodiacNames } from "./render/zodiac";
 import { type HandColor, dialGeometry, drawDial, drawHand, drawMoon, handColors } from "./render/dial";
 import { loadMoonTexture } from "./render/moon";
 import {
@@ -24,16 +27,18 @@ interface Place extends Coordinate {
   timeZone: string;
 }
 
-type TimeDisplay = "relative" | "twelveHour" | "twentyFourHour";
+type TimeDisplay = "relative" | "twelveHour" | "twentyFourHour" | "periods" | "wadokei";
 type Theme = "system" | "light" | "dark";
 type Orientation = "noon" | "now";
 type MoonMode = "clock" | "sky";
 
-const displays: TimeDisplay[] = ["relative", "twelveHour", "twentyFourHour"];
+const displays: TimeDisplay[] = ["relative", "twelveHour", "twentyFourHour", "periods", "wadokei"];
 const displayTitles: Record<TimeDisplay, string> = {
   relative: "Relative to the sun",
   twelveHour: "12-hour clock",
   twentyFourHour: "24-hour clock",
+  periods: "Sun periods",
+  wadokei: "Wadokei (Edo temporal hours)",
 };
 
 /** Browser storage can be unavailable (private windows, blocked site data). */
@@ -72,6 +77,7 @@ const state = {
   orientation: (params.get("dial") as Orientation) ?? storage.get<Orientation>("orientation") ?? "noon",
   moonMode: (params.get("moon") as MoonMode) ?? storage.get<MoonMode>("moonMode") ?? "clock",
   handColor: (params.get("hand") as HandColor) ?? storage.get<HandColor>("handColor") ?? "royalBlue",
+  moonPeriods: params.has("moonp") ? params.get("moonp") === "1" : (storage.get<boolean>("moonPeriods") ?? false),
   scrubMinutes: Number(params.get("scrub") ?? 0),
 };
 if (!displays.includes(state.display)) state.display = "relative";
@@ -163,6 +169,13 @@ function centerText(now: number, place: Place, r: ReturnType<typeof readout>): [
       return [clockTime(now, place.timeZone, "twelveHour"), solar];
     case "twentyFourHour":
       return [clockTime(now, place.timeZone, "twentyFourHour"), solar];
+    case "periods": {
+      const p = sunPeriod(now, place);
+      return p ? [p.code, periodPhrase(p)] : [solar, ""];
+    }
+    case "wadokei":
+      // The kanji and animal are drawn on the wadokei layer instead.
+      return ["", ""];
   }
 }
 
@@ -205,6 +218,8 @@ function render() {
     eclipseShadow: special?.style === "lunarEclipse" ? umbralCoverage(now) : 0,
     solarEclipse: special?.style === "solarEclipse" ? solarCoverage(now, place) : undefined,
     label: (date) => clockTime(date, tz),
+    eventLabels: state.display !== "wadokei",
+    sectionTicks: sectionTicks(now, place),
     orientation: state.orientation,
     moonMode: state.moonMode,
     readout: readoutBox,
@@ -243,11 +258,164 @@ function render() {
   $("scrub-label").textContent = scrubbing ? `${sign}${duration(Math.abs(state.scrubMinutes) * 60_000)} from now` : "";
 
   renderOrbit(now, place);
+  renderPeriodDetails(now, place);
+  wadokeiScene =
+    state.display === "wadokei"
+      ? { hours: wadokeiRing(now, place), rotation: state.orientation === "now" ? -model.nowAngle : 0, dark: isDark() }
+      : undefined;
+  drawWadokeiLayer();
   renderSpecial(special, upcoming);
   renderReadouts(now, place, r, day);
   renderEvents(now, tz, day);
   renderMoon(now, place, day);
 }
+
+// MARK: Sun periods and wadokei
+
+const milestoneNames: Record<string, string> = {
+  R: "sunrise", N: "solar noon", S: "sunset", M: "solar midnight",
+  r: "moonrise", n: "the moon's highest", s: "moonset", m: "the moon's lowest",
+};
+const middleNames: Record<string, string> = { "0": "mid-morning", "1": "mid-afternoon", "2": "mid-evening", "3": "deep night" };
+const quarterNames: Record<string, string> = { R: "morning", N: "afternoon", S: "evening", M: "night" };
+
+const nextMilestone: Record<string, string> = { R: "N", N: "S", S: "M", M: "R" };
+
+/** "after solar noon", "around sunset", "mid-afternoon". */
+function periodPhrase(p: Period): string {
+  const letter = p.code.replace(/[-+]/g, "");
+  if (/^\d$/.test(p.code)) {
+    // The usual solar quarters have names; the moon's and polar days' are described.
+    return nextMilestone[p.from.letter] === p.to.letter
+      ? middleNames[p.code]
+      : `between ${milestoneNames[p.from.letter]} and ${milestoneNames[p.to.letter]}`;
+  }
+  if (p.code.startsWith("-")) return `before ${milestoneNames[letter]}`;
+  if (p.code.endsWith("+")) return `after ${milestoneNames[letter]}`;
+  return `around ${milestoneNames[letter]}`;
+}
+
+function sectionTicks(now: number, place: Place): number[] | undefined {
+  const angle = (t: number) => solarHourAngle(t, place.longitude);
+  if (state.display === "wadokei") return wadokeiHours(now, place).map((h) => angle(h.start));
+  if (state.display !== "periods") return undefined;
+  const day = solarDayContaining(now, place);
+  const ticks: number[] = [];
+  // Every boundary in this solar day: walk the periods from its start.
+  for (let t = day.solarMidnight + 1, guard = 0; t < day.nextSolarMidnight && guard < 40; guard++) {
+    const p = sunPeriod(t, place);
+    if (!p) break;
+    ticks.push(angle(p.end));
+    t = p.end + 1;
+  }
+  return ticks;
+}
+
+function wadokeiRing(now: number, place: Place): WadokeiScene["hours"] {
+  const hours = wadokeiHours(now, place);
+  const day = solarDayContaining(now, place);
+  // One of each animal: the hours overlapping this solar day, nearest to now.
+  const seen = new Map<string, WadokeiScene["hours"][number] & { distance: number }>();
+  for (const h of hours) {
+    const mid = (h.start + h.end) / 2;
+    if (h.end < day.solarMidnight || h.start > day.nextSolarMidnight) continue;
+    const distance = Math.abs(mid - now);
+    const prior = seen.get(h.kanji);
+    if (!prior || distance < prior.distance) {
+      seen.set(h.kanji, { kanji: h.kanji, angle: solarHourAngle(mid, place.longitude), active: h.start <= now && now < h.end, distance });
+    }
+  }
+  return [...seen.values()];
+}
+
+function renderPeriodDetails(now: number, place: Place) {
+  const box = $("period-details");
+  const tz = place.timeZone;
+  const lines: string[] = [];
+  if (state.display === "periods") {
+    const p = sunPeriod(now, place);
+    if (p) {
+      const quarter = quarterNames[p.from.letter] ?? "half-day";
+      lines.push(`<strong>${p.code}</strong> · ${periodPhrase(p)}`);
+      lines.push(
+        `${duration(now - p.from.date)} after ${milestoneNames[p.from.letter]} · ${duration(p.to.date - now)} before ${milestoneNames[p.to.letter]} · ` +
+          `${Math.round(p.fraction * 100)}% through the ${quarter}`,
+      );
+      const next = sunPeriod(p.end + 1, place);
+      lines.push(`${p.code} until ${clockTime(p.end, tz)}${next ? `, then ${next.code}` : ""} · this section is ${duration(p.end - p.start)} today`);
+    }
+    if (state.moonPeriods) {
+      const m = moonPeriod(now, place);
+      if (m) {
+        lines.push(
+          `Moon <strong>${m.code}</strong> · ${periodPhrase(m)} · ${duration(now - m.from.date)} after ${milestoneNames[m.from.letter]}, ` +
+            `${duration(m.to.date - now)} before ${milestoneNames[m.to.letter]}`,
+        );
+      }
+    }
+  } else if (state.display === "wadokei") {
+    const hours = wadokeiHours(now, place);
+    const i = hours.findIndex((h) => h.start <= now && now < h.end);
+    const h = hours[i], next = hours[i + 1];
+    const counts = ["", "", "", "", "四つ", "五つ", "六つ", "七つ", "八つ", "九つ"];
+    if (h) {
+      const daylight = "卯辰巳午未申".includes(h.kanji);
+      lines.push(`<strong lang="ja">${h.kanji}</strong> ${zodiacNames[h.kanji]} hour (<span lang="ja">${counts[h.count]}</span>, ${h.count}) · ${daylight ? "daylight" : "night"}`);
+      lines.push(`${clockTime(h.start, tz)} – ${clockTime(h.end, tz)} · ${duration(h.end - h.start)} long today (an equal hour would be 2h 0m)`);
+      if (next) lines.push(`Next: <span lang="ja">${next.kanji}</span> ${zodiacNames[next.kanji]} at ${clockTime(next.start, tz)}`);
+      const dawn = hours.find((t) => t.kanji === "卯" && t.end > now - 86_400_000);
+      const dusk = hours.find((t) => t.kanji === "酉" && t.start > (dawn?.start ?? 0));
+      if (dawn && dusk) {
+        lines.push(`Dawn (<span lang="ja">明け六つ</span>) ${clockTime(dawn.start, tz)} · dusk (<span lang="ja">暮れ六つ</span>) ${clockTime(dusk.start, tz)}: the sun 7.4° below the horizon`);
+      }
+    }
+  }
+  box.hidden = lines.length === 0;
+  box.querySelector(".lines")!.innerHTML = lines.map((l) => `<p>${l}</p>`).join("");
+  const toggle = box.querySelector<HTMLLabelElement>(".moon-toggle")!;
+  toggle.hidden = state.display !== "periods";
+  box.querySelector<HTMLInputElement>("input")!.checked = state.moonPeriods;
+}
+
+const wadokeiCanvas = $<HTMLCanvasElement>("wadokei");
+let wadokeiScene: WadokeiScene | undefined;
+let emberFrame = 0;
+
+function drawWadokeiLayer() {
+  wadokeiCanvas.hidden = !wadokeiScene;
+  if (!wadokeiScene) return;
+  drawWadokei(wadokeiCanvas, wadokeiScene, reduceMotion.matches ? undefined : performance.now() / 1000);
+}
+
+/** The embers flicker only in wadokei mode, and only this layer redraws (about 30 fps). */
+function embers() {
+  cancelAnimationFrame(emberFrame);
+  let last = 0;
+  const tick = (t: number) => {
+    if (state.display === "wadokei" && !reduceMotion.matches) {
+      if (t - last > 33 && document.visibilityState === "visible") {
+        last = t;
+        drawWadokeiLayer();
+      }
+      emberFrame = requestAnimationFrame(tick);
+    }
+  };
+  emberFrame = requestAnimationFrame(tick);
+}
+
+$("period-details").querySelector("input")!.addEventListener("change", (e) => {
+  state.moonPeriods = (e.target as HTMLInputElement).checked;
+  storage.set("moonPeriods", state.moonPeriods);
+  render();
+});
+
+// The brush font for the kanji ships with the app (no third-party font service).
+new FontFace("SunClock Wadokei", `url(${import.meta.env.BASE_URL}fonts/wadokei.woff2)`)
+  .load()
+  .then((face) => {
+    document.fonts.add(face);
+    render();
+  }, () => {});
 
 // MARK: Hand
 
@@ -271,6 +439,16 @@ function shimmer() {
   shimmerFrame = requestAnimationFrame(tick);
 }
 
+const displaySelect = $<HTMLSelectElement>("display-select");
+displaySelect.innerHTML = displays.map((d) => `<option value="${d}">${displayTitles[d]}</option>`).join("");
+displaySelect.value = state.display;
+displaySelect.addEventListener("change", () => {
+  state.display = displaySelect.value as TimeDisplay;
+  storage.set("display", state.display);
+  render();
+  embers();
+});
+
 handSelect.innerHTML = handColors.map((c) => `<option value="${c.id}">${c.title}</option>`).join("");
 handSelect.value = state.handColor;
 handSelect.addEventListener("change", () => {
@@ -282,6 +460,7 @@ handSelect.addEventListener("change", () => {
 reduceMotion.addEventListener("change", () => {
   render();
   shimmer();
+  embers();
 });
 
 // MARK: 3D view
@@ -608,6 +787,8 @@ document.addEventListener("click", (event) => {
 $("place-button").addEventListener("click", openPlaceDialog);
 $("dial-center").addEventListener("click", () => {
   state.display = displays[(displays.indexOf(state.display) + 1) % displays.length];
+  displaySelect.value = state.display;
+  embers();
   storage.set("display", state.display);
   render();
 });
@@ -633,3 +814,4 @@ loadSunImage(asset("sun.jpg")).then(redrawOrbit, () => {});
 loadSunSpots(asset("sun-flat.jpg")).then(render, () => {});
 if (!Number.isFinite(frozenNow)) setInterval(render, 15_000);
 shimmer();
+embers();

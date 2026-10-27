@@ -195,6 +195,15 @@ export function solarDayNearestNoon(guess: number, coordinate: Coordinate): Sola
   return { coordinate, solarNoon: noon, solarMidnight: midnight, nextSolarMidnight: nextMidnight, events };
 }
 
+/**
+ * When the sun's center crosses `alt` degrees on the solar day around `noon`: before
+ * noon (`dir` -1, rising) or after (+1, setting). For altitudes other than the ten
+ * standard events, such as the Edo calendar's dawn and dusk.
+ */
+export function sunCrossing(alt: number, dir: -1 | 1, noon: number, coordinate: Coordinate): EventTime {
+  return eventTime(alt, dir, noon, coordinate);
+}
+
 function eventTime(alt: number, dir: number, noon: number, coordinate: Coordinate): EventTime {
   let h = altitudeHourAngle(alt, coordinate.latitude, sunPosition(noon).declination);
   if (typeof h === "string") return h;

@@ -18,6 +18,8 @@ All notable changes to SunClock. Versions follow the app's marketing version.
   sun, event markers, and relative readouts ("2h 14m after sunrise").
 - Center readout setting: relative to the nearest solar anchor, 12-hour, or 24-hour.
 - Moon setting: on the clock (moonrise and moonset against the hours) or in the sky (the moon at its real angle from the sun, which shows the phase), with the next moonrise and moonset under the dial.
+- Sun periods: a new center readout naming where you are in the solar day: -R R R+ 0 -N N N+ 1 -S S S+ 2 -M M M+ 3 (milestones with a ±15-minute window, thirds of each quarter between), with details below the dial and the moon's equivalent (lowercase) as an option.
+- Wadokei: Edo-period temporal hours (six of daylight and six of night between the Kansei calendar's dawn and dusk), with the zodiac kanji around the dial and the current hour lit like embers.
 - Real sunspots on the dial's sun and a real sun in the 3D view, from NASA SDO's HMI intensitygrams (monthly on the web; bundled in the app).
 - Hand color setting: royal blue, red, cyan, green, krypton purple, white/black (follows light and dark), or shimmering gold (still with Reduce Motion).
 - The "now" hand is a glowing blue line beneath both rings, from inside the moon ring to past the sun ring; the sun on the ring is larger.

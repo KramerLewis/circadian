@@ -19,7 +19,7 @@ and a richer Watch face all build on), and the open-ended items last.
 | 8b | **Sun over time**: how sunrise, sunset, twilight and day length change across weeks to a year, with special days and eclipses on the same timeline (see details) | M | - |
 | 8c | **Saved places**: keep several places and switch the clock, 3D view and widgets between them (see details) | S | - |
 | 8d | **3D view on iPhone** (RealityKit), with NASA Blue Marble imagery | M | NASA images uploaded |
-| 8f | **Relative-time clock**: our own clock face for relative time, four lettered quadrants, solar and (optionally) lunar (see details) | M | Design pass |
+| 8f | **Sun periods and wadokei**: built on the web (scale -R R R+ 0 … with ±15 min milestones, moon option; Edo temporal hours with ember kanji). Left: the iPhone/Watch port, and zodiac animal line art for the wadokei center (see details) | M | Art source |
 | 9 | **Tides** | L | Data source decision (bundle vs. API) |
 | 8e | **Seasonal and live NASA Earth imagery**: all 12 Blue Marble months so snow and vegetation change with the date; pull the latest NASA imagery automatically (see details) | M | 8d for iPhone |
 | 11 | **Effective sunrise/sunset from terrain**: when the sun actually clears or drops behind the hills, slope and valley where you are, plus simulated light (see details) | L | Elevation data source; weather (13) for clouds |
@@ -110,6 +110,14 @@ The 3D view uses NASA's Blue Marble for June 2004 and the Black Marble 2016 nigh
   (no release needed; note the request to NASA in the privacy policy).
 - Record the source, date and URL of each image next to it, and keep the credits in the
   README and the app's about screen current.
+
+### Wadokei animal art
+The wadokei center shows the current hour's kanji lit like embers. The goal is line art of
+the zodiac animal instead, lit the same way. Drawing it by hand in code came out like
+doodles, so it needs a real source: public-domain Japanese prints of the twelve animals
+(for example from museum open-access collections such as the Met's, CC0), traced to
+line art; a commissioned set; or a licensed set. The renderer can light any line art (a
+mask), so the art drops in once chosen.
 
 ### Relative-time clock
 12-hour and 24-hour are clock times; "relative" deserves its own clock rather than a line
