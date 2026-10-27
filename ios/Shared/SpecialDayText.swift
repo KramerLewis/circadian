@@ -5,7 +5,7 @@ import SunCore
 /// and how the dial should mark it.
 struct SpecialDayText: Equatable {
     enum Style: Equatable {
-        case solstice, equinox, fullMoon, supermoon, blueMoon, newMoon, lunarEclipse, solarEclipse
+        case solstice, equinox, zenith, fullMoon, supermoon, blueMoon, newMoon, lunarEclipse, solarEclipse
     }
 
     var symbol: String
@@ -62,13 +62,35 @@ struct SpecialDayText: Equatable {
         }
     }
 
+    init(_ passage: ZenithPassage, at coordinate: Coordinate) {
+        symbol = "sun.max.circle.fill"
+        style = .zenith
+        title = "Zenith passage"
+        let next = ZenithPassage.next(after: passage.date, at: coordinate)
+        lines = [
+            "The sun passes straight overhead at \(passage.date.formatted(date: .omitted, time: .shortened)): upright things cast almost no shadow.",
+            next.map { "The next one is \($0.date.formatted(.dateTime.month(.wide).day()))." } ?? "It happens twice a year between the tropics.",
+        ]
+        short = "Sun overhead at noon"
+    }
+
+    /// The zenith passage on the local day containing `date`, if any (only between the tropics).
+    static func zenith(onDayOf date: Date, at coordinate: Coordinate) -> ZenithPassage? {
+        let start = Calendar.current.startOfDay(for: date)
+        let end = Calendar.current.date(byAdding: .day, value: 1, to: start) ?? start.addingTimeInterval(86_400)
+        return ZenithPassage.passages(from: start, to: end, at: coordinate).first
+    }
+
     /// Today's special day at a place, if any. An eclipse visible here outranks
-    /// everything else.
+    /// everything else, then a solstice or equinox, then a zenith passage, then the moon.
     static func today(at coordinate: Coordinate, on date: Date) -> SpecialDayText? {
         if let eclipse = VisibleEclipse.on(dayOf: date, at: coordinate) {
             return SpecialDayText(eclipse, at: coordinate)
         }
-        return SkyCalendar.event(onDayOf: date, in: .current).map { SpecialDayText($0, at: coordinate, on: date) }
+        let sky = SkyCalendar.event(onDayOf: date, in: .current)
+        if let sky, case .season = sky.kind { return SpecialDayText(sky, at: coordinate, on: date) }
+        if let passage = zenith(onDayOf: date, at: coordinate) { return SpecialDayText(passage, at: coordinate) }
+        return sky.map { SpecialDayText($0, at: coordinate, on: date) }
     }
 
     init(_ eclipse: VisibleEclipse, at coordinate: Coordinate) {
@@ -131,7 +153,13 @@ struct SpecialDayText: Equatable {
                 return "\(SpecialDayText(eclipse, at: coordinate).title) \(when(day))"
             }
         }
-        guard let next = SkyCalendar.upcoming(after: date, within: 3, in: .current) else { return nil }
+        let next = SkyCalendar.upcoming(after: date, within: 3, in: .current)
+        let tomorrow = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: date)) ?? date
+        if let zenith = ZenithPassage.passages(from: tomorrow, to: tomorrow.addingTimeInterval(3 * 86_400), at: coordinate).first,
+           next.map({ zenith.date < $0.date }) ?? true {
+            return "Zenith passage \(when(zenith.date))"
+        }
+        guard let next else { return nil }
         return "\(next.title(southern: coordinate.latitude < 0)) \(when(next.date))"
     }
 }

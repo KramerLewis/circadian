@@ -13,7 +13,7 @@ and a richer Watch face all build on), and the open-ended items last.
 | 3 | **App Store readiness**: docs, privacy, listing, screenshots, review notes (see details) | M | 1 for the build; can start now |
 | 4 | **Stage 5: Apple Watch complications + app**: built (complications, Smart Stack, app with Crown scrubbing) | L | - |
 | 5 | **Cat feeder on solar time** | M | Which feeder (later, see details) |
-| 6 | **Special event days**: built (solstices, equinoxes, full/super/blue/new moons, eclipses, heads-up, widgets, Watch) | M | - |
+| 6 | **Special event days**: built (solstices, equinoxes, zenith passages, full/super/blue/new moons, eclipses, heads-up, widgets, Watch) | M | - |
 | 7 | **Eclipses**: built (computed on device, no bundled data; fixtures cross-checked with PyEphem) | L | - |
 | 8 | **More widgets** (Lock Screen rectangular/inline, readout variants, moon ring/phase in widgets, CarPlay, see details) | S | - |
 | 8b | **Sun over time**: how sunrise, sunset, twilight and day length change across weeks to a year, with special days and eclipses on the same timeline (see details) | M | - |
@@ -21,6 +21,7 @@ and a richer Watch face all build on), and the open-ended items last.
 | 8d | **3D view on iPhone** (RealityKit), with NASA Blue Marble imagery | M | NASA images uploaded |
 | 8f | **Sun periods and wadokei**: built on the web (scale -R R R+ 0 … with ±15 min milestones, moon option; Edo temporal hours with ember kanji). Zodiac animals in the wadokei center; ported to iPhone and Watch (the Watch shows the animal in the middle, without the outer kanji ring) | M | |
 | 8g | **More historical clocks** in the Historical Clocks group (Roman hours done; see details): canonical hours, Hindu prahar/muhurta, Egyptian decan hours, Chinese shichen; prayer times and zmanim considered and skipped | S each | |
+| 8h | **Maya calendar date line**: Tzolk'in, Haab' and Long Count (e.g. 5 Etz'nab' 11 Sak' · 13.0.14.0.18) beside the date; pure arithmetic (GMT correlation 584283). Zenith passage days, the sun-related part, are done | S | |
 | 9 | **Tides** | L | Data source decision (bundle vs. API) |
 | 8e | **Seasonal and live NASA Earth imagery**: all 12 Blue Marble months so snow and vegetation change with the date; pull the latest NASA imagery automatically (see details) | M | 8d for iPhone |
 | 11 | **Effective sunrise/sunset from terrain**: when the sun actually clears or drops behind the hills, slope and valley where you are, plus simulated light (see details) | L | Elevation data source; weather (13) for clouds |

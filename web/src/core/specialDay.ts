@@ -9,9 +9,10 @@ import { duration } from "./readout";
 import { type SkyOccurrence, skyEventOnDay, skyTitle, skyUpcoming } from "./skyCalendar";
 import { isInstant, solarDayFor, sunAltitude } from "./solar";
 import { addDays, daysBetween, startOfDay } from "./tz";
+import { type ZenithPassage, nextZenithPassage, zenithPassages } from "./zenith";
 
 export type SpecialStyle =
-  | "solstice" | "equinox" | "fullMoon" | "supermoon" | "blueMoon" | "newMoon" | "lunarEclipse" | "solarEclipse";
+  | "solstice" | "equinox" | "zenith" | "fullMoon" | "supermoon" | "blueMoon" | "newMoon" | "lunarEclipse" | "solarEclipse";
 
 export interface SpecialDay {
   style: SpecialStyle;
@@ -114,11 +115,36 @@ export function fromEclipse(v: VisibleEclipse, coordinate: Coordinate, timeZone:
   return { style: "solarEclipse", title, lines, short: "Solar eclipse today" };
 }
 
-/** Today's special day at a place. An eclipse visible here outranks everything else. */
+export function fromZenithPassage(p: ZenithPassage, coordinate: Coordinate, timeZone: string): SpecialDay {
+  const next = nextZenithPassage(p.date, coordinate);
+  const day = (t: number) => new Intl.DateTimeFormat(undefined, { month: "long", day: "numeric", timeZone }).format(t);
+  return {
+    style: "zenith",
+    title: "Zenith passage",
+    lines: [
+      `The sun passes straight overhead at ${clockTime(p.date, timeZone)}: upright things cast almost no shadow.`,
+      next ? `The next one is ${day(next.date)}.` : "It happens twice a year between the tropics.",
+    ],
+    short: "Sun overhead at noon",
+  };
+}
+
+/** The zenith passage on the local day containing `date`, if any (only between the tropics). */
+export function zenithOnDay(date: number, coordinate: Coordinate, timeZone: string): ZenithPassage | undefined {
+  return zenithPassages(startOfDay(date, timeZone), addDays(date, 1, timeZone), coordinate)[0];
+}
+
+/**
+ * Today's special day at a place. An eclipse visible here outranks everything else, then
+ * a solstice or equinox, then a zenith passage, then the moon.
+ */
 export function specialToday(coordinate: Coordinate, date: number, timeZone: string): SpecialDay | undefined {
   const eclipse = eclipseOnDay(date, coordinate, timeZone);
   if (eclipse) return fromEclipse(eclipse, coordinate, timeZone);
   const o = skyEventOnDay(date, timeZone);
+  if (o?.kind.type === "season") return fromOccurrence(o, coordinate, date, timeZone);
+  const zenith = zenithOnDay(date, coordinate, timeZone);
+  if (zenith) return fromZenithPassage(zenith, coordinate, timeZone);
   return o && fromOccurrence(o, coordinate, date, timeZone);
 }
 
@@ -134,6 +160,8 @@ export function headsUp(coordinate: Coordinate, date: number, timeZone: string):
     if (eclipse) return `${fromEclipse(eclipse, coordinate, timeZone).title} ${when(day)}`;
   }
   const next = skyUpcoming(date, 3, timeZone);
+  const zenith = zenithPassages(addDays(date, 1, timeZone), addDays(date, 4, timeZone), coordinate)[0];
+  if (zenith && (!next || zenith.date < next.date)) return `Zenith passage ${when(zenith.date)}`;
   return next && `${skyTitle(next, coordinate.latitude < 0)} ${when(next.date)}`;
 }
 

@@ -99,6 +99,7 @@ shoot 33-wadokei-gold-light          light America/Los_Angeles 2026-03-20T09:00:
 shoot 34-wadokei-plain-night-dark    dark  America/Los_Angeles 2026-12-21T23:30:00-08:00 "${seattle[@]}" -demoTimeDisplay wadokei -demoKanjiStyle plain
 shoot 35-roman-hours-light           light America/Los_Angeles 2026-06-21T15:00:00-07:00 "${seattle[@]}" -demoTimeDisplay roman
 shoot 36-roman-watch-night-dark      dark  America/Los_Angeles 2026-12-21T23:30:00-08:00 "${seattle[@]}" -demoTimeDisplay roman
+shoot 37-zenith-passage-light        light America/Merida      2026-05-25T12:30:00-06:00 -demoLatitude 20.97 -demoLongitude -89.62 -demoName Mérida
 # Largest accessibility text size, to check nothing truncates.
 xcrun simctl ui "$udid" content_size accessibility-extra-extra-extra-large
 shoot 14-accessibility-text-light    light America/Los_Angeles 2026-11-01T09:00:00-08:00 "${seattle[@]}" -demoScroll moon

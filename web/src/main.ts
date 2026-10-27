@@ -137,6 +137,7 @@ const isDark = () => state.theme === "dark" || (state.theme === "system" && dark
 const specialStyles: Record<SpecialStyle, { color: string; icon: string }> = {
   solstice: { color: "#f29d1b", icon: "sun" },
   equinox: { color: "#d8a64a", icon: "half" },
+  zenith: { color: "#f0b429", icon: "zenith" },
   fullMoon: { color: "#8a93b8", icon: "moon" },
   supermoon: { color: "#7d8bd6", icon: "moon" },
   blueMoon: { color: "#4f7bf0", icon: "moon" },
@@ -146,6 +147,8 @@ const specialStyles: Record<SpecialStyle, { color: string; icon: string }> = {
 };
 
 const icons: Record<string, string> = {
+  // The sun overhead, and a post with no shadow.
+  zenith: '<circle cx="12" cy="6" r="3.5"/><g stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 12.5v8M7 20.5h10"/></g>',
   sun: '<circle cx="12" cy="12" r="4.5"/><g stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></g>',
   half: '<path d="M12 3a9 9 0 0 0 0 18Z"/><circle cx="12" cy="12" r="8.2" fill="none" stroke="currentColor" stroke-width="1.6"/>',
   moon: '<path d="M14.5 3.2A9 9 0 1 0 20.8 15 7.2 7.2 0 0 1 14.5 3.2Z"/>',

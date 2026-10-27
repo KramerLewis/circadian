@@ -150,7 +150,7 @@ enum SkyRingRenderer {
                 context.fill(Path(ellipseIn: CGRect(x: point.x - size, y: point.y - size, width: size * 2, height: size * 2)),
                              with: .color(color.opacity(0.35 + 0.6 * Double(random()))))
             }
-        case .fullMoon, .supermoon, .blueMoon, .lunarEclipse, .solarEclipse:
+        case .zenith, .fullMoon, .supermoon, .blueMoon, .lunarEclipse, .solarEclipse:
             break
         }
     }

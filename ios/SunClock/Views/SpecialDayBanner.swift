@@ -38,6 +38,7 @@ struct SpecialDayBanner: View {
         switch special.style {
         case .solstice: Color(red: 1.0, green: 0.62, blue: 0.10)
         case .equinox: Color(red: 0.95, green: 0.60, blue: 0.25)
+        case .zenith: Color(red: 0.94, green: 0.71, blue: 0.16)
         case .fullMoon: Color(red: 0.55, green: 0.60, blue: 0.85)
         case .supermoon: Color(red: 0.50, green: 0.56, blue: 0.95)
         case .blueMoon: Color(red: 0.25, green: 0.48, blue: 1.0)

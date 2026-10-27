@@ -5,6 +5,7 @@ All notable changes to SunClock. Versions follow the app's marketing version.
 ## [Unreleased]
 
 ### Added
+- Zenith passage (web, iPhone, Watch): between the tropics, the two days a year the sun passes straight overhead at noon get a special-day banner (and a heads-up three days ahead), ranked below solstices and equinoxes and above moon days.
 - Roman hours (web, iPhone, Watch): twelve hours from sunrise to sunset and four watches of the night, in a new Historical Clocks group with the wadokei; tapping the dial cycles within the group.
 - iPhone and Watch: the Sun Periods and Wadokei time displays, with section ticks in place of the hour ticks, a details line under the dial, and the four kanji styles (Display menu → Kanji). The Watch shows the hour's animal and kanji in the middle.
 - Wadokei center: the current hour's zodiac animal, lit in the kanji style (molten, plain, silver or gold), with its kanji beneath.
