@@ -19,7 +19,7 @@ and a richer Watch face all build on), and the open-ended items last.
 | 8b | **Sun over time**: how sunrise, sunset, twilight and day length change across weeks to a year, with special days and eclipses on the same timeline (see details) | M | - |
 | 8c | **Saved places**: keep several places and switch the clock, 3D view and widgets between them (see details) | S | - |
 | 8d | **3D view on iPhone** (RealityKit), with NASA Blue Marble imagery | M | NASA images uploaded |
-| 8f | **Sun periods and wadokei**: built on the web (scale -R R R+ 0 … with ±15 min milestones, moon option; Edo temporal hours with ember kanji). Zodiac animals in the wadokei center done on the web. Left: the iPhone/Watch port | M | |
+| 8f | **Sun periods and wadokei**: built on the web (scale -R R R+ 0 … with ±15 min milestones, moon option; Edo temporal hours with ember kanji). Zodiac animals in the wadokei center; ported to iPhone and Watch (the Watch shows the animal in the middle, without the outer kanji ring) | M | |
 | 9 | **Tides** | L | Data source decision (bundle vs. API) |
 | 8e | **Seasonal and live NASA Earth imagery**: all 12 Blue Marble months so snow and vegetation change with the date; pull the latest NASA imagery automatically (see details) | M | 8d for iPhone |
 | 11 | **Effective sunrise/sunset from terrain**: when the sun actually clears or drops behind the hills, slope and valley where you are, plus simulated light (see details) | L | Elevation data source; weather (13) for clouds |
@@ -114,7 +114,7 @@ The 3D view uses NASA's Blue Marble for June 2004 and the Black Marble 2016 nigh
 ### Wadokei animal art
 Done on the web: twelve line drawings (Recraft, in `shared/assets/zodiac/`, all facing
 left), baked to masks in `web/public/zodiac/` by `web/scripts/zodiac-masks.mjs` and lit in
-the kanji style. For the iPhone port, add the same PNGs to the asset catalog.
+the kanji style. The same script writes them to `ios/Shared/Wadokei/` for iPhone and Watch.
 
 ### Relative-time clock
 12-hour and 24-hour are clock times; "relative" deserves its own clock rather than a line

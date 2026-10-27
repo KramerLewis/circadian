@@ -48,6 +48,8 @@ shoot watch-6-blood-moon      America/Los_Angeles 2026-03-03T03:30:00-08:00 "${s
 shoot watch-7-solar-eclipse   America/Chicago     2024-04-08T13:30:00-05:00 -demoLatitude 32.78 -demoLongitude -96.80 -demoName Dallas
 shoot watch-8-now-at-top      America/Los_Angeles 2026-11-01T15:00:00-08:00 "${seattle[@]}" -demoDialOrientation nowAtTop
 shoot watch-9-moon-in-sky     America/Los_Angeles 2026-11-24T22:00:00-08:00 "${seattle[@]}" -demoMoonPlacement sky -demoDialOrientation nowAtTop
+shoot watch-10-wadokei        America/Los_Angeles 2026-06-21T15:00:00-07:00 "${seattle[@]}" -demoTimeDisplay wadokei
+shoot watch-11-sun-periods    America/Los_Angeles 2026-06-21T15:00:00-07:00 "${seattle[@]}" -demoTimeDisplay periods
 
 if (( failures > 0 )); then
   echo "$failures screenshot(s) caught a crashed app"

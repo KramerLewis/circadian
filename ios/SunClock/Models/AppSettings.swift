@@ -24,6 +24,8 @@ final class AppSettings {
     var handColorRaw: String = HandColor.royalBlue.rawValue
     /// Where the moon ring puts the moon; see `MoonPlacement`.
     var moonPlacementRaw: String = MoonPlacement.clock.rawValue
+    /// How the wadokei's kanji and animal are drawn; see `KanjiStyle`.
+    var kanjiStyleRaw: String = KanjiStyle.molten.rawValue
 
     /// Last fix from CoreLocation, so the app (and later the alarm scheduler) has a
     /// location before the first fix after launch.
@@ -55,6 +57,14 @@ extension AppSettings {
         get { MoonPlacement(rawValue: moonPlacementRaw) ?? .clock }
         set {
             moonPlacementRaw = newValue.rawValue
+            updatedAt = .now
+        }
+    }
+
+    var kanjiStyle: KanjiStyle {
+        get { KanjiStyle(rawValue: kanjiStyleRaw) ?? .molten }
+        set {
+            kanjiStyleRaw = newValue.rawValue
             updatedAt = .now
         }
     }

@@ -10,6 +10,7 @@ extension DemoConfig {
         if let dialOrientation { settings.dialOrientationRaw = dialOrientation }
         if let moonPlacement { settings.moonPlacementRaw = moonPlacement }
         if let handColor { settings.handColorRaw = handColor }
+        if let kanjiStyle { settings.kanjiStyleRaw = kanjiStyle }
         context.insert(settings)
         let samples: [(String, SolarEvent, Int, [Int], Bool)] = [
             ("Wake up", .sunrise, -30, [2, 3, 4, 5, 6], true),

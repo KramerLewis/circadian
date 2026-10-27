@@ -21,14 +21,16 @@ final class WatchModel: NSObject, WCSessionDelegate {
                 place: SharedStore.StoredPlace(name: demo.name, latitude: demo.coordinate.latitude, longitude: demo.coordinate.longitude),
                 timeDisplay: demo.timeDisplay ?? TimeDisplay.relative.rawValue,
                 dialOrientation: demo.dialOrientation ?? DialOrientation.noonAtTop.rawValue,
-                moonPlacement: demo.moonPlacement ?? MoonPlacement.clock.rawValue
+                moonPlacement: demo.moonPlacement ?? MoonPlacement.clock.rawValue,
+                kanjiStyle: demo.kanjiStyle ?? KanjiStyle.molten.rawValue
             )
         } else {
             context = WatchContext(
                 place: SharedStore.loadPlace(),
                 timeDisplay: SharedStore.loadTimeDisplay() ?? TimeDisplay.relative.rawValue,
                 dialOrientation: SharedStore.loadDialOrientation() ?? DialOrientation.noonAtTop.rawValue,
-                moonPlacement: SharedStore.loadMoonPlacement() ?? MoonPlacement.clock.rawValue
+                moonPlacement: SharedStore.loadMoonPlacement() ?? MoonPlacement.clock.rawValue,
+                kanjiStyle: SharedStore.loadKanjiStyle() ?? KanjiStyle.molten.rawValue
             )
         }
         super.init()
@@ -37,6 +39,7 @@ final class WatchModel: NSObject, WCSessionDelegate {
     var timeDisplay: TimeDisplay { TimeDisplay(rawValue: context.timeDisplay) ?? .relative }
     var dialOrientation: DialOrientation { DialOrientation(rawValue: context.dialOrientation) ?? .noonAtTop }
     var moonPlacement: MoonPlacement { MoonPlacement(rawValue: context.moonPlacement) ?? .clock }
+    var kanjiStyle: KanjiStyle { KanjiStyle(rawValue: context.kanjiStyle) ?? .molten }
 
     func start() {
         guard DemoConfig.current == nil, WCSession.isSupported() else { return }
@@ -83,6 +86,7 @@ final class WatchModel: NSObject, WCSessionDelegate {
         SharedStore.saveTimeDisplay(new.timeDisplay)
         SharedStore.saveDialOrientation(new.dialOrientation)
         SharedStore.saveMoonPlacement(new.moonPlacement)
+        SharedStore.saveKanjiStyle(new.kanjiStyle)
         WidgetCenter.shared.reloadAllTimelines()
     }
 

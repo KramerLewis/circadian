@@ -49,7 +49,11 @@ struct WatchDialView: View {
         let solarMinutes = SolarCalculator.apparentSolarMinutes(at: moment, longitude: coordinate.longitude)
         let center = scrubbing
             ? scrubText(moment, readout: readout)
-            : DialCenterText.make(now: moment, solarMinutes: solarMinutes, readout: readout, display: self.model.timeDisplay)
+            : DialCenterText.make(now: moment, solarMinutes: solarMinutes, readout: readout, display: self.model.timeDisplay,
+                                  coordinate: coordinate)
+        // The wadokei's animal and kanji fill the middle (there's no room for the ring of
+        // kanji outside the dial); while scrubbing, the time readout takes over.
+        let wadokei = self.model.timeDisplay == .wadokei && !scrubbing
 
         return ZStack {
             Canvas { context, size in
@@ -76,6 +80,17 @@ struct WatchDialView: View {
                                         eclipse: overlay.map { ($0.offset, $0.moonScale) })
             }
             .opacity(dimmed ? 0.55 : 1)
+
+            if wadokei {
+                WadokeiLayer(hours: [], active: Wadokei.hour(at: moment, coordinate: coordinate)?.kanji, rotation: 0,
+                             style: self.model.kanjiStyle, animate: !dimmed) { size in
+                    let outer = min(size.width, size.height) / 2 - 2
+                    return WadokeiLayer.Layout(center: CGPoint(x: size.width / 2, y: size.height / 2), ringRadius: nil,
+                                               kanjiSize: 0, centerRadius: outer * 0.8 - 4 - outer * 0.1)
+                }
+                .environment(\.colorScheme, .dark)
+                .opacity(dimmed ? 0.55 : 1)
+            }
 
             if let special = SpecialDayText.today(at: coordinate, on: moment) {
                 VStack {
@@ -105,6 +120,7 @@ struct WatchDialView: View {
             .minimumScaleFactor(0.5)
             .frame(maxWidth: 104)
             .contentTransition(.numericText())
+            .opacity(wadokei ? 0 : 1)
         }
         .contentShape(.rect)
         .onTapGesture { if !scrubbing { self.model.cycleTimeDisplay() } }

@@ -39,6 +39,12 @@ struct HomeView: View {
                             ForEach(HandColor.allCases) { Text($0.title).tag($0) }
                         }
                         .pickerStyle(.menu)
+                        if settings.timeDisplay == .wadokei {
+                            Picker("Kanji", selection: $settings.kanjiStyle) {
+                                ForEach(KanjiStyle.allCases) { Text($0.title).tag($0) }
+                            }
+                            .pickerStyle(.menu)
+                        }
                     }
                 }
                 ToolbarItem(placement: .topBarTrailing) {
@@ -87,6 +93,7 @@ struct HomeView: View {
                         orientation: settings.dialOrientation,
                         moonPlacement: settings.moonPlacement,
                         handColor: settings.handColor,
+                        kanjiStyle: settings.kanjiStyle,
                         coordinate: place.coordinate,
                         onCycleDisplay: {
                             withAnimation { settings.timeDisplay = settings.timeDisplay.next }
@@ -100,6 +107,10 @@ struct HomeView: View {
                             .monospacedDigit()
                             .foregroundStyle(.secondary)
                             .padding(.top, -12)
+                    }
+                    if settings.timeDisplay.hasSections {
+                        PeriodDetailsView(display: settings.timeDisplay, coordinate: place.coordinate, now: now)
+                            .padding(.top, -8)
                     }
                     if let special {
                         SpecialDayBanner(special: special)

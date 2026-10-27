@@ -93,6 +93,10 @@ shoot 27-moon-in-sky-light           light America/Los_Angeles 2026-06-21T15:00:
 shoot 28-moon-in-sky-full-dark       dark  America/Los_Angeles 2026-11-24T22:00:00-08:00 "${seattle[@]}" -demoMoonPlacement sky -demoDialOrientation nowAtTop
 shoot 29-hand-gold-dark              dark  America/Los_Angeles 2026-11-01T15:00:00-08:00 "${seattle[@]}" -demoHandColor gold
 shoot 30-hand-cyan-light             light America/Los_Angeles 2026-11-01T15:00:00-08:00 "${seattle[@]}" -demoHandColor cyan
+shoot 31-sun-periods-light           light America/Los_Angeles 2026-06-21T15:00:00-07:00 "${seattle[@]}" -demoTimeDisplay periods
+shoot 32-wadokei-molten-dark         dark  America/Los_Angeles 2026-06-21T15:00:00-07:00 "${seattle[@]}" -demoTimeDisplay wadokei
+shoot 33-wadokei-gold-light          light America/Los_Angeles 2026-03-20T09:00:00-07:00 "${seattle[@]}" -demoTimeDisplay wadokei -demoKanjiStyle gold
+shoot 34-wadokei-plain-night-dark    dark  America/Los_Angeles 2026-12-21T23:30:00-08:00 "${seattle[@]}" -demoTimeDisplay wadokei -demoKanjiStyle plain
 # Largest accessibility text size, to check nothing truncates.
 xcrun simctl ui "$udid" content_size accessibility-extra-extra-extra-large
 shoot 14-accessibility-text-light    light America/Los_Angeles 2026-11-01T09:00:00-08:00 "${seattle[@]}" -demoScroll moon

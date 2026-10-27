@@ -2,13 +2,15 @@
 // masks the wadokei center draws: white ink on transparent, trimmed to the drawing and
 // centered in a square, so every animal fills the center the same way.
 //
-//   node scripts/zodiac-masks.mjs   → public/zodiac/<animal>.png
+//   node scripts/zodiac-masks.mjs   → public/zodiac/<animal>.png (web)
+//                                     ../ios/Shared/Wadokei/Zodiac-<animal>.png (iPhone, Watch)
 
 import { readFile, mkdir, writeFile, readdir } from "node:fs/promises";
 import { chromium } from "playwright";
 
 const source = new URL("../../shared/assets/zodiac/", import.meta.url);
 const target = new URL("../public/zodiac/", import.meta.url);
+const iosTarget = new URL("../../ios/Shared/Wadokei/", import.meta.url);
 const side = 384;
 
 const browser = await chromium.launch();
@@ -20,6 +22,7 @@ await page.route("https://zodiac.invalid/**", async (route) => {
 });
 await page.goto("https://zodiac.invalid/");
 await mkdir(target, { recursive: true });
+await mkdir(iosTarget, { recursive: true });
 
 for (const file of (await readdir(source)).filter((f) => f.endsWith(".svg")).sort()) {
   const png = await page.evaluate(async ({ file, side }) => {
@@ -58,6 +61,7 @@ for (const file of (await readdir(source)).filter((f) => f.endsWith(".svg")).sor
   const name = file.replace(/\.svg$/, ".png");
   const bytes = Buffer.from(png.split(",")[1], "base64");
   await writeFile(new URL(name, target), bytes);
+  await writeFile(new URL(`Zodiac-${name}`, iosTarget), bytes);
   console.log(`${name} ${(bytes.length / 1024).toFixed(0)} KB`);
 }
 await browser.close();

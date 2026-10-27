@@ -15,6 +15,7 @@ struct SolarDialView: View {
     var orientation: DialOrientation = .noonAtTop
     var moonPlacement: MoonPlacement = .clock
     var handColor: HandColor = .royalBlue
+    var kanjiStyle: KanjiStyle = .molten
     /// Where the dial is drawn for; only needed to place the moon over the sun in a solar eclipse.
     var coordinate: Coordinate?
     /// Called when the center is tapped, to switch to the next display.
@@ -38,7 +39,11 @@ struct SolarDialView: View {
             if let style = special?.style, style == .equinox || style == .newMoon {
                 SkyRingRenderer.drawSpecialDay(style, in: &context, ring: geometry.ring, innerRadius: geometry.moonInner, dark: dark)
             }
-            drawHourTicks(in: &context, geometry)
+            if timeDisplay.hasSections {
+                drawSectionTicks(in: &context, geometry)
+            } else {
+                drawHourTicks(in: &context, geometry)
+            }
             drawMarkers(in: &context, geometry)
             SkyRingRenderer.drawSun(in: &context, ring: geometry.ring, angle: model.nowAngle,
                                     altitude: model.altitude(atAngle: model.nowAngle), monochrome: false,
@@ -49,6 +54,19 @@ struct SolarDialView: View {
         // It's its own layer so a shimmering hand animates without redrawing the dial.
         .background {
             HandLayer(nowAngle: model.nowAngle, rotation: orientation.rotation(nowAngle: model.nowAngle), color: handColor)
+        }
+        .overlay {
+            if timeDisplay == .wadokei, let coordinate {
+                let rotation = orientation.rotation(nowAngle: model.nowAngle)
+                WadokeiLayer(hours: Wadokei.ring(at: now, coordinate: coordinate),
+                             active: Wadokei.hour(at: now, coordinate: coordinate)?.kanji,
+                             rotation: rotation, style: kanjiStyle) { size in
+                    let g = Geometry(size: size, rotation: rotation)
+                    return WadokeiLayer.Layout(center: g.center, ringRadius: g.outer + 18,
+                                               kanjiSize: max(13, min(20, min(size.width, size.height) * 0.045)),
+                                               centerRadius: g.moonInner)
+                }
+            }
         }
         .overlay {
             GeometryReader { proxy in
@@ -67,6 +85,8 @@ struct SolarDialView: View {
                 .minimumScaleFactor(0.5)
                 .frame(width: width)
                 .position(x: proxy.size.width / 2, y: proxy.size.height / 2)
+                // The wadokei's animal and kanji take the middle instead.
+                .opacity(timeDisplay == .wadokei ? 0 : 1)
             }
         }
         .contentShape(.circle)
@@ -95,7 +115,7 @@ struct SolarDialView: View {
     }
 
     private var centerText: (primary: String, secondary: String) {
-        DialCenterText.make(now: now, solarMinutes: solarMinutes, readout: readout, display: timeDisplay)
+        DialCenterText.make(now: now, solarMinutes: solarMinutes, readout: readout, display: timeDisplay, coordinate: coordinate)
     }
 
     // MARK: Drawing
@@ -161,11 +181,31 @@ struct SolarDialView: View {
         }
     }
 
+    /// Ticks at the boundaries of the display's own sections (sun periods or wadokei hours),
+    /// in place of the hour ticks.
+    private func drawSectionTicks(in context: inout GraphicsContext, _ g: Geometry) {
+        guard let coordinate else { return }
+        let dates = timeDisplay == .wadokei
+            ? Wadokei.hours(around: now, at: coordinate).map(\.start)
+            : SunPeriods.boundaries(inDayContaining: now, at: coordinate)
+        for date in dates {
+            let angle = DialModel.angle(for: date, longitude: coordinate.longitude)
+            var tick = Path()
+            tick.move(to: g.point(g.outer - 5, angle))
+            tick.addLine(to: g.point(g.outer + 1, angle))
+            context.stroke(tick, with: .style(HierarchicalShapeStyle.secondary.opacity(0.8)), lineWidth: 1)
+        }
+    }
+
     private func drawMarkers(in context: inout GraphicsContext, _ g: Geometry) {
+        // The wadokei's kanji sit where the event labels go: keep just the four dots.
+        let labels = timeDisplay != .wadokei
         for marker in model.markers {
+            if !labels, !Self.labeledEvents.contains(marker.event) { continue }
             if Self.labeledEvents.contains(marker.event) {
                 let dot = g.point(g.outer + 6, marker.angle)
                 context.fill(Path(ellipseIn: CGRect(x: dot.x - 3, y: dot.y - 3, width: 6, height: 6)), with: .style(.primary))
+                guard labels else { continue }
                 let label = Text(marker.date, format: .dateTime.hour().minute())
                     .font(.caption2.monospacedDigit())
                     .foregroundStyle(.secondary)

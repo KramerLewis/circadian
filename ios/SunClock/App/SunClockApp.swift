@@ -71,7 +71,7 @@ struct RootView: View {
                     shareWithWidgets(place)
                     shareWithWatch(place, settings: settings)
                 }
-                .onChange(of: [settings.timeDisplayRaw, settings.dialOrientationRaw, settings.moonPlacementRaw]) {
+                .onChange(of: [settings.timeDisplayRaw, settings.dialOrientationRaw, settings.moonPlacementRaw, settings.kanjiStyleRaw]) {
                     shareWithWatch(Place.resolve(settings: settings, live: locationService.location), settings: settings)
                 }
             } else {
@@ -129,6 +129,7 @@ struct RootView: View {
         }
         WatchSync.shared.send(WatchContext(place: stored, timeDisplay: settings.timeDisplayRaw,
                                            dialOrientation: settings.dialOrientationRaw,
-                                           moonPlacement: settings.moonPlacementRaw))
+                                           moonPlacement: settings.moonPlacementRaw,
+                                           kanjiStyle: settings.kanjiStyleRaw))
     }
 }

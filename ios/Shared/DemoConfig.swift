@@ -5,9 +5,9 @@ import SunCore
 ///
 ///     -demoLatitude 47.61 -demoLongitude -122.33 -demoName Seattle
 ///     -demoDate 2026-06-21T15:00:00-07:00 [-demoTab alarms] [-demoSheet location|alarm|widgets]
-///     [-demoTimeDisplay relative|twelveHour|twentyFourHour] [-demoDialOrientation noonAtTop|nowAtTop]
+///     [-demoTimeDisplay relative|twelveHour|twentyFourHour|periods|wadokei] [-demoDialOrientation noonAtTop|nowAtTop]
 ///     [-demoMoonPlacement clock|sky] [-demoHandColor royalBlue|red|cyan|green|kryptonPurple|auto|gold]
-///     [-demoScroll moon] [-demoScrub minutes]
+///     [-demoKanjiStyle molten|plain|silver|gold] [-demoScroll moon] [-demoScrub minutes]
 ///
 /// Debug builds only. In demo mode the app uses an in-memory store and never
 /// touches CoreLocation, so no permission prompt covers the screen.
@@ -21,6 +21,7 @@ struct DemoConfig {
     var dialOrientation: String?
     var moonPlacement: String?
     var handColor: String?
+    var kanjiStyle: String?
     var scroll: String?
     /// Watch: start scrubbed this many minutes from now (and don't snap back).
     var scrub: Double?
@@ -49,6 +50,7 @@ struct DemoConfig {
             dialOrientation: value("-demoDialOrientation"),
             moonPlacement: value("-demoMoonPlacement"),
             handColor: value("-demoHandColor"),
+            kanjiStyle: value("-demoKanjiStyle"),
             scroll: value("-demoScroll"),
             scrub: value("-demoScrub").flatMap(Double.init)
         )

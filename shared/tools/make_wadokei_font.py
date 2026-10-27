@@ -5,7 +5,9 @@ Yuji Syuku (SIL Open Font License 1.1), from the @fontsource/yuji-syuku npm pack
 
     npm pack @fontsource/yuji-syuku@5.3.1 && tar -xzf fontsource-yuji-syuku-5.3.1.tgz
     pip install fonttools brotli
-    python3 shared/tools/make_wadokei_font.py package/files/yuji-syuku-japanese-400-normal.woff2 web/public/fonts
+    python3 shared/tools/make_wadokei_font.py package/files/yuji-syuku-japanese-400-normal.woff2 web/public/fonts ios/Shared/Wadokei
+
+The web gets WOFF2; iOS and watchOS, which can't read WOFF2, get the same subset as TTF.
 
 The subset is renamed (the OFL asks modified fonts not to use the original's name) and
 ships with the license.
@@ -21,7 +23,7 @@ CHARACTERS = "子丑寅卯辰巳午未申酉戌亥九八七六五四つ"
 FAMILY = "SunClock Wadokei"
 
 
-def main(source, out_dir):
+def main(source, out_dir, ttf_dir=None):
     font = TTFont(source)
     options = subset.Options()
     options.flavor = "woff2"
@@ -40,7 +42,12 @@ def main(source, out_dir):
     font.flavor = "woff2"
     font.save(out)
     print(f"wrote {out} ({out.stat().st_size} bytes)")
+    if ttf_dir:
+        ttf = Path(ttf_dir) / "SunClockWadokei.ttf"
+        font.flavor = None
+        font.save(ttf)
+        print(f"wrote {ttf} ({ttf.stat().st_size} bytes)")
 
 
 if __name__ == "__main__":
-    main(*sys.argv[1:3])
+    main(*sys.argv[1:4])

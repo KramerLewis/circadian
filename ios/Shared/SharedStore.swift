@@ -26,6 +26,15 @@ nonisolated enum SharedStore {
     private static let timeDisplayKey = "timeDisplay"
     private static let dialOrientationKey = "dialOrientation"
     private static let moonPlacementKey = "moonPlacement"
+    private static let kanjiStyleKey = "kanjiStyle"
+
+    static func loadKanjiStyle() -> String? {
+        defaults?.string(forKey: kanjiStyleKey)
+    }
+
+    static func saveKanjiStyle(_ raw: String) {
+        defaults?.set(raw, forKey: kanjiStyleKey)
+    }
 
     static func loadMoonPlacement() -> String? {
         defaults?.string(forKey: moonPlacementKey)

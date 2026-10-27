@@ -76,6 +76,13 @@ public enum SolarCalculator {
         )
     }
 
+    /// When the sun's center crosses `altitude` on the solar day of `noon`: rising
+    /// (`direction` -1, before noon) or setting (+1, after). For definitions other than the
+    /// standard events, such as the wadokei's dawn and dusk.
+    public static func crossing(altitude: Double, direction: Double, noon: Date, coordinate: Coordinate) -> EventTime {
+        eventTime(altitude: altitude, direction: direction, noon: noon, coordinate: coordinate)
+    }
+
     private static func eventTime(altitude: Double, direction: Double, noon: Date, coordinate: Coordinate) -> EventTime {
         var hourAngle: Double
         switch altitudeHourAngle(altitude, latitude: coordinate.latitude, declination: position(at: noon).declination) {
