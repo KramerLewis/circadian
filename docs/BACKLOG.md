@@ -22,6 +22,7 @@ and a richer Watch face all build on), and the open-ended items last.
 | 8f | **Sun periods and wadokei**: built on the web (scale -R R R+ 0 … with ±15 min milestones, moon option; Edo temporal hours with ember kanji). Zodiac animals in the wadokei center; ported to iPhone and Watch (the Watch shows the animal in the middle, without the outer kanji ring) | M | |
 | 8g | **More historical clocks** in the Historical Clocks group (Roman hours done; see details): canonical hours, Hindu prahar/muhurta, Egyptian decan hours, Chinese shichen; prayer times and zmanim considered and skipped | S each | |
 | 8h | **Maya calendar date line**: Tzolk'in, Haab' and Long Count (e.g. 5 Etz'nab' 11 Sak' · 13.0.14.0.18) beside the date; pure arithmetic (GMT correlation 584283). Zenith passage days, the sun-related part, are done | S | |
+| 8i | **Solar automations** (see details): first an offset helper ("civil dusk is sunset + 35 min here, ±1 min from Nov 15 to Jan 10") for smart plugs, timers and Apple Home, which only know sunrise/sunset; later, trigger a Home scene or Matter plug at any sun event | S, then M | Later part: Apple Home hub (Apple TV/HomePod) |
 | 9 | **Tides** | L | Data source decision (bundle vs. API) |
 | 8e | **Seasonal and live NASA Earth imagery**: all 12 Blue Marble months so snow and vegetation change with the date; pull the latest NASA imagery automatically (see details) | M | 8d for iPhone |
 | 11 | **Effective sunrise/sunset from terrain**: when the sun actually clears or drops behind the hills, slope and valley where you are, plus simulated light (see details) | L | Elevation data source; weather (13) for clouds |
@@ -135,6 +136,18 @@ Roman hours (split day and night into stretching parts):
 Considered and skipped: Islamic prayer times and Jewish zmanim (several competing
 calculation methods; dedicated apps do them well and people rely on them), French decimal
 time (not sun-based).
+
+### Solar automations
+Smart plugs (Kasa, Meross), photocell timers and Apple Home schedule only on sunrise and
+sunset, with an offset. SunClock knows every sun event, so:
+- **Offset helper** (small): pick an event (civil, nautical or astronomical dusk/dawn) and
+  a date range; show the offset from sunset/sunrise that matches it and how much it drifts
+  over the range. Seattle, Christmas season: civil dusk = sunset + 35 min, within ±1 min
+  from Nov 15 to Jan 10 (computed with SunCore). Copy-ready text for the plug's app.
+- **Direct control** (later): trigger an Apple Home scene or a Matter plug at any sun
+  event (HomeKit framework; automations that run while away need a home hub). Could reuse
+  the solar alarm rules (event + offset + weekdays) as the trigger.
+Origin: outdoor Christmas lights on at civil dusk, off at a set time.
 
 ### Relative-time clock
 12-hour and 24-hour are clock times; "relative" deserves its own clock rather than a line
